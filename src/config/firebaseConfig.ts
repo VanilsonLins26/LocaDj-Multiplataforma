@@ -1,7 +1,7 @@
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApps } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
 
-// Defina o objeto com os seus dados
 const firebaseConfig = {
   apiKey: "AIzaSyDDUF56tpMxteQktlS1b2k5n1E6oNtgsGk",
   authDomain: "locadj-6c4a1.firebaseapp.com",
@@ -11,9 +11,9 @@ const firebaseConfig = {
   appId: "1:151515228402:web:bec006e123447c6fdfc86b"
 };
 
-// Inicialize o Firebase
-const app = initializeApp(firebaseConfig);
+// Evita inicializar múltiplas vezes (importante com hot reload do Expo)
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
-// Exporte para usar em outros arquivos
-export const db = getFirestore(app);
+export const db   = getFirestore(app);
+export const auth = getAuth(app);
 export { app };
