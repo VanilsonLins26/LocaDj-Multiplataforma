@@ -1,17 +1,19 @@
-import React, { useState } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import {
-  View, Text, TextInput, TouchableOpacity, StyleSheet,
-  KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator,
-} from 'react-native';
-import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
+import React, { useState } from 'react';
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView, Platform, ScrollView,
+  StyleSheet,
+  Text, TextInput, TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { auth, db } from '../config/firebaseConfig';
 
-// ─── Firebase ───────────────────────────────────────────────
 
-
-
-// ────────────────────────────────────────────────────────────
 
 const PRIMARY  = '#5B4EE4';
 const SUCCESS  = '#14D88A';
@@ -63,16 +65,33 @@ export default function RegisterScreen() {
   async function handleRegister() {
     if (!validateStep2()) return;
     setLoading(true);
+    
     try {
-      // ↓↓↓ INTEGRAÇÃO Firebase Auth ↓↓↓
-      // const { user } = await createUserWithEmailAndPassword(auth, email, password);
-      // await updateProfile(user, { displayName: name });
-      // await setDoc(doc(db, 'users', user.uid), { name, email, phone, role: 'user', createdAt: serverTimestamp() });
-      // await sendEmailVerification(user);
-      await new Promise(r => setTimeout(r, 1000));
-      router.push('/confirm-email');
-    } catch {
-      setError('Erro ao criar conta. Tente novamente.');
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      await updateProfile(user, { displayName: name });
+
+      await setDoc(doc(db, 'users', user.uid), { 
+        name, 
+        email, 
+        phone, 
+        role: 'user', 
+        createdAt: serverTimestamp() 
+      });
+
+
+      router.replace('/home');
+      
+    } catch (err) {
+      console.error(err);
+      if (err.code === 'auth/email-already-in-use') {
+        setError('Este e-mail já está cadastrado.');
+      } else if (err.code === 'auth/invalid-email') {
+        setError('O formato do e-mail é inválido.');
+      } else {
+        setError('Erro ao criar conta. Verifique sua conexão e tente novamente.');
+      }
     } finally {
       setLoading(false);
     }
