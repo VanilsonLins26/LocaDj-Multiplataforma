@@ -1,6 +1,8 @@
-import { initializeApp, getApps } from "firebase/app";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getApp, getApps, initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
+// @ts-ignore
+import { getAuth, getReactNativePersistence, initializeAuth } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDDUF56tpMxteQktlS1b2k5n1E6oNtgsGk",
@@ -11,9 +13,25 @@ const firebaseConfig = {
   appId: "1:151515228402:web:bec006e123447c6fdfc86b"
 };
 
-// Evita inicializar múltiplas vezes (importante com hot reload do Expo)
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
-export const db   = getFirestore(app);
-export const auth = getAuth(app);
-export { app };
+
+let app;
+let auth;
+
+if (getApps().length === 0) {
+
+  app = initializeApp(firebaseConfig);
+  
+  auth = initializeAuth(app, {
+    persistence: getReactNativePersistence(AsyncStorage),
+  });
+} else {
+  app = getApp();
+  auth = getAuth(app);
+}
+
+
+export const db = getFirestore(app);
+
+export { app, auth };
+
