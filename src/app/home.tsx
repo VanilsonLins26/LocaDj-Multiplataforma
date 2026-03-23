@@ -1,19 +1,27 @@
-import { SafeAreaView } from 'react-native-safe-area-context';
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-
-// ─── Tela em construção ───────────────────────────────────────
-// TODO: implementar tela home completa (issue #9)
-// ─────────────────────────────────────────────────────────────
+import { useRouter } from 'expo-router';
+import { signOut } from 'firebase/auth';
+import React from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { auth } from '../config/firebaseConfig';
 
 const PRIMARY = '#5B4EE4';
+const ERROR = '#EF4444';
 const GRAY_500 = '#6B7280';
 const DARK_BG = '#040417';
 
 export default function HomeScreen() {
   const router = useRouter();
+
+  async function handleLogout() {
+    try {
+      await signOut(auth);
+      router.replace('/');
+    } catch (error) {
+      console.error('Erro ao sair da conta:', error);
+    }
+  }
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -25,12 +33,12 @@ export default function HomeScreen() {
         <Text style={styles.sub}>Tela em construção.{'\n'}Em breve disponível.</Text>
 
         <TouchableOpacity
-          style={styles.btn}
-          onPress={() => router.replace('/')}
+          style={styles.btnLogout}
+          onPress={handleLogout}
           activeOpacity={0.85}
         >
-          <Ionicons name="arrow-back" size={16} color="#fff" style={{ marginRight: 8 }} />
-          <Text style={styles.btnText}>Voltar ao início</Text>
+          <Ionicons name="log-out-outline" size={18} color="#fff" style={{ marginRight: 8 }} />
+          <Text style={styles.btnText}>Sair da conta</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -44,5 +52,6 @@ const styles = StyleSheet.create({
   title:     { fontSize: 26, fontWeight: '800', color: '#fff', marginBottom: 10 },
   sub:       { fontSize: 15, color: GRAY_500, textAlign: 'center', lineHeight: 22, marginBottom: 40 },
   btn:       { flexDirection: 'row', alignItems: 'center', backgroundColor: PRIMARY, borderRadius: 14, paddingHorizontal: 24, paddingVertical: 14 },
+  btnLogout: { flexDirection: 'row', alignItems: 'center', backgroundColor: ERROR, borderRadius: 14, paddingHorizontal: 24, paddingVertical: 14 },
   btnText:   { color: '#fff', fontSize: 15, fontWeight: '700' },
 });

@@ -1,11 +1,17 @@
-import { SafeAreaView } from 'react-native-safe-area-context';
-import React, { useState, useRef } from 'react';
-import {
-  View, Text, TextInput, TouchableOpacity, StyleSheet,
-  KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator, Animated,
-} from 'react-native';
-import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import React, { useRef, useState } from 'react';
+import {
+  ActivityIndicator, Animated,
+  KeyboardAvoidingView, Platform, ScrollView,
+  StyleSheet,
+  Text, TextInput, TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { auth, db } from '../config/firebaseConfig';
 
 const PRIMARY  = '#5B4EE4';
 const SUCCESS  = '#14D88A';
@@ -42,18 +48,35 @@ export default function LoginScreen() {
     if (!email.includes('@')) {
       setError('Digite um e-mail válido.'); shake(); return;
     }
-    setError(''); setLoading(true);
+    
+    setError(''); 
+    setLoading(true);
+    
     try {
-      // ↓↓↓ INTEGRAÇÃO Firebase Auth ↓↓↓
-      // const { user } = await signInWithEmailAndPassword(auth, email, password);
-      // const userDoc = await getDoc(doc(db, 'users', user.uid));
-      // const role = userDoc.data()?.role ?? 'user';
-      // if (role === 'admin') router.replace('/dashboard');
-      // else router.replace('/');  // TODO: trocar para '/home' quando a tela for criada
-      await new Promise(r => setTimeout(r, 1000));
-      router.replace('/');  // TODO: trocar para '/home' quando a tela for criada
-    } catch {
-      setError('E-mail ou senha incorretos.'); shake();
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      
+      const role = userDoc.exists() ? userDoc.data()?.role : 'user';
+
+      if (role === 'admin') {
+        router.replace('/dashboard');
+      } else {
+        router.replace('/home');
+      }
+
+    } catch (err: any) {
+      console.error(err);
+      
+      if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
+        setError('E-mail ou senha incorretos.');
+      } else if (err.code === 'auth/too-many-requests') {
+        setError('Muitas tentativas. Tente novamente mais tarde.');
+      } else {
+        setError('Erro ao entrar. Verifique sua conexão.');
+      }
+      shake(); 
     } finally {
       setLoading(false);
     }

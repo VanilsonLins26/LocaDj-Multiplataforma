@@ -1,10 +1,20 @@
-import React from 'react';
-import {
-  View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  SafeAreaView, StatusBar, Dimensions,
-} from 'react-native';
-import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import React, { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Dimensions,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from 'react-native';
+import { auth, db } from '../config/firebaseConfig';
 
 const PRIMARY = '#5245F1';
 const DARK_BG = '#040417';
@@ -16,6 +26,40 @@ const { width } = Dimensions.get('window');
 export default function LandingScreen() {
   const router = useRouter();
 
+  const [isChecking, setIsChecking] = useState(true);
+
+ useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        try {
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          const role = userDoc.exists() ? userDoc.data()?.role : 'user';
+          
+          if (role === 'admin') {
+            router.replace('/dashboard');
+          } else {
+            router.replace('/home'); 
+          }
+        } catch (error) {
+          router.replace('/home');
+        }
+      } else {
+
+        setIsChecking(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  if (isChecking) {
+    return (
+      <View style={[styles.safe, { justifyContent: 'center', alignItems: 'center' }]}>
+        <StatusBar barStyle="light-content" backgroundColor={DARK_BG} />
+        <ActivityIndicator size="large" color={PRIMARY} />
+      </View>
+    );
+  }
   const features = [
     { icon: 'musical-notes-outline' as const, title: 'EquipaDJ', desc: 'Alugue equipamentos de alta qualidade para suas festas e eventos.' },
     { icon: 'calendar-outline' as const,       title: 'Agende Online', desc: 'Reserve com facilidade pelo app, sem burocracia.' },

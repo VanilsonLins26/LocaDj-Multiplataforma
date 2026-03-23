@@ -1,10 +1,17 @@
-import React, { useRef, useState } from 'react';
-import {
-  View, Text, TextInput, TouchableOpacity, StyleSheet,
-  SafeAreaView, KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator,
-} from 'react-native';
-import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { sendPasswordResetEmail } from 'firebase/auth';
+import React, { useState } from 'react';
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView, Platform,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text, TextInput, TouchableOpacity,
+  View,
+} from 'react-native';
+import { auth } from '../config/firebaseConfig';
 
 const PRIMARY = '#5B4EE4';
 const SUCCESS = '#14D88A';
@@ -14,86 +21,53 @@ const GRAY_300 = '#D1D5DB';
 const GRAY_500 = '#6B7280';
 const GRAY_900 = '#111827';
 
-type Phase = 'email' | 'code' | 'reset' | 'done';
+type Phase = 'email' | 'done';
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
   const [phase, setPhase] = useState<Phase>('email');
   const [email, setEmail] = useState('');
-  const [code, setCode] = useState(['', '', '', '', '', '']);
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const codeRefs = useRef<(TextInput | null)[]>([]);
-
-  function handleCodeChange(index: number, value: string) {
-    if (value.length > 1) return;
-    const next = [...code];
-    next[index] = value;
-    setCode(next);
+  function handleBack() {
     setError('');
-    if (value && index < 5) codeRefs.current[index + 1]?.focus();
-  }
-
-  function handleCodeBackspace(index: number) {
-    if (!code[index] && index > 0) {
-      codeRefs.current[index - 1]?.focus();
-      const next = [...code];
-      next[index - 1] = '';
-      setCode(next);
+    if (phase === 'email') {
+      router.back();
+    } else {
+      router.replace('/');
     }
   }
 
-  function handleBack() {
-    setError('');
-    if (phase === 'email') router.back();
-    else if (phase === 'code') setPhase('email');
-    else if (phase === 'reset') setPhase('code');
-    else router.replace('/');
-  }
-
   async function handleSendEmail() {
-    if (!email.trim() || !email.includes('@')) { setError('Digite um e-mail válido.'); return; }
-    setError(''); setLoading(true);
+    if (!email.trim() || !email.includes('@')) { 
+      setError('Digite um e-mail válido.'); 
+      return; 
+    }
+    
+    setError(''); 
+    setLoading(true);
+    
     try {
-      // ↓↓↓ INTEGRAÇÃO Firebase Auth ↓↓↓
-      // await sendPasswordResetEmail(auth, email);
-      // setPhase('done'); // Firebase usa link direto, não OTP
-      await new Promise(r => setTimeout(r, 1000));
-      setPhase('code');
-    } catch { setError('Erro ao enviar. Verifique o e-mail.'); }
-    finally { setLoading(false); }
-  }
-
-  async function handleVerifyCode() {
-    if (code.join('').length < 6) { setError('Digite o código completo.'); return; }
-    setError(''); setLoading(true);
-    try {
-      await new Promise(r => setTimeout(r, 800));
-      setPhase('reset');
-    } catch { setError('Código inválido ou expirado.'); }
-    finally { setLoading(false); }
-  }
-
-  async function handleResetPassword() {
-    if (newPassword.length < 6) { setError('Mínimo 6 caracteres.'); return; }
-    if (newPassword !== confirmPassword) { setError('As senhas não coincidem.'); return; }
-    setError(''); setLoading(true);
-    try {
-      await new Promise(r => setTimeout(r, 1000));
+      await sendPasswordResetEmail(auth, email);
       setPhase('done');
-    } catch { setError('Erro ao redefinir. Tente novamente.'); }
-    finally { setLoading(false); }
+    } catch (err: any) {
+      console.error(err);
+      if (err.code === 'auth/user-not-found') {
+        setError('Não há conta cadastrada com este e-mail.');
+      } else if (err.code === 'auth/invalid-email') {
+        setError('O formato do e-mail é inválido.');
+      } else {
+        setError('Erro ao enviar. Verifique sua conexão e tente novamente.');
+      }
+    } finally { 
+      setLoading(false); 
+    }
   }
 
   const config = {
-    email: { icon: 'mail-outline' as const,           iconBg: '#EEF2FF', iconColor: PRIMARY,  title: 'Recuperar senha',  sub: 'Informe seu e-mail cadastrado para receber o código de recuperação' },
-    code:  { icon: 'chatbubble-outline' as const,     iconBg: '#EEF2FF', iconColor: PRIMARY,  title: 'Código enviado',   sub: `Enviamos um código de 6 dígitos para ${email}` },
-    reset: { icon: 'lock-closed-outline' as const,    iconBg: '#EEF2FF', iconColor: PRIMARY,  title: 'Nova senha',       sub: 'Crie uma senha segura para sua conta' },
-    done:  { icon: 'checkmark-circle-outline' as const, iconBg: 'rgba(20,216,138,0.1)', iconColor: SUCCESS, title: 'Senha redefinida!', sub: 'Sua senha foi alterada com sucesso.' },
+    email: { icon: 'mail-outline' as const,             iconBg: '#EEF2FF', iconColor: PRIMARY,  title: 'Recuperar senha',  sub: 'Informe seu e-mail cadastrado para receber o link de recuperação' },
+    done:  { icon: 'checkmark-circle-outline' as const, iconBg: 'rgba(20,216,138,0.1)', iconColor: SUCCESS, title: 'E-mail enviado!', sub: `Enviamos as instruções de recuperação para o e-mail:\n${email}` },
   };
   const cfg = config[phase];
 
@@ -115,18 +89,12 @@ export default function ForgotPasswordScreen() {
             <View style={[styles.iconCircle, { backgroundColor: cfg.iconBg }]}>
               <Ionicons name={cfg.icon} size={36} color={cfg.iconColor} />
             </View>
-            {/* Ícone de email com check (como no design para fase done/email enviado) */}
-            {phase === 'code' && (
-              <View style={styles.iconBadge}>
-                <Ionicons name="checkmark" size={12} color="#fff" />
-              </View>
-            )}
           </View>
 
           <Text style={styles.title}>{cfg.title}</Text>
           <Text style={styles.subtitle}>{cfg.sub}</Text>
 
-          {/* ─── E-MAIL ─── */}
+          {/* ─── FASE 1: PEDIR E-MAIL ─── */}
           {phase === 'email' && (
             <>
               <Text style={styles.label}>E-MAIL CADASTRADO</Text>
@@ -147,7 +115,7 @@ export default function ForgotPasswordScreen() {
               {error ? <View style={styles.errorRow}><Ionicons name="alert-circle-outline" size={14} color={ERROR} /><Text style={styles.errorText}>{error}</Text></View> : null}
 
               <TouchableOpacity style={[styles.btnPrimary, loading && styles.btnDisabled]} onPress={handleSendEmail} disabled={loading} activeOpacity={0.85}>
-                {loading ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.btnText}>Enviar código</Text>}
+                {loading ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.btnText}>Enviar link de recuperação</Text>}
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.backLinkWrap} onPress={() => router.back()} hitSlop={{ top: 8, bottom: 8 }}>
@@ -157,82 +125,16 @@ export default function ForgotPasswordScreen() {
             </>
           )}
 
-          {/* ─── CÓDIGO OTP ─── */}
-          {phase === 'code' && (
-            <>
-              <View style={styles.codeRow}>
-                {code.map((digit, i) => (
-                  <TextInput
-                    key={i}
-                    ref={ref => { codeRefs.current[i] = ref; }}
-                    style={[styles.codeInput, digit ? styles.codeInputFilled : null]}
-                    value={digit}
-                    onChangeText={v => handleCodeChange(i, v)}
-                    onKeyPress={({ nativeEvent }) => nativeEvent.key === 'Backspace' && handleCodeBackspace(i)}
-                    keyboardType="number-pad"
-                    maxLength={1}
-                    textAlign="center"
-                    selectTextOnFocus
-                  />
-                ))}
-              </View>
-
-              {error ? <View style={[styles.errorRow, { justifyContent: 'center' }]}><Ionicons name="alert-circle-outline" size={14} color={ERROR} /><Text style={styles.errorText}>{error}</Text></View> : null}
-
-              <Text style={styles.resendText}>
-                Não recebeu o código?{'  '}
-                <Text style={styles.resendLink} onPress={handleSendEmail}>Reenviar</Text>
-              </Text>
-
-              <TouchableOpacity style={[styles.btnPrimary, loading && styles.btnDisabled]} onPress={handleVerifyCode} disabled={loading} activeOpacity={0.85}>
-                {loading ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.btnText}>Verificar código</Text>}
-              </TouchableOpacity>
-            </>
-          )}
-
-          {/* ─── NOVA SENHA ─── */}
-          {phase === 'reset' && (
-            <>
-              <Text style={styles.label}>NOVA SENHA</Text>
-              <View style={styles.inputWrap}>
-                <Ionicons name="lock-closed-outline" size={18} color={GRAY_500} style={styles.inputIcon} />
-                <TextInput style={[styles.input, { flex: 1 }]} placeholder="Mínimo 6 caracteres" placeholderTextColor={GRAY_300} secureTextEntry={!showPass} value={newPassword} onChangeText={v => { setNewPassword(v); setError(''); }} />
-                <TouchableOpacity onPress={() => setShowPass(!showPass)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                  <Ionicons name={showPass ? 'eye-off-outline' : 'eye-outline'} size={18} color={GRAY_500} />
-                </TouchableOpacity>
-              </View>
-
-              <Text style={styles.label}>CONFIRMAR SENHA</Text>
-              <View style={styles.inputWrap}>
-                <Ionicons name="lock-closed-outline" size={18} color={GRAY_500} style={styles.inputIcon} />
-                <TextInput style={styles.input} placeholder="Repita a senha" placeholderTextColor={GRAY_300} secureTextEntry value={confirmPassword} onChangeText={v => { setConfirmPassword(v); setError(''); }} />
-                {confirmPassword.length > 0 && (
-                  <Ionicons
-                    name={newPassword === confirmPassword ? 'checkmark-circle' : 'close-circle'}
-                    size={18}
-                    color={newPassword === confirmPassword ? SUCCESS : ERROR}
-                  />
-                )}
-              </View>
-
-              {error ? <View style={styles.errorRow}><Ionicons name="alert-circle-outline" size={14} color={ERROR} /><Text style={styles.errorText}>{error}</Text></View> : null}
-
-              <TouchableOpacity style={[styles.btnPrimary, loading && styles.btnDisabled]} onPress={handleResetPassword} disabled={loading} activeOpacity={0.85}>
-                {loading ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.btnText}>Redefinir senha</Text>}
-              </TouchableOpacity>
-            </>
-          )}
-
-          {/* ─── SUCESSO ─── */}
+          {/* ─── FASE 2: SUCESSO ─── */}
           {phase === 'done' && (
             <>
               <View style={styles.successCard}>
-                <Ionicons name="shield-checkmark-outline" size={28} color={SUCCESS} style={{ marginBottom: 8 }} />
-                <Text style={styles.successText}>Sua conta está protegida com a nova senha</Text>
+                <Ionicons name="mail-open-outline" size={28} color={SUCCESS} style={{ marginBottom: 8 }} />
+                <Text style={styles.successText}>Abra o seu e-mail, clique no link e crie sua nova senha.</Text>
               </View>
 
-              <TouchableOpacity style={styles.btnPrimary} onPress={() => router.replace('/')} activeOpacity={0.85}>
-                <Text style={styles.btnText}>Ir para o login</Text>
+              <TouchableOpacity style={styles.btnPrimary} onPress={() => router.replace('/login')} activeOpacity={0.85}>
+                <Text style={styles.btnText}>Voltar para o Login</Text>
               </TouchableOpacity>
             </>
           )}
@@ -252,12 +154,6 @@ const styles = StyleSheet.create({
 
   iconContainer: { alignItems: 'center', marginBottom: 24, position: 'relative' },
   iconCircle: { width: 88, height: 88, borderRadius: 44, alignItems: 'center', justifyContent: 'center' },
-  iconBadge: {
-    position: 'absolute', bottom: 0, right: '30%',
-    width: 24, height: 24, borderRadius: 12,
-    backgroundColor: SUCCESS, borderWidth: 2, borderColor: '#fff',
-    alignItems: 'center', justifyContent: 'center',
-  },
 
   title: { fontSize: 24, fontWeight: '700', color: GRAY_900, textAlign: 'center', marginBottom: 8 },
   subtitle: { fontSize: 14, color: GRAY_500, textAlign: 'center', marginBottom: 32, lineHeight: 21, paddingHorizontal: 8 },
@@ -266,17 +162,6 @@ const styles = StyleSheet.create({
   inputWrap: { flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: GRAY_300, borderRadius: 14, backgroundColor: GRAY_100, paddingHorizontal: 14, marginBottom: 20, minHeight: 54 },
   inputIcon: { marginRight: 10 },
   input: { flex: 1, fontSize: 15, color: GRAY_900, paddingVertical: 14 },
-
-  codeRow: { flexDirection: 'row', justifyContent: 'center', gap: 10, marginBottom: 24 },
-  codeInput: {
-    width: 50, height: 60, borderWidth: 2, borderColor: GRAY_300,
-    borderRadius: 14, fontSize: 24, fontWeight: '700', color: GRAY_900,
-    backgroundColor: GRAY_100, textAlign: 'center',
-  },
-  codeInputFilled: { borderColor: PRIMARY, backgroundColor: '#F5F3FF' },
-
-  resendText: { fontSize: 14, color: GRAY_500, textAlign: 'center', marginBottom: 28 },
-  resendLink: { color: PRIMARY, fontWeight: '700' },
 
   errorRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: -12, marginBottom: 16 },
   errorText: { fontSize: 13, color: ERROR },
