@@ -15,74 +15,74 @@ import { auth, db } from '../config/firebaseConfig';
 
 
 
-const PRIMARY  = '#5B4EE4';
-const SUCCESS  = '#14D88A';
-const ERROR    = '#EF4444';
+const PRIMARY = '#5B4EE4';
+const SUCCESS = '#14D88A';
+const ERROR = '#EF4444';
 const GRAY_100 = '#F3F4F6';
 const GRAY_300 = '#D1D5DB';
 const GRAY_500 = '#6B7280';
 const GRAY_900 = '#111827';
 
 function getStrength(p: string): { bars: number; label: string; color: string } {
-  if (!p)           return { bars: 0, label: '',            color: GRAY_300 };
+  if (!p) return { bars: 0, label: '', color: GRAY_300 };
   if (p.length < 4) return { bars: 1, label: 'Muito fraca', color: ERROR };
-  if (p.length < 6) return { bars: 2, label: 'Fraca',       color: '#F97316' };
-  if (p.length < 8) return { bars: 3, label: 'Boa',         color: '#EAB308' };
-  return               { bars: 4, label: 'Forte',           color: SUCCESS };
+  if (p.length < 6) return { bars: 2, label: 'Fraca', color: '#F97316' };
+  if (p.length < 8) return { bars: 3, label: 'Boa', color: '#EAB308' };
+  return { bars: 4, label: 'Forte', color: SUCCESS };
 }
 
 
 export default function RegisterScreen() {
   const router = useRouter();
-  const [step, setStep]       = useState(1);
+  const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState('');
+  const [error, setError] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [accepted, setAccepted] = useState(false);
 
-  const [name, setName]                       = useState('');
-  const [email, setEmail]                     = useState('');
-  const [phone, setPhone]                     = useState('');
-  const [password, setPassword]               = useState('');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
   const strength = getStrength(password);
 
   function validateStep1(): boolean {
-    if (!name.trim())                          { setError('Informe seu nome completo.'); return false; }
-    if (!email.trim() || !email.includes('@')) { setError('E-mail inválido.');           return false; }
-    if (!phone.trim())                         { setError('Informe o telefone.');        return false; }
+    if (!name.trim()) { setError('Informe seu nome completo.'); return false; }
+    if (!email.trim() || !email.includes('@')) { setError('E-mail inválido.'); return false; }
+    if (!phone.trim()) { setError('Informe o telefone.'); return false; }
     setError(''); return true;
   }
 
   function validateStep2(): boolean {
-    if (password.length < 6)          { setError('Mínimo 6 caracteres.');         return false; }
-    if (password !== confirmPassword)  { setError('As senhas não coincidem.');     return false; }
-    if (!accepted)                    { setError('Aceite os termos para continuar.'); return false; }
+    if (password.length < 6) { setError('Mínimo 6 caracteres.'); return false; }
+    if (password !== confirmPassword) { setError('As senhas não coincidem.'); return false; }
+    if (!accepted) { setError('Aceite os termos para continuar.'); return false; }
     setError(''); return true;
   }
 
   async function handleRegister() {
     if (!validateStep2()) return;
     setLoading(true);
-    
+
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
       await updateProfile(user, { displayName: name });
 
-      await setDoc(doc(db, 'users', user.uid), { 
-        name, 
-        email, 
-        phone, 
-        role: 'user', 
-        createdAt: serverTimestamp() 
+      await setDoc(doc(db, 'users', user.uid), {
+        name,
+        email,
+        phone,
+        role: 'user',
+        createdAt: serverTimestamp()
       });
 
 
-      router.replace('/home');
-      
+      router.replace('/(tabs)/kits_list');
+
     } catch (err) {
       console.error(err);
       if (err.code === 'auth/email-already-in-use') {
@@ -119,7 +119,7 @@ export default function RegisterScreen() {
           <View style={styles.stepsRow}>
             {steps.map((s, i) => {
               const n = i + 1;
-              const done   = step > n;
+              const done = step > n;
               const active = step === n;
               return (
                 <React.Fragment key={n}>
@@ -313,46 +313,46 @@ export default function RegisterScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe:   { flex: 1, backgroundColor: '#fff' },
+  safe: { flex: 1, backgroundColor: '#fff' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 12 },
-  backBtn:{ width: 40, height: 40, borderRadius: 20, backgroundColor: GRAY_100, alignItems: 'center', justifyContent: 'center' },
+  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: GRAY_100, alignItems: 'center', justifyContent: 'center' },
 
-  stepsRow:   { flexDirection: 'row', alignItems: 'center' },
-  stepItem:   { alignItems: 'center', gap: 4 },
+  stepsRow: { flexDirection: 'row', alignItems: 'center' },
+  stepItem: { alignItems: 'center', gap: 4 },
   stepCircle: { width: 30, height: 30, borderRadius: 15, backgroundColor: GRAY_100, alignItems: 'center', justifyContent: 'center' },
   stepActive: { backgroundColor: PRIMARY },
-  stepDone:   { backgroundColor: SUCCESS },
-  stepNum:    { fontSize: 12, fontWeight: '700', color: GRAY_500 },
-  stepLabel:  { fontSize: 10, color: GRAY_500, fontWeight: '600' },
-  stepLine:   { width: 32, height: 2, backgroundColor: GRAY_300, marginHorizontal: 6, marginBottom: 14 },
+  stepDone: { backgroundColor: SUCCESS },
+  stepNum: { fontSize: 12, fontWeight: '700', color: GRAY_500 },
+  stepLabel: { fontSize: 10, color: GRAY_500, fontWeight: '600' },
+  stepLine: { width: 32, height: 2, backgroundColor: GRAY_300, marginHorizontal: 6, marginBottom: 14 },
 
-  scroll:   { flexGrow: 1, paddingHorizontal: 28, paddingTop: 24, paddingBottom: 40 },
+  scroll: { flexGrow: 1, paddingHorizontal: 28, paddingTop: 24, paddingBottom: 40 },
 
   iconContainer: { alignItems: 'center', marginBottom: 24 },
-  iconCircle:    { width: 80, height: 80, borderRadius: 40, backgroundColor: '#EEF2FF', alignItems: 'center', justifyContent: 'center' },
+  iconCircle: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#EEF2FF', alignItems: 'center', justifyContent: 'center' },
 
-  title:    { fontSize: 24, fontWeight: '700', color: GRAY_900, textAlign: 'center', marginBottom: 6 },
+  title: { fontSize: 24, fontWeight: '700', color: GRAY_900, textAlign: 'center', marginBottom: 6 },
   subtitle: { fontSize: 14, color: GRAY_500, textAlign: 'center', marginBottom: 32, lineHeight: 20 },
 
-  label:     { fontSize: 11, fontWeight: '700', color: GRAY_900, letterSpacing: 0.8, marginBottom: 8 },
+  label: { fontSize: 11, fontWeight: '700', color: GRAY_900, letterSpacing: 0.8, marginBottom: 8 },
   inputWrap: { flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: GRAY_300, borderRadius: 14, backgroundColor: GRAY_100, paddingHorizontal: 14, marginBottom: 20, minHeight: 54 },
   inputIcon: { marginRight: 10 },
-  input:     { flex: 1, fontSize: 15, color: GRAY_900, paddingVertical: 14 },
+  input: { flex: 1, fontSize: 15, color: GRAY_900, paddingVertical: 14 },
 
-  strengthWrap:  { marginTop: -12, marginBottom: 20 },
-  strengthBars:  { flexDirection: 'row', gap: 6, marginBottom: 4 },
-  strengthBar:   { flex: 1, height: 4, borderRadius: 2 },
+  strengthWrap: { marginTop: -12, marginBottom: 20 },
+  strengthBars: { flexDirection: 'row', gap: 6, marginBottom: 4 },
+  strengthBar: { flex: 1, height: 4, borderRadius: 2 },
   strengthLabel: { fontSize: 12, fontWeight: '600' },
 
-  checkRow:       { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginBottom: 24 },
-  checkbox:       { width: 22, height: 22, borderRadius: 6, borderWidth: 2, borderColor: GRAY_300, alignItems: 'center', justifyContent: 'center', marginTop: 1, flexShrink: 0 },
+  checkRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginBottom: 24 },
+  checkbox: { width: 22, height: 22, borderRadius: 6, borderWidth: 2, borderColor: GRAY_300, alignItems: 'center', justifyContent: 'center', marginTop: 1, flexShrink: 0 },
   checkboxActive: { backgroundColor: PRIMARY, borderColor: PRIMARY },
-  checkText:      { fontSize: 13, color: GRAY_500, lineHeight: 20, flex: 1 },
+  checkText: { fontSize: 13, color: GRAY_500, lineHeight: 20, flex: 1 },
 
-  errorRow:  { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginTop: -8, marginBottom: 16 },
+  errorRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginTop: -8, marginBottom: 16 },
   errorText: { fontSize: 13, color: ERROR, flex: 1, lineHeight: 18 },
 
-  btnPrimary:  { backgroundColor: PRIMARY, borderRadius: 16, height: 54, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', shadowColor: PRIMARY, shadowOpacity: 0.3, shadowRadius: 10, shadowOffset: { width: 0, height: 5 }, elevation: 6 },
+  btnPrimary: { backgroundColor: PRIMARY, borderRadius: 16, height: 54, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', shadowColor: PRIMARY, shadowOpacity: 0.3, shadowRadius: 10, shadowOffset: { width: 0, height: 5 }, elevation: 6 },
   btnDisabled: { opacity: 0.5 },
-  btnText:     { color: '#fff', fontSize: 16, fontWeight: '700' },
+  btnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
 });
