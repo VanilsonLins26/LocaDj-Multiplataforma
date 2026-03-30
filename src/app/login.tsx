@@ -13,9 +13,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { auth, db } from '../config/firebaseConfig';
 
-const PRIMARY  = '#5B4EE4';
-const SUCCESS  = '#14D88A';
-const ERROR    = '#EF4444';
+const PRIMARY = '#5B4EE4';
+const SUCCESS = '#14D88A';
+const ERROR = '#EF4444';
 const GRAY_100 = '#F3F4F6';
 const GRAY_300 = '#D1D5DB';
 const GRAY_500 = '#6B7280';
@@ -23,21 +23,21 @@ const GRAY_900 = '#111827';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const [email, setEmail]               = useState('');
-  const [password, setPassword]         = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading]           = useState(false);
-  const [error, setError]               = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [emailFocused, setEmailFocused] = useState(false);
-  const [passFocused, setPassFocused]   = useState(false);
+  const [passFocused, setPassFocused] = useState(false);
   const shakeAnim = useRef(new Animated.Value(0)).current;
 
   function shake() {
     Animated.sequence([
-      Animated.timing(shakeAnim, { toValue: 8,  duration: 60, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 8, duration: 60, useNativeDriver: true }),
       Animated.timing(shakeAnim, { toValue: -8, duration: 60, useNativeDriver: true }),
-      Animated.timing(shakeAnim, { toValue: 8,  duration: 60, useNativeDriver: true }),
-      Animated.timing(shakeAnim, { toValue: 0,  duration: 60, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 8, duration: 60, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 0, duration: 60, useNativeDriver: true }),
     ]).start();
   }
 
@@ -48,27 +48,27 @@ export default function LoginScreen() {
     if (!email.includes('@')) {
       setError('Digite um e-mail válido.'); shake(); return;
     }
-    
-    setError(''); 
+
+    setError('');
     setLoading(true);
-    
+
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
       const userDoc = await getDoc(doc(db, 'users', user.uid));
-      
+
       const role = userDoc.exists() ? userDoc.data()?.role : 'user';
 
       if (role === 'admin') {
         router.replace('/dashboard');
       } else {
-        router.replace('/home');
+        router.replace('/(tabs)/kits_list');
       }
 
     } catch (err: any) {
       console.error(err);
-      
+
       if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
         setError('E-mail ou senha incorretos.');
       } else if (err.code === 'auth/too-many-requests') {
@@ -76,7 +76,7 @@ export default function LoginScreen() {
       } else {
         setError('Erro ao entrar. Verifique sua conexão.');
       }
-      shake(); 
+      shake();
     } finally {
       setLoading(false);
     }
@@ -186,31 +186,31 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe:        { flex: 1, backgroundColor: '#fff' },
-  header:      { paddingHorizontal: 20, paddingVertical: 12 },
-  backBtn:     { width: 40, height: 40, borderRadius: 20, backgroundColor: GRAY_100, alignItems: 'center', justifyContent: 'center' },
-  scroll:      { flexGrow: 1, paddingHorizontal: 28, paddingTop: 16, paddingBottom: 40 },
+  safe: { flex: 1, backgroundColor: '#fff' },
+  header: { paddingHorizontal: 20, paddingVertical: 12 },
+  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: GRAY_100, alignItems: 'center', justifyContent: 'center' },
+  scroll: { flexGrow: 1, paddingHorizontal: 28, paddingTop: 16, paddingBottom: 40 },
   iconContainer: { alignItems: 'center', marginBottom: 28 },
-  iconCircle:    { width: 88, height: 88, borderRadius: 44, backgroundColor: '#EEF2FF', alignItems: 'center', justifyContent: 'center' },
-  title:         { fontSize: 26, fontWeight: '700', color: GRAY_900, textAlign: 'center', marginBottom: 8 },
-  subtitle:      { fontSize: 15, color: GRAY_500, textAlign: 'center', marginBottom: 36, lineHeight: 22 },
-  label:         { fontSize: 11, fontWeight: '700', color: GRAY_900, letterSpacing: 0.8, marginBottom: 8 },
-  inputWrap:     { flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: GRAY_300, borderRadius: 14, backgroundColor: GRAY_100, paddingHorizontal: 14, marginBottom: 20, minHeight: 54 },
-  inputFocused:  { borderColor: PRIMARY, backgroundColor: '#F5F3FF' },
-  inputError:    { borderColor: ERROR },
-  inputIcon:     { marginRight: 10 },
-  input:         { flex: 1, fontSize: 15, color: GRAY_900, paddingVertical: 14 },
-  errorRow:      { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: -12, marginBottom: 12 },
-  errorText:     { fontSize: 13, color: ERROR },
-  forgotWrap:    { alignItems: 'flex-end', marginBottom: 28 },
-  forgotText:    { fontSize: 14, color: PRIMARY, fontWeight: '600' },
-  btnPrimary:    { backgroundColor: PRIMARY, borderRadius: 16, height: 54, alignItems: 'center', justifyContent: 'center', shadowColor: PRIMARY, shadowOpacity: 0.35, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, elevation: 8 },
-  btnDisabled:   { opacity: 0.6 },
-  btnText:       { color: '#fff', fontSize: 16, fontWeight: '700', letterSpacing: 0.3 },
-  divider:       { flexDirection: 'row', alignItems: 'center', marginVertical: 28, gap: 12 },
-  dividerLine:   { flex: 1, height: 1, backgroundColor: GRAY_300 },
-  dividerText:   { fontSize: 13, color: GRAY_500, fontWeight: '500' },
-  bottomRow:     { flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
-  bottomText:    { fontSize: 15, color: GRAY_500 },
-  link:          { fontSize: 15, color: PRIMARY, fontWeight: '700' },
+  iconCircle: { width: 88, height: 88, borderRadius: 44, backgroundColor: '#EEF2FF', alignItems: 'center', justifyContent: 'center' },
+  title: { fontSize: 26, fontWeight: '700', color: GRAY_900, textAlign: 'center', marginBottom: 8 },
+  subtitle: { fontSize: 15, color: GRAY_500, textAlign: 'center', marginBottom: 36, lineHeight: 22 },
+  label: { fontSize: 11, fontWeight: '700', color: GRAY_900, letterSpacing: 0.8, marginBottom: 8 },
+  inputWrap: { flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: GRAY_300, borderRadius: 14, backgroundColor: GRAY_100, paddingHorizontal: 14, marginBottom: 20, minHeight: 54 },
+  inputFocused: { borderColor: PRIMARY, backgroundColor: '#F5F3FF' },
+  inputError: { borderColor: ERROR },
+  inputIcon: { marginRight: 10 },
+  input: { flex: 1, fontSize: 15, color: GRAY_900, paddingVertical: 14 },
+  errorRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: -12, marginBottom: 12 },
+  errorText: { fontSize: 13, color: ERROR },
+  forgotWrap: { alignItems: 'flex-end', marginBottom: 28 },
+  forgotText: { fontSize: 14, color: PRIMARY, fontWeight: '600' },
+  btnPrimary: { backgroundColor: PRIMARY, borderRadius: 16, height: 54, alignItems: 'center', justifyContent: 'center', shadowColor: PRIMARY, shadowOpacity: 0.35, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, elevation: 8 },
+  btnDisabled: { opacity: 0.6 },
+  btnText: { color: '#fff', fontSize: 16, fontWeight: '700', letterSpacing: 0.3 },
+  divider: { flexDirection: 'row', alignItems: 'center', marginVertical: 28, gap: 12 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: GRAY_300 },
+  dividerText: { fontSize: 13, color: GRAY_500, fontWeight: '500' },
+  bottomRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
+  bottomText: { fontSize: 15, color: GRAY_500 },
+  link: { fontSize: 15, color: PRIMARY, fontWeight: '700' },
 });

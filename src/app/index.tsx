@@ -28,20 +28,20 @@ export default function LandingScreen() {
 
   const [isChecking, setIsChecking] = useState(true);
 
- useEffect(() => {
+  useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         try {
           const userDoc = await getDoc(doc(db, 'users', user.uid));
           const role = userDoc.exists() ? userDoc.data()?.role : 'user';
-          
+
           if (role === 'admin') {
             router.replace('/dashboard');
           } else {
-            router.replace('/home'); 
+            router.replace('/(tabs)/kits_list');
           }
         } catch (error) {
-          router.replace('/home');
+          router.replace('/(tabs)/kits_list');
         }
       } else {
 
@@ -62,8 +62,8 @@ export default function LandingScreen() {
   }
   const features = [
     { icon: 'musical-notes-outline' as const, title: 'EquipaDJ', desc: 'Alugue equipamentos de alta qualidade para suas festas e eventos.' },
-    { icon: 'calendar-outline' as const,       title: 'Agende Online', desc: 'Reserve com facilidade pelo app, sem burocracia.' },
-    { icon: 'star-outline' as const,           title: 'Avaliações', desc: 'Confira reviews de outros usuários e escolha com confiança.' },
+    { icon: 'calendar-outline' as const, title: 'Agende Online', desc: 'Reserve com facilidade pelo app, sem burocracia.' },
+    { icon: 'star-outline' as const, title: 'Avaliações', desc: 'Confira reviews de outros usuários e escolha com confiança.' },
   ];
 
   return (
@@ -135,8 +135,8 @@ export default function LandingScreen() {
         <View style={styles.statsRow}>
           {[
             { value: '+500', label: 'Equipamentos' },
-            { value: '+1k',  label: 'Clientes' },
-            { value: '4.9',  label: 'Avaliação' },
+            { value: '+1k', label: 'Clientes' },
+            { value: '4.9', label: 'Avaliação' },
           ].map((s, i) => (
             <View key={i} style={[styles.statItem, i < 2 && styles.statBorder]}>
               <Text style={styles.statValue}>{s.value}</Text>
