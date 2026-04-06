@@ -1,9 +1,17 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getApp, getApps, initializeApp } from "firebase/app";
+import { initializeApp, getApp, getApps } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-// @ts-ignore
-import { getAuth, getReactNativePersistence, initializeAuth } from "firebase/auth";
 
+// IMPORTAÇÃO CORRETA:
+import {
+  initializeAuth,
+  getAuth,
+  //@ts-ignore - Caso o TS ainda reclame do caminho interno
+  getReactNativePersistence
+} from "firebase/auth";
+
+// Se o erro de "no exported member" persistir, use esta alternativa:
+// import { getReactNativePersistence } from 'firebase/auth/react-native';
 const firebaseConfig = {
   apiKey: "AIzaSyDDUF56tpMxteQktlS1b2k5n1E6oNtgsGk",
   authDomain: "locadj-6c4a1.firebaseapp.com",
@@ -13,25 +21,19 @@ const firebaseConfig = {
   appId: "1:151515228402:web:bec006e123447c6fdfc86b"
 };
 
+// 1. Inicializa o App (Singleton pattern)
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-
-let app;
+// 2. Inicializa o Auth com persistência para React Native
+// Usamos uma verificação para garantir que o initializeAuth só rode uma vez
 let auth;
-
-if (getApps().length === 0) {
-
-  app = initializeApp(firebaseConfig);
-  
+try {
+  auth = getAuth(app);
+} catch (e) {
   auth = initializeAuth(app, {
     persistence: getReactNativePersistence(AsyncStorage),
   });
-} else {
-  app = getApp();
-  auth = getAuth(app);
 }
 
-
 export const db = getFirestore(app);
-
 export { app, auth };
-
