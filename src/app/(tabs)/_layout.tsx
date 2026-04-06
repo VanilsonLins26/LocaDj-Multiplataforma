@@ -2,10 +2,14 @@ import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 const PRIMARY = '#5B4EE4';
 const GRAY_400 = '#9CA3AF';
 
 export default function TabsLayout() {
+  const insets = useSafeAreaInsets();
+
   return (
     <Tabs
       screenOptions={{
@@ -16,9 +20,9 @@ export default function TabsLayout() {
           backgroundColor: '#FFFFFF',
           borderTopWidth: 1,
           borderTopColor: '#F3F4F6',
-          height: 85,
-          paddingBottom: 25,
-          paddingTop: 10,
+          height: 60 + insets.bottom,
+          paddingBottom: 8 + (insets.bottom > 0 ? insets.bottom - 4 : 0),
+          paddingTop: 6,
         },
         tabBarLabelStyle: {
           fontSize: 12,
@@ -45,7 +49,7 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="profile"
+        name="perfil"
         options={{
           title: 'Perfil',
           tabBarIcon: ({ color, size }) => (

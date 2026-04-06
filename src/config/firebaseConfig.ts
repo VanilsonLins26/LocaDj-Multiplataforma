@@ -25,14 +25,15 @@ const firebaseConfig = {
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
 // 2. Inicializa o Auth com persistência para React Native
-// Usamos uma verificação para garantir que o initializeAuth só rode uma vez
 let auth;
 try {
-  auth = getAuth(app);
-} catch (e) {
   auth = initializeAuth(app, {
     persistence: getReactNativePersistence(AsyncStorage),
   });
+} catch (e) {
+  // Catch for Fast Refresh (HMR) if auth is already initialized
+  const { getAuth } = require('firebase/auth');
+  auth = getAuth(app);
 }
 
 export const db = getFirestore(app);
