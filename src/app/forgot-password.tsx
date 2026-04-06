@@ -5,12 +5,12 @@ import React, { useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView, Platform,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text, TextInput, TouchableOpacity,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { auth } from '../config/firebaseConfig';
 
 const PRIMARY = '#5B4EE4';

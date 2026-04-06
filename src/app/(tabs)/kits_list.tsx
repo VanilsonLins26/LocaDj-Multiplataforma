@@ -7,9 +7,10 @@ import {
   Image,
   TouchableOpacity,
   ActivityIndicator,
-  Platform
+  Platform,
+  StatusBar
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
@@ -106,7 +107,7 @@ export default function KitsListScreen() {
 
         <View style={styles.cardFooter}>
           <Text style={styles.stockText}>{item.quantity} disponíveis</Text>
-          <TouchableOpacity style={styles.btnReservar} activeOpacity={0.85}>
+          <TouchableOpacity style={styles.btnReservar} activeOpacity={0.85} onPress={() => router.push({ pathname: '/kit/[id]', params: { id: item.id } })}>
             <Text style={styles.btnReservarText}>+ Reservar</Text>
           </TouchableOpacity>
         </View>
@@ -114,46 +115,54 @@ export default function KitsListScreen() {
     );
   };
 
+  const filteredKits = [...kits].sort((a, b) => {
+    if (activeFilter === 'Mais populares') {
+      return (b.rents || 0) - (a.rents || 0);
+    }
+    return 0;
+  });
+
   return (
-    <View style={styles.container}>
-      {/* Header com fundo azul */}
-      <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) }]}>
-        <View style={styles.headerRow}>
-          <Text style={styles.headerTitle}>Catálogo de Kits</Text>
-          <Text style={styles.headerCount}>{kits.length} kits disponíveis</Text>
-        </View>
-      </View>
-
-      {/* Conteúdo rolável */}
-      <View style={styles.content}>
-        <View style={styles.filtersRow}>
-          {renderFilter('Todos')}
-          {renderFilter('Mais populares')}
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: PRIMARY }}>
+      <StatusBar barStyle="light-content" backgroundColor={PRIMARY} translucent />
+      <View style={styles.container}>
+        <View style={[styles.header, { paddingTop: 16 }]}>
+          <View style={styles.headerRow}>
+            <Text style={styles.headerTitle}>Catálogo de Kits</Text>
+            <Text style={styles.headerCount}>{kits.length} kits disponíveis</Text>
+          </View>
         </View>
 
-        {loading ? (
-          <View style={styles.centerBox}>
-            <ActivityIndicator size="large" color={PRIMARY} />
+        <View style={styles.content}>
+          <View style={styles.filtersRow}>
+            {renderFilter('Todos')}
+            {renderFilter('Mais populares')}
           </View>
-        ) : error ? (
-          <View style={styles.centerBox}>
-            <Ionicons name="alert-circle-outline" size={32} color={GRAY_500} style={{ marginBottom: 8 }} />
-            <Text style={styles.errorText}>{error}</Text>
-            <TouchableOpacity onPress={fetchKits} style={styles.btnRetry}>
-              <Text style={styles.btnRetryText}>Tentar Novamente</Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <FlatList
-            data={kits}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={renderKit}
-            contentContainerStyle={styles.listContent}
-            showsVerticalScrollIndicator={false}
-          />
-        )}
+
+          {loading ? (
+            <View style={styles.centerBox}>
+              <ActivityIndicator size="large" color={PRIMARY} />
+            </View>
+          ) : error ? (
+            <View style={styles.centerBox}>
+              <Ionicons name="alert-circle-outline" size={32} color={GRAY_500} style={{ marginBottom: 8 }} />
+              <Text style={styles.errorText}>{error}</Text>
+              <TouchableOpacity onPress={fetchKits} style={styles.btnRetry}>
+                <Text style={styles.btnRetryText}>Tentar Novamente</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <FlatList
+              data={filteredKits}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={renderKit}
+              contentContainerStyle={styles.listContent}
+              showsVerticalScrollIndicator={false}
+            />
+          )}
+        </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -164,7 +173,7 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: PRIMARY,
-    paddingBottom: 24,
+    paddingBottom: 16,
     paddingHorizontal: 20,
   },
   headerRow: {
