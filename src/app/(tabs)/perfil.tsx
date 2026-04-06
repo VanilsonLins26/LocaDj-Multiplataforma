@@ -61,13 +61,13 @@ export default function PerfilScreen() {
               <Feather name="chevron-right" size={20} color="#9CA3AF" />
             </TouchableOpacity>
             <View style={styles.divider} />
-            <TouchableOpacity style={styles.cardItem} activeOpacity={0.7}>
+            <TouchableOpacity style={styles.cardItem} activeOpacity={0.7} onPress={() => router.push('/alterar-senha')}>
               <Feather name="lock" size={20} color="#5B42F3" style={styles.itemIcon} />
               <Text style={styles.itemText}>Alterar Senha</Text>
               <Feather name="chevron-right" size={20} color="#9CA3AF" />
             </TouchableOpacity>
             <View style={styles.divider} />
-            <TouchableOpacity style={styles.cardItem} activeOpacity={0.7}>
+            <TouchableOpacity style={styles.cardItem} activeOpacity={0.7} onPress={() => router.push('/meus-enderecos')}>
               <Feather name="sliders" size={20} color="#5B42F3" style={styles.itemIcon} />
               <Text style={styles.itemText}>Meus Endereços</Text>
               <Feather name="chevron-right" size={20} color="#9CA3AF" />
@@ -79,13 +79,13 @@ export default function PerfilScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Mais Opções</Text>
           <View style={styles.card}>
-            <TouchableOpacity style={styles.cardItem} activeOpacity={0.7}>
+            <TouchableOpacity style={styles.cardItem} activeOpacity={0.7} onPress={() => router.push('/suporte')}>
               <Feather name="help-circle" size={20} color="#5B42F3" style={styles.itemIcon} />
               <Text style={styles.itemText}>Ajuda e Suporte</Text>
               <Feather name="chevron-right" size={20} color="#9CA3AF" />
             </TouchableOpacity>
             <View style={styles.divider} />
-            <TouchableOpacity style={styles.cardItem} activeOpacity={0.7}>
+            <TouchableOpacity style={styles.cardItem} activeOpacity={0.7} onPress={() => router.push('/sobre-o-app')}>
               <Feather name="info" size={20} color="#5B42F3" style={styles.itemIcon} />
               <Text style={styles.itemText}>Sobre o Aplicativo</Text>
               <Feather name="chevron-right" size={20} color="#9CA3AF" />
