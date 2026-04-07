@@ -10,18 +10,14 @@ export default function MeusDadosScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Esconde o Header padrão da Stack para usar um customizado */}
       <Stack.Screen options={{ headerShown: false }} />
-
-      {/* Header Customizado */}
       <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 12 }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()} activeOpacity={0.7}>
           <Ionicons name="arrow-back" size={24} color="#FFF" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Meus Dados</Text>
-        <View style={{ width: 40 }} /> {/* Espaçador para centralizar o título */}
+        <View style={{ width: 40 }} />
       </View>
-
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
