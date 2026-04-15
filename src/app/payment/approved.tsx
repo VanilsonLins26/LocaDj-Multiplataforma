@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import React, { useEffect, useRef } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Dimensions,
@@ -24,6 +24,10 @@ const { width, height } = Dimensions.get('window');
 export default function PaymentApprovedScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { payment_id, external_reference, preference_id } = useLocalSearchParams();
+
+  const [paymentMethod, setPaymentMethod] = useState("A definir");
+  const [reservationDate, setReservationDate] = useState("A definir");
 
   const scaleValue = useRef(new Animated.Value(0)).current;
   const fadeValue = useRef(new Animated.Value(0)).current;
@@ -50,6 +54,48 @@ export default function PaymentApprovedScreen() {
       ])
     ]).start();
   }, []);
+
+  useEffect(() => {
+    async function fetchApiData() {
+      if (payment_id) {
+        try {
+          const res = await fetch(`https://locadj.onrender.com/api/checkout/status/${payment_id}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.payment_type_id || data.payment_method_id) {
+              const type = (data.payment_type_id || data.payment_method_id).toLowerCase();
+              if (type.includes('credit')) setPaymentMethod('Cartão de Crédito');
+              else if (type.includes('debit')) setPaymentMethod('Cartão de Débito');
+              else if (type.includes('pix')) setPaymentMethod('Pix');
+              else if (type.includes('ticket') || type.includes('boleto')) setPaymentMethod('Boleto');
+            }
+          }
+        } catch (error) {
+          console.error("Erro ao buscar status do pagamento:", error);
+        }
+      }
+
+
+      const resId = external_reference || preference_id;
+      if (resId) {
+        try {
+          const res = await fetch(`https://locadj.onrender.com/api/checkout/reservation/${resId}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.startDate) {
+              const dateObj = new Date(data.startDate);
+              const formattedDate = `${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth() + 1).toString().padStart(2, '0')}/${dateObj.getFullYear()}`;
+              setReservationDate(formattedDate);
+            }
+          }
+        } catch (error) {
+          console.error("Erro ao buscar detalhes da reserva:", error);
+        }
+      }
+    }
+
+    fetchApiData();
+  }, [payment_id, external_reference, preference_id]);
 
   return (
     <View style={styles.container}>
@@ -88,11 +134,11 @@ export default function PaymentApprovedScreen() {
             </View>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Método de Pagamento</Text>
-              <Text style={styles.summaryValue}>Cartão de Crédito</Text>
+              <Text style={styles.summaryValue}>{paymentMethod}</Text>
             </View>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Data da Reserva</Text>
-              <Text style={styles.summaryValue}>A definir</Text>
+              <Text style={styles.summaryValue}>{reservationDate}</Text>
             </View>
           </View>
 
