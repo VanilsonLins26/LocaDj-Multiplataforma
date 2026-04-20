@@ -4,13 +4,28 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
-import { auth } from '../../config/firebaseConfig';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from '../../config/firebaseConfig';
 
 const { width } = Dimensions.get('window');
 
 export default function PerfilScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const [userData, setUserData] = React.useState<any>(null);
+
+  React.useEffect(() => {
+    async function fetchUser() {
+      if (auth.currentUser) {
+        const docRef = doc(db, 'users', auth.currentUser.uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setUserData(docSnap.data());
+        }
+      }
+    }
+    fetchUser();
+  }, []);
 
   async function handleLogout() {
     try {
@@ -39,12 +54,14 @@ export default function PerfilScreen() {
         <View style={styles.profileCard}>
           <View style={styles.avatarContainer}>
             <View style={styles.avatar}>
-              <Text style={styles.avatarText}>JS</Text>
+              <Text style={styles.avatarText}>
+                {userData?.name ? userData.name.substring(0, 2).toUpperCase() : 'US'}
+              </Text>
             </View>
           </View>
 
-          <Text style={styles.userName}>João Silva</Text>
-          <Text style={styles.userEmail}>joao.silva@email.com</Text>
+          <Text style={styles.userName}>{userData?.name || auth.currentUser?.displayName || 'Usuário'}</Text>
+          <Text style={styles.userEmail}>{userData?.email || auth.currentUser?.email || ''}</Text>
         </View>
 
         {/* Minha Conta Section */}

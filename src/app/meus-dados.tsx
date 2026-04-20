@@ -3,10 +3,55 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Keyboa
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import { Feather, Ionicons } from '@expo/vector-icons';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { auth, db } from '../config/firebaseConfig';
 
 export default function MeusDadosScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+
+  const [name, setName] = React.useState('');
+  const [email, setEmail] = React.useState('');
+  const [phone, setPhone] = React.useState('');
+  const [cpf, setCpf] = React.useState('***.123.456-**');
+  const [saving, setSaving] = React.useState(false);
+
+  React.useEffect(() => {
+    async function fetchUser() {
+      if (auth.currentUser) {
+        setEmail(auth.currentUser.email || '');
+        const docRef = doc(db, 'users', auth.currentUser.uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setName(data.name || auth.currentUser.displayName || '');
+          setPhone(data.phone || '');
+          if (data.cpf) setCpf(data.cpf);
+        } else {
+          setName(auth.currentUser.displayName || '');
+        }
+      }
+    }
+    fetchUser();
+  }, []);
+
+  async function handleSave() {
+    if (!auth.currentUser) return;
+    setSaving(true);
+    try {
+      const docRef = doc(db, 'users', auth.currentUser.uid);
+      await updateDoc(docRef, {
+        name,
+        phone,
+      });
+      alert('Dados atualizados com sucesso!');
+    } catch (error) {
+      console.error(error);
+      alert('Erro ao atualizar dados.');
+    } finally {
+      setSaving(false);
+    }
+  }
 
   return (
     <View style={styles.container}>
@@ -27,7 +72,9 @@ export default function MeusDadosScreen() {
           {/* Sessão do Avatar */}
           <View style={styles.avatarSection}>
             <View style={styles.avatar}>
-              <Text style={styles.avatarText}>JS</Text>
+              <Text style={styles.avatarText}>
+                {name ? name.substring(0, 2).toUpperCase() : 'US'}
+              </Text>
             </View>
             <TouchableOpacity activeOpacity={0.7}>
               <Text style={styles.changePhotoText}>Alterar foto</Text>
@@ -43,7 +90,8 @@ export default function MeusDadosScreen() {
               <View style={styles.inputContainer}>
                 <TextInput
                   style={styles.input}
-                  value="João Silva"
+                  value={name}
+                  onChangeText={setName}
                   placeholder="Seu nome completo"
                   placeholderTextColor="#9CA3AF"
                 />
@@ -55,8 +103,9 @@ export default function MeusDadosScreen() {
               <Text style={styles.label}>E-mail</Text>
               <View style={styles.inputContainer}>
                 <TextInput
-                  style={styles.input}
-                  value="joao.silva@email.com"
+                  style={[styles.input, { color: '#9CA3AF' }]}
+                  value={email}
+                  editable={false}
                   placeholder="Seu e-mail"
                   placeholderTextColor="#9CA3AF"
                   keyboardType="email-address"
@@ -71,7 +120,8 @@ export default function MeusDadosScreen() {
               <View style={styles.inputContainer}>
                 <TextInput
                   style={styles.input}
-                  value="(85) 99999-9999"
+                  value={phone}
+                  onChangeText={setPhone}
                   placeholder="(00) 00000-0000"
                   placeholderTextColor="#9CA3AF"
                   keyboardType="phone-pad"
@@ -85,7 +135,7 @@ export default function MeusDadosScreen() {
               <View style={[styles.inputContainer, styles.inputDisabled]}>
                 <TextInput
                   style={[styles.input, { color: '#9CA3AF' }]}
-                  value="***.123.456-**"
+                  value={cpf}
                   editable={false}
                 />
                 <Feather name="lock" size={16} color="#9CA3AF" style={styles.inputIconRight} />
@@ -98,8 +148,13 @@ export default function MeusDadosScreen() {
 
         {/* Botão Salvar Rodapé */}
         <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 20) }]}>
-          <TouchableOpacity style={styles.saveButton} activeOpacity={0.8}>
-            <Text style={styles.saveButtonText}>Salvar Alterações</Text>
+          <TouchableOpacity
+            style={[styles.saveButton, saving && { opacity: 0.7 }]}
+            activeOpacity={0.8}
+            onPress={handleSave}
+            disabled={saving}
+          >
+            <Text style={styles.saveButtonText}>{saving ? 'Salvando...' : 'Salvar Alterações'}</Text>
           </TouchableOpacity>
         </View>
 
