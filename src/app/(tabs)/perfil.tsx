@@ -2,7 +2,8 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { signOut } from 'firebase/auth';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
+import { useCallback } from 'react';
 import { Feather } from '@expo/vector-icons';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../../config/firebaseConfig';
@@ -14,18 +15,20 @@ export default function PerfilScreen() {
   const insets = useSafeAreaInsets();
   const [userData, setUserData] = React.useState<any>(null);
 
-  React.useEffect(() => {
-    async function fetchUser() {
-      if (auth.currentUser) {
-        const docRef = doc(db, 'users', auth.currentUser.uid);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          setUserData(docSnap.data());
+  useFocusEffect(
+    useCallback(() => {
+      async function fetchUser() {
+        if (auth.currentUser) {
+          const docRef = doc(db, 'users', auth.currentUser.uid);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            setUserData(docSnap.data());
+          }
         }
       }
-    }
-    fetchUser();
-  }, []);
+      fetchUser();
+    }, [])
+  );
 
   async function handleLogout() {
     try {

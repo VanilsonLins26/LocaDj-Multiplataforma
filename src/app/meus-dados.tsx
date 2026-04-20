@@ -2,8 +2,9 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
+import { updateProfile } from 'firebase/auth';
 import { Feather, Ionicons } from '@expo/vector-icons';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../config/firebaseConfig';
 
 export default function MeusDadosScreen() {
@@ -40,14 +41,19 @@ export default function MeusDadosScreen() {
     setSaving(true);
     try {
       const docRef = doc(db, 'users', auth.currentUser.uid);
-      await updateDoc(docRef, {
+      await setDoc(docRef, {
         name,
         phone,
-      });
+      }, { merge: true });
+      await updateProfile(auth.currentUser, { displayName: name });
       alert('Dados atualizados com sucesso!');
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      alert('Erro ao atualizar dados.');
+      if (error.code === 'permission-denied') {
+        alert('Sem permissão. Verifique as regras do Firestore no console do Firebase.');
+      } else {
+        alert('Erro ao atualizar dados.');
+      }
     } finally {
       setSaving(false);
     }
