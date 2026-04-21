@@ -71,6 +71,41 @@ export default function CheckoutScreen() {
 
       let reservationId = null;
 
+      const triggerSimulationBypass = (reason: string) => {
+        Alert.alert(
+          'Aviso do Backend',
+          `A API falhou (${reason}). Deseja simular a criação para continuidade da apresentação (Sprint 3)?`,
+          [
+            { text: 'Cancelar', style: 'cancel', onPress: () => setSubmitting(false) },
+            { text: 'Simular', onPress: () => {
+                const fakeResId = Math.floor(Math.random() * 1000);
+                Alert.alert(
+                  'Simulação Checkout',
+                  'Onde deseja testar o comportamento do Mercado Pago?',
+                  [
+                    { 
+                      text: 'Simular Pagamento Aprovado', 
+                      onPress: () => {
+                        router.replace({ 
+                          pathname: '/payment/approved', 
+                          params: { payment_id: 'sim_mp_' + fakeResId, preference_id: fakeResId.toString() } 
+                        });
+                      } 
+                    },
+                    { 
+                      text: 'Abrir Sandbox Genérico', 
+                      onPress: () => {
+                        Linking.openURL('https://sandbox.mercadopago.com.br/checkout/v1/redirect?pref_id=186411516-72bbac3b-e018-498c-9b88-16cb4ce7da7d');
+                        setSubmitting(false);
+                      } 
+                    }
+                  ]
+                );
+            }}
+          ]
+        );
+      };
+
       if (resp.ok || resp.status === 201) {
         const textData = await resp.text();
         try {
@@ -84,50 +119,15 @@ export default function CheckoutScreen() {
               await AsyncStorage.setItem('my_reservation_ids', JSON.stringify(ids));
             }
           } else {
-            Alert.alert('Erro', 'Backend retornou OK mas nenhum ID foi encontrado. Verifique se não redirecionou para Login.');
-            setSubmitting(false);
+            triggerSimulationBypass('ID não encontrado no JSON');
             return;
           }
         } catch (err) {
-            // Backend mandou HTML (pagina de login por erro de auth do Spring)
-            // Para poderem apresentar a Sprint 3 hoje apesar dessa falha no backend:
-            Alert.alert(
-              'Aviso do Backend', 
-              'A API barrou a reserva solicitando Login. Deseja simular a criação para continuidade da apresentação (Sprint 3)?',
-              [
-                { text: 'Cancelar', style: 'cancel', onPress: () => setSubmitting(false) },
-                { text: 'Simular', onPress: () => {
-                    const fakeResId = Math.floor(Math.random() * 1000);
-                    Alert.alert(
-                      'Simulação Checkout',
-                      'Onde deseja testar o comportamento do Mercado Pago?',
-                      [
-                        { 
-                          text: 'Simular Pagamento Aprovado', 
-                          onPress: () => {
-                            router.replace({ 
-                              pathname: '/payment/approved', 
-                              params: { payment_id: 'sim_mp_' + fakeResId, preference_id: fakeResId.toString() } 
-                            });
-                          } 
-                        },
-                        { 
-                          text: 'Abrir Sandbox Genérico', 
-                          onPress: () => {
-                            Linking.openURL('https://sandbox.mercadopago.com.br/checkout/v1/redirect?pref_id=186411516-72bbac3b-e018-498c-9b88-16cb4ce7da7d');
-                            setSubmitting(false);
-                          } 
-                        }
-                      ]
-                    );
-                }}
-              ]
-            );
+            triggerSimulationBypass('HTML / Resposta Inválida');
             return;
         }
       } else {
-        Alert.alert('Erro', `Não foi possível registrar a reserva no backend. HTTP ${resp.status}`);
-        setSubmitting(false);
+        triggerSimulationBypass(`HTTP ${resp.status} - Bloqueado/Não Autorizado`);
         return;
       }
 
