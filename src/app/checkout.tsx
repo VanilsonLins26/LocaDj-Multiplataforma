@@ -72,18 +72,30 @@ export default function CheckoutScreen() {
       let reservationId = null;
 
       if (resp.ok || resp.status === 201) {
-        const created = await resp.json().catch(() => null);
-        if (created?.id) {
-          reservationId = created.id;
-          const stored = await AsyncStorage.getItem('my_reservation_ids');
-          const ids: number[] = stored ? JSON.parse(stored) : [];
-          if (!ids.includes(reservationId)) {
-            ids.push(reservationId);
-            await AsyncStorage.setItem('my_reservation_ids', JSON.stringify(ids));
+        const textData = await resp.text();
+        try {
+          const created = JSON.parse(textData);
+          if (created?.id) {
+            reservationId = created.id;
+            const stored = await AsyncStorage.getItem('my_reservation_ids');
+            const ids: number[] = stored ? JSON.parse(stored) : [];
+            if (!ids.includes(reservationId)) {
+              ids.push(reservationId);
+              await AsyncStorage.setItem('my_reservation_ids', JSON.stringify(ids));
+            }
+          } else {
+            Alert.alert('Erro', 'Backend retornou OK mas nenhum ID foi encontrado. Verifique se não redirecionou para Login.');
+            setSubmitting(false);
+            return;
           }
+        } catch (err) {
+            // Provavelmente o backend mandou HTML (pagina de login por erro de auth)
+            Alert.alert('Erro no Backend', 'A API de reserva devolveu HTML/Texto ao invés de JSON. Verifique a autenticação.');
+            setSubmitting(false);
+            return;
         }
       } else {
-        Alert.alert('Erro', 'Não foi possível registrar a reserva no backend.');
+        Alert.alert('Erro', `Não foi possível registrar a reserva no backend. HTTP ${resp.status}`);
         setSubmitting(false);
         return;
       }
