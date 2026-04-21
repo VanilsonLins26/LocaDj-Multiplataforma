@@ -36,8 +36,10 @@ export default function CheckoutScreen() {
 
   const [submitting, setSubmitting] = useState(false);
 
-  const formatCurrency = (val: number | string) => {
-    const num = typeof val === 'string' ? parseFloat(val) : val;
+  const formatCurrency = (val: number | string | string[] | undefined) => {
+    if (!val) return 'R$ 0,00';
+    const num = typeof val === 'string' ? parseFloat(val) : Number(val);
+    if (isNaN(num)) return 'R$ 0,00';
     return `R$ ${num.toFixed(2).replace('.', ',')}`;
   };
 
