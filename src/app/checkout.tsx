@@ -43,10 +43,10 @@ export default function CheckoutScreen() {
 
   const handleCheckout = async () => {
     setSubmitting(true);
-    let reservationId = null;
-
     try {
       const currentUser = auth.currentUser;
+      const token = await currentUser?.getIdToken();
+
       const body: Record<string, unknown> = {
         kit: { id: Number(kitId) },
         startDateTime: startDate,
@@ -57,12 +57,17 @@ export default function CheckoutScreen() {
         body.user = { email: currentUser.email };
       }
 
-      // 1. Tentar criar a reserva no backend
+      // 1. Criar a reserva no backend
       const resp = await fetch('https://locadj.onrender.com/api/reservations', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
         body: JSON.stringify(body),
       });
+
+      let reservationId = null;
 
       if (resp.ok || resp.status === 201) {
         const created = await resp.json().catch(() => null);
@@ -75,52 +80,60 @@ export default function CheckoutScreen() {
             await AsyncStorage.setItem('my_reservation_ids', JSON.stringify(ids));
           }
         }
+      } else {
+        Alert.alert('Erro', 'Não foi possível registrar a reserva no backend.');
+        setSubmitting(false);
+        return;
+      }
+
+      // 2. Enviar POST para rotear o Mercado Pago
+      if (reservationId) {
+        const checkoutResp = await fetch('https://locadj.onrender.com/api/checkout', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          },
+          body: JSON.stringify({
+            reservationId: reservationId,
+            token: token
+          })
+        });
+
+        if (checkoutResp.ok) {
+          const checkoutData = await checkoutResp.text();
+          try {
+            // Tenta tratar como JSON
+            const jsonData = JSON.parse(checkoutData);
+            if (jsonData?.sandbox_init_point || jsonData?.init_point) {
+               Linking.openURL(jsonData.sandbox_init_point || jsonData.init_point);
+               return;
+            } else if (jsonData?.url) {
+               Linking.openURL(jsonData.url);
+               return;
+            }
+          } catch {
+             // Caso a API retorne a URL diretamente como String
+             if (checkoutData.startsWith('http')) {
+               Linking.openURL(checkoutData);
+               return;
+             }
+          }
+          // Caso consiga sucesso mas não ache URL do mercado pago, 
+          // exibe mensagem simulada e vai para a listagem
+          Alert.alert('Redirecionando...', 'Sucesso no Checkout, mas o backend não retornou URL do Mercado Pago.', [
+            { text: 'Simular', onPress: () => router.replace({ pathname: '/payment/approved', params: { payment_id: '123', preference_id: String(reservationId) } }) }
+          ]);
+        } else {
+          Alert.alert('Erro', 'O backend do Checkout retornou erro.');
+        }
       }
     } catch (e) {
-      console.warn('Backend indisponível para reserva', e);
-    }
-
-    // 2. Simular/Redirecionar para Mercado Pago
-    // Como o backend atualmente não fornece um pref_id do Mercado Pago, e ele redireciona para /login,
-    // o fluxo mockará a ida para o mercado pago e redirecionará para a tela de Sucesso ou Pagamento Aprovado.
-    
-    // Fallback ID
-    const fakeResId = reservationId || Math.floor(Math.random() * 1000);
-
-    setTimeout(() => {
+      console.warn('Backend indisponível', e);
+      Alert.alert('Erro', 'Verifique sua conexão.');
+    } finally {
       setSubmitting(false);
-      // Redireciona o usuário para aprovação direta pra finalizar o Sprint 3,
-      // já que a API Sandbox MP necessita de um Token restrito backend que o app não possui.
-      Alert.alert(
-        'Redirecionando...',
-        'Indo para o Mercado Pago (Ambiente de Testes)',
-        [
-          {
-            text: 'Simular Pagamento Aprovado',
-            onPress: () => {
-              router.replace({
-                pathname: '/payment/approved',
-                params: {
-                  payment_id: 'simulated_mp_' + fakeResId,
-                  external_reference: fakeResId.toString(),
-                  preference_id: fakeResId.toString()
-                }
-              });
-            }
-          },
-          {
-            text: 'Abrir Sandbox MP',
-            onPress: () => {
-               // Uma URL genérica do checkout sandbox Mercado Pago caso o avaliador exija ver a página aberta
-               const url = 'https://sandbox.mercadopago.com.br/checkout/v1/redirect?pref_id=186411516-72bbac3b-e018-498c-9b88-16cb4ce7da7d';
-               Linking.openURL(url).catch(() => {
-                 Alert.alert('Erro', 'Não foi possível acessar a URL do Mercado Pago.');
-               });
-            }
-          }
-        ]
-      );
-    }, 1500);
+    }
   };
 
   return (
