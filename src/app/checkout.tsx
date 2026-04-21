@@ -89,9 +89,40 @@ export default function CheckoutScreen() {
             return;
           }
         } catch (err) {
-            // Provavelmente o backend mandou HTML (pagina de login por erro de auth)
-            Alert.alert('Erro no Backend', 'A API de reserva devolveu HTML/Texto ao invés de JSON. Verifique a autenticação.');
-            setSubmitting(false);
+            // Backend mandou HTML (pagina de login por erro de auth do Spring)
+            // Para poderem apresentar a Sprint 3 hoje apesar dessa falha no backend:
+            Alert.alert(
+              'Aviso do Backend', 
+              'A API barrou a reserva solicitando Login. Deseja simular a criação para continuidade da apresentação (Sprint 3)?',
+              [
+                { text: 'Cancelar', style: 'cancel', onPress: () => setSubmitting(false) },
+                { text: 'Simular', onPress: () => {
+                    const fakeResId = Math.floor(Math.random() * 1000);
+                    Alert.alert(
+                      'Simulação Checkout',
+                      'Onde deseja testar o comportamento do Mercado Pago?',
+                      [
+                        { 
+                          text: 'Simular Pagamento Aprovado', 
+                          onPress: () => {
+                            router.replace({ 
+                              pathname: '/payment/approved', 
+                              params: { payment_id: 'sim_mp_' + fakeResId, preference_id: fakeResId.toString() } 
+                            });
+                          } 
+                        },
+                        { 
+                          text: 'Abrir Sandbox Genérico', 
+                          onPress: () => {
+                            Linking.openURL('https://sandbox.mercadopago.com.br/checkout/v1/redirect?pref_id=186411516-72bbac3b-e018-498c-9b88-16cb4ce7da7d');
+                            setSubmitting(false);
+                          } 
+                        }
+                      ]
+                    );
+                }}
+              ]
+            );
             return;
         }
       } else {
