@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, ActivityIndicator, StatusBar, Platform, Modal } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ActivityIndicator, StatusBar, Platform, Modal, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { auth } from '../../config/firebaseConfig';
 
 const PRIMARY = '#5B4EE4';
 const GRAY_100 = '#F3F4F6';
@@ -30,6 +32,7 @@ export default function KitDetailsScreen() {
   const [kit, setKit] = useState<Kit | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const [startDate, setStartDate] = useState(new Date());
 
@@ -102,6 +105,66 @@ export default function KitDetailsScreen() {
 
   const finalTotal = kit ? kit.pricePerDay * durationDays : 0;
 
+  const formatISODateTime = (d: Date) => {
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00`;
+  };
+
+  const handleConfirm = async () => {
+    if (!kit) return;
+    setSubmitting(true);
+    try {
+      const currentUser = auth.currentUser;
+      const body: Record<string, unknown> = {
+        kit: { id: kit.id },
+        startDateTime: formatISODateTime(startDate),
+        endDateTime: formatISODateTime(endDate),
+      };
+      // Inclui usuário logado para que o backend associe corretamente
+      if (currentUser?.email) {
+        body.user = { email: currentUser.email };
+      }
+      const resp = await fetch('https://locadj.onrender.com/api/reservations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      if (resp.ok || resp.status === 201) {
+        // Salva o ID da reserva localmente para exibir em "Minhas Reservas"
+        try {
+          const created = await resp.json();
+          if (created?.id) {
+            const stored = await AsyncStorage.getItem('my_reservation_ids');
+            const ids: number[] = stored ? JSON.parse(stored) : [];
+            if (!ids.includes(created.id)) {
+              ids.push(created.id);
+              await AsyncStorage.setItem('my_reservation_ids', JSON.stringify(ids));
+            }
+          }
+        } catch (_) {}
+
+        router.replace({
+          pathname: '/reservation-success',
+          params: {
+            kitName: kit.name,
+            startDate: formatVisibleDate(startDate),
+            endDate: formatVisibleDate(endDate),
+            total: `R$ ${finalTotal.toFixed(2).replace('.', ',')}`,
+            days: String(durationDays),
+          },
+        });
+      } else {
+        const msg = await resp.text().catch(() => '');
+        Alert.alert('Erro ao reservar', msg || `Erro ${resp.status}. Tente novamente.`);
+      }
+    } catch (e) {
+      Alert.alert('Sem conexão', 'Verifique sua internet e tente novamente.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   if (loading) {
     return (
       <View style={styles.centerBox}>
@@ -170,8 +233,17 @@ export default function KitDetailsScreen() {
             <Text style={styles.footerTotalLabel}>Total ({durationDays} dia{durationDays > 1 ? 's' : ''})</Text>
             <Text style={styles.footerTotalValue}>{formatCurrency(finalTotal)}</Text>
           </View>
-          <TouchableOpacity style={styles.btnConfirm} activeOpacity={0.85}>
-            <Text style={styles.btnConfirmText}>Confirmar</Text>
+          <TouchableOpacity
+            style={[styles.btnConfirm, submitting && { opacity: 0.7 }]}
+            activeOpacity={0.85}
+            onPress={handleConfirm}
+            disabled={submitting}
+          >
+            {submitting ? (
+              <ActivityIndicator size="small" color="#FFF" />
+            ) : (
+              <Text style={styles.btnConfirmText}>Confirmar</Text>
+            )}
           </TouchableOpacity>
         </View>
 
