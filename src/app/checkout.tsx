@@ -128,7 +128,10 @@ export default function CheckoutScreen() {
             return;
         }
       } else {
-        triggerSimulationBypass(`HTTP ${resp.status} - Bloqueado/Não Autorizado`);
+        const errorMsg = resp.status === 409 ? 'Conflito (Reserva já existente ou datas indisponíveis)' :
+                        resp.status === 401 || resp.status === 403 ? 'Não Autorizado / Login necessário' :
+                        `HTTP ${resp.status}`;
+        triggerSimulationBypass(errorMsg);
         return;
       }
 
