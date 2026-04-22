@@ -1,3 +1,5 @@
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -11,8 +13,6 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
 import { auth } from '../../config/firebaseConfig';
 
 const PRIMARY = '#5B4EE4';
@@ -34,7 +34,6 @@ interface Kit {
   available?: boolean;
 }
 
-type FilterType = 'Todos' | 'Disponíveis' | 'Mais populares';
 
 export default function KitsListScreen() {
   const [kits, setKits] = useState<Kit[]>([]);

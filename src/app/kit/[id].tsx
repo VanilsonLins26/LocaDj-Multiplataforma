@@ -1,9 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Image, Modal, Platform, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, Modal, Platform, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { auth } from '../../config/firebaseConfig';
 
@@ -126,62 +125,22 @@ export default function KitDetailsScreen() {
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00`;
   };
 
-  const handleConfirm = async () => {
+  const handleConfirm = () => {
     if (!kit) return;
-    setSubmitting(true);
-    try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) throw new Error('Usuário não autenticado');
-      const idToken = await currentUser.getIdToken();
 
-      const body = {
-        kitId: kit.id,
-        startDateTime: formatISODateTime(startDate),
-        endDateTime: formatISODateTime(endDate),
-      };
-
-      const resp = await fetch('https://locadj.onrender.com/api/reservations', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${idToken}`
-        },
-        body: JSON.stringify(body),
-      });
-
-      if (resp.ok || resp.status === 201) {
-        // Salva o ID da reserva localmente para exibir em "Minhas Reservas"
-        try {
-          const created = await resp.json();
-          if (created?.id) {
-            const stored = await AsyncStorage.getItem('my_reservation_ids');
-            const ids: number[] = stored ? JSON.parse(stored) : [];
-            if (!ids.includes(created.id)) {
-              ids.push(created.id);
-              await AsyncStorage.setItem('my_reservation_ids', JSON.stringify(ids));
-            }
-          }
-        } catch (_) { }
-
-        router.replace({
-          pathname: '/reservation-success',
-          params: {
-            kitName: kit.name,
-            startDate: formatVisibleDate(startDate),
-            endDate: formatVisibleDate(endDate),
-            total: `R$ ${finalTotal.toFixed(2).replace('.', ',')}`,
-            days: String(durationDays),
-          },
-        });
-      } else {
-        const msg = await resp.text().catch(() => '');
-        Alert.alert('Erro ao reservar', msg || `Erro ${resp.status}. Tente novamente.`);
-      }
-    } catch (e) {
-      Alert.alert('Sem conexão', 'Verifique sua internet e tente novamente.');
-    } finally {
-      setSubmitting(false);
-    }
+    router.push({
+      pathname: '/checkout',
+      params: {
+        kitId: String(kit.id),
+        kitName: kit.name,
+        kitPrice: String(kit.pricePerDay),
+        kitImageUrl: kit.imageUrl || '',
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        total: finalTotal.toString(),
+        days: durationDays.toString(),
+      },
+    });
   };
 
   if (loading) {
