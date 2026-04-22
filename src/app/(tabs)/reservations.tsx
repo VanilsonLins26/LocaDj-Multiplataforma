@@ -104,12 +104,18 @@ export default function ReservationsScreen() {
     }
 
     try {
+      const currentUser = auth.currentUser;
+      const idToken = currentUser ? await currentUser.getIdToken() : null;
+
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (idToken) headers['Authorization'] = `Bearer ${idToken}`;
+
       const BASE = 'https://locadj.onrender.com/api/reservations';
       const ids = Array.from({ length: 20 }, (_, i) => i + 1);
 
       const results = await Promise.allSettled(
         ids.map((id) =>
-          fetch(`${BASE}/${id}`).then((r) => {
+          fetch(`${BASE}/${id}`, { headers }).then((r) => {
             if (!r.ok) throw new Error('not found');
             return r.json() as Promise<Reservation>;
           })
