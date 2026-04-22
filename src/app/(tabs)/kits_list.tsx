@@ -13,6 +13,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { auth } from '../../config/firebaseConfig';
 
 const PRIMARY = '#5B4EE4';
 const GRAY_100 = '#F3F4F6';
@@ -29,7 +30,8 @@ interface Kit {
   imageUrl: string;
   quantity: number;
   rents: number;
-  availability: boolean;
+  availability?: boolean;
+  available?: boolean;
 }
 
 type FilterType = 'Todos' | 'Disponíveis' | 'Mais populares';
@@ -49,7 +51,17 @@ export default function KitsListScreen() {
     else setLoading(true);
     setError('');
     try {
-      const response = await fetch(API_URL);
+      const currentUser = auth.currentUser;
+      const idToken = currentUser ? await currentUser.getIdToken() : null;
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json'
+      };
+      if (idToken) {
+        headers['Authorization'] = `Bearer ${idToken}`;
+      }
+
+      const response = await fetch(API_URL, { headers });
       if (!response.ok) throw new Error('Erro no servidor');
       const data = await response.json();
       setKits(Array.isArray(data) ? data : data.value ?? []);
@@ -63,14 +75,20 @@ export default function KitsListScreen() {
   }, []);
 
   useEffect(() => {
-    fetchKits();
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      // Assim que o Firebase terminar de checar o storage local e se achar o user, a gente joga a requisição!
+      // Se não achar (ainda carregando ou deslogado), tenta também, e a API vai recusar (com 401).
+      fetchKits();
+    });
+    return unsubscribe;
   }, [fetchKits]);
 
   const formatCurrency = (val: number) => `R$ ${val.toFixed(2).replace('.', ',')}`;
 
   const filteredKits = kits
     .filter((k) => {
-      if (activeFilter === 'Disponíveis') return k.availability;
+      const isConfigAvailable = k.quantity > 0;
+      if (activeFilter === 'Disponíveis') return isConfigAvailable;
       return true;
     })
     .sort((a, b) => {
@@ -111,8 +129,8 @@ export default function KitsListScreen() {
             <Ionicons name="image-outline" size={40} color={GRAY_200} />
           </View>
         )}
-        <View style={[styles.availBadge, { backgroundColor: item.availability ? '#10B981' : '#EF4444' }]}>
-          <Text style={styles.availText}>{item.availability ? 'Disponível' : 'Indisponível'}</Text>
+        <View style={[styles.availBadge, { backgroundColor: item.quantity > 0 ? '#10B981' : '#EF4444' }]}>
+          <Text style={styles.availText}>{item.quantity > 0 ? 'Disponível' : 'Indisponível'}</Text>
         </View>
       </View>
 

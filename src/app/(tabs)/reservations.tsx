@@ -1,191 +1,113 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  Image,
-  RefreshControl,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather, Ionicons } from '@expo/vector-icons';
-import { auth } from '../../config/firebaseConfig';
+import { useRouter } from 'expo-router';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { auth, db } from '../../config/firebaseConfig';
 
 const PRIMARY = '#5B42F3';
 const BG = '#F4F4F5';
 
-interface ReservationKit {
-  id: number;
-  name: string;
-  pricePerDay: number;
-  imageUrl: string;
-}
-
-interface Reservation {
-  id: number;
-  user: { id: number; name: string; email: string } | null;
-  kit: ReservationKit;
-  startDateTime: string;
-  endDateTime: string;
-  daily: number;
-  totalAmount: number;
-  status: string | null;
-}
-
-function formatDate(isoStr: string): string {
-  if (!isoStr) return '--';
-  const [datePart] = isoStr.split('T');
-  const [y, m, d] = datePart.split('-');
-  return `${d}/${m}/${y}`;
-}
-
-function calcDays(start: string, end: string): number {
-  const diff = Math.ceil(
-    (new Date(end).getTime() - new Date(start).getTime()) / (1000 * 60 * 60 * 24)
-  );
-  return diff > 0 ? diff : 1;
-}
-
-function formatCurrency(val: number): string {
-  return `R$ ${val.toFixed(2).replace('.', ',')}`;
-}
-
-function StatusBadge({ status }: { status: string | null }) {
-  if (!status) {
-    return (
-      <View style={[styles.badge, { backgroundColor: '#FEF3C7' }]}>
-        <Text style={[styles.badgeText, { color: '#92400E' }]}>Pendente</Text>
-      </View>
-    );
-  }
-  const upper = status.toUpperCase();
-  if (upper === 'CONFIRMED' || upper === 'CONFIRMADA') {
-    return (
-      <View style={[styles.badge, { backgroundColor: '#D1FAE5' }]}>
-        <Text style={[styles.badgeText, { color: '#065F46' }]}>Confirmada</Text>
-      </View>
-    );
-  }
-  if (upper === 'CANCELLED' || upper === 'CANCELADA') {
-    return (
-      <View style={[styles.badge, { backgroundColor: '#FEE2E2' }]}>
-        <Text style={[styles.badgeText, { color: '#991B1B' }]}>Cancelada</Text>
-      </View>
-    );
-  }
-  return (
-    <View style={[styles.badge, { backgroundColor: '#FEF3C7' }]}>
-      <Text style={[styles.badgeText, { color: '#92400E' }]}>{status}</Text>
-    </View>
-  );
-}
-
 export default function ReservationsScreen() {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
-  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [reservations, setReservations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState('');
-
-  const fetchReservations = useCallback(async (isRefresh = false) => {
-    if (isRefresh) setRefreshing(true);
-    else setLoading(true);
-    setError('');
-
-    const currentUserEmail = auth.currentUser?.email?.toLowerCase();
-
-    if (!currentUserEmail) {
-      setReservations([]);
-      setLoading(false);
-      setRefreshing(false);
-      return;
-    }
-
-    try {
-      const BASE = 'https://locadj.onrender.com/api/reservations';
-      const ids = Array.from({ length: 20 }, (_, i) => i + 1);
-
-      const results = await Promise.allSettled(
-        ids.map((id) =>
-          fetch(`${BASE}/${id}`).then((r) => {
-            if (!r.ok) throw new Error('not found');
-            return r.json() as Promise<Reservation>;
-          })
-        )
-      );
-
-      const data = results
-        .filter((r): r is PromiseFulfilledResult<Reservation> => r.status === 'fulfilled')
-        .map((r) => r.value)
-        .filter(
-          (item): item is Reservation => 
-            item != null && 
-            typeof item?.id === 'number' && 
-            item.user?.email?.toLowerCase() === currentUserEmail
-        );
-
-      setReservations(data);
-    } catch (_) {
-      setError('Não foi possível carregar as reservas.');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
 
   useEffect(() => {
-    fetchReservations();
-  }, [fetchReservations]);
+    async function fetchReservations() {
+      if (!auth.currentUser) {
+        setLoading(false);
+        return;
+      }
+      try {
+        const idToken = await auth.currentUser.getIdToken();
+        const BASE = 'https://locadj.onrender.com/api/reservations';
 
-  const renderItem = ({ item }: { item: Reservation }) => {
-    const days = calcDays(item.startDateTime, item.endDateTime);
-    const total = item.totalAmount > 0 ? item.totalAmount : item.kit.pricePerDay * days;
+        const response = await fetch(BASE, {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${idToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Falha ao buscar reservas do backend');
+        }
+
+        const data = await response.json();
+        setReservations(data);
+      } catch (error) {
+        console.error("Erro ao carregar reservas:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchReservations();
+  }, []);
+
+  const renderBadge = (status: string) => {
+    if (status.toLowerCase().includes('confirmada')) {
+      return (
+        <View style={[styles.badge, { backgroundColor: '#D1FAE5' }]}>
+          <Text style={[styles.badgeText, { color: '#065F46' }]}>Confirmada</Text>
+        </View>
+      );
+    }
+    return (
+      <View style={[styles.badge, { backgroundColor: '#FEF3C7' }]}>
+        <Text style={[styles.badgeText, { color: '#92400E' }]}>Pendente {'>'}</Text>
+      </View>
+    );
+  };
+
+  const formatVisibleDate = (isoString?: string) => {
+    if (!isoString) return '--/--/----';
+    const split = isoString.split('T');
+    if (split.length > 0) {
+       const datePart = split[0];
+       const parts = datePart.split('-');
+       if (parts.length === 3) {
+         const [y, m, d] = parts;
+         return `${d}/${m}/${y}`;
+       }
+    }
+    return isoString;
+  };
+
+  const renderItem = ({ item }: { item: any }) => {
+    const kitName = item.kit?.name || item.kitName || 'Kit sem nome';
+    const startDate = item.startDateTime ? formatVisibleDate(item.startDateTime) : (item.startDate || '--/--/----');
+    const endDate = item.endDateTime ? formatVisibleDate(item.endDateTime) : (item.endDate || '--/--/----');
 
     return (
       <View style={styles.card}>
-        {/* Imagem do kit */}
-        <View style={styles.imageWrapper}>
-          {item.kit.imageUrl ? (
-            <Image source={{ uri: item.kit.imageUrl }} style={styles.cardImage} resizeMode="cover" />
-          ) : (
-            <View style={styles.imagePlaceholder}>
-              <Ionicons name="cube-outline" size={28} color="#C4BFFA" />
-            </View>
-          )}
-        </View>
-
-        <View style={styles.cardBody}>
-          {/* Header: nome + status */}
+        <View style={styles.cardTop}>
           <View style={styles.cardHeader}>
-            <Text style={styles.kitName} numberOfLines={1}>{item.kit.name}</Text>
-            <StatusBadge status={item.status} />
+            <Text style={styles.kitName}>{kitName}</Text>
+            {renderBadge(item.status || 'Pendente')}
           </View>
 
-          {/* Datas */}
           <View style={styles.datesRow}>
             <View style={styles.dateCol}>
               <Text style={styles.dateLabel}>INÍCIO</Text>
-              <Text style={styles.dateValue}>{formatDate(item.startDateTime)}</Text>
-            </View>
-            <View style={styles.dateDivider}>
-              <Feather name="arrow-right" size={14} color="#9CA3AF" />
+              <Text style={styles.dateValue}>{startDate}</Text>
             </View>
             <View style={styles.dateCol}>
               <Text style={styles.dateLabel}>FIM</Text>
-              <Text style={styles.dateValue}>{formatDate(item.endDateTime)}</Text>
+              <Text style={styles.dateValue}>{endDate}</Text>
             </View>
           </View>
+        </View>
 
-          {/* Rodapé: dias + total */}
-          <View style={styles.cardFooter}>
-            <View style={styles.daysTag}>
-              <Feather name="clock" size={12} color={PRIMARY} />
-              <Text style={styles.daysText}>{days} dia{days !== 1 ? 's' : ''}</Text>
-            </View>
-            <Text style={styles.totalText}>{formatCurrency(total)}</Text>
-          </View>
+        <View style={styles.cardBottom}>
+          <TouchableOpacity style={styles.cancelBtn} activeOpacity={0.8}>
+            <Feather name="x-circle" size={14} color="#FFF" style={{ marginRight: 6 }} />
+            <Text style={styles.cancelBtnText}>Cancelar</Text>
+          </TouchableOpacity>
         </View>
       </View>
     );
@@ -193,50 +115,39 @@ export default function ReservationsScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 12 }]}>
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+          <Ionicons name="chevron-back" size={28} color="#FFF" />
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>Minhas Reservas</Text>
-        <Text style={styles.headerSub}>{reservations.length} registro{reservations.length !== 1 ? 's' : ''}</Text>
+        <View style={{ width: 40 }} />
       </View>
 
       {loading ? (
-        <View style={styles.center}>
+        <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={PRIMARY} />
-          <Text style={styles.loadingText}>Carregando reservas...</Text>
-        </View>
-      ) : error ? (
-        <View style={styles.center}>
-          <Ionicons name="wifi-outline" size={44} color="#C4BFFA" />
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryBtn} onPress={() => fetchReservations()}>
-            <Text style={styles.retryBtnText}>Tentar novamente</Text>
-          </TouchableOpacity>
         </View>
       ) : (
         <FlatList
           data={reservations}
-          keyExtractor={(item) => item.id.toString()}
+          keyExtractor={(item) => item.id}
           renderItem={renderItem}
-          contentContainerStyle={[
-            styles.listContent,
-            { paddingBottom: Math.max(insets.bottom, 20) + 16 },
-          ]}
+          contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={() => fetchReservations(true)}
-              colors={[PRIMARY]}
-              tintColor={PRIMARY}
-            />
-          }
           ListEmptyComponent={
-            <View style={styles.center}>
-              <Ionicons name="calendar-outline" size={44} color="#C4BFFA" />
-              <Text style={styles.emptyText}>Nenhuma reserva encontrada</Text>
-              <Text style={styles.emptyHint}>
-                Reserve um kit e ele aparecerá aqui.
+            <View style={styles.emptyContainer}>
+              <Ionicons name="calendar-clear-outline" size={64} color="#D1D5DB" />
+              <Text style={styles.emptyTitle}>Nenhuma reserva ainda</Text>
+              <Text style={styles.emptySubtitle}>
+                Parece que você ainda não alugou nenhum equipamento com a gente.
               </Text>
+              <TouchableOpacity
+                style={styles.emptyBtn}
+                activeOpacity={0.8}
+                onPress={() => router.push('/(tabs)/kits_list')}
+              >
+                <Text style={styles.emptyBtnText}>Explorar Catálogo</Text>
+              </TouchableOpacity>
             </View>
           }
         />
@@ -246,75 +157,113 @@ export default function ReservationsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: BG },
-
+  container: {
+    flex: 1,
+    backgroundColor: BG,
+  },
   header: {
     backgroundColor: PRIMARY,
-    paddingHorizontal: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
     paddingBottom: 20,
   },
-  headerTitle: { fontSize: 22, fontWeight: '700', color: '#FFF' },
-  headerSub: { fontSize: 13, color: '#E0E7FF', marginTop: 2 },
-
-  center: {
+  backButton: {
+    padding: 4,
+    marginLeft: -4,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFF',
+  },
+  loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: 60,
-    gap: 10,
   },
-  loadingText: { fontSize: 14, color: '#9CA3AF' },
-  errorText: { fontSize: 14, color: '#6B7280', textAlign: 'center', paddingHorizontal: 32 },
-  emptyText: { fontSize: 15, color: '#9CA3AF' },
-  emptyHint: { fontSize: 13, color: '#C4BFFA', textAlign: 'center', paddingHorizontal: 32 },
-  retryBtn: {
+  listContent: {
+    padding: 16,
+    paddingBottom: 40,
+    flexGrow: 1,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+    marginTop: 60,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1F2937',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  emptyBtn: {
     backgroundColor: PRIMARY,
-    borderRadius: 100,
     paddingHorizontal: 24,
     paddingVertical: 12,
+    borderRadius: 8,
   },
-  retryBtnText: { color: '#FFF', fontWeight: '700', fontSize: 14 },
-
-  listContent: { padding: 16 },
-
+  emptyBtnText: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
   card: {
     backgroundColor: '#FFF',
     borderRadius: 16,
     marginBottom: 16,
-    overflow: 'hidden',
     borderWidth: 1,
     borderColor: '#F3F4F6',
     elevation: 2,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
-    shadowRadius: 6,
+    shadowRadius: 3,
   },
-  imageWrapper: { width: '100%', height: 140, backgroundColor: '#F3F4F6' },
-  cardImage: { width: '100%', height: '100%' },
-  imagePlaceholder: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-
-  cardBody: { padding: 16 },
+  cardTop: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
   },
-  kitName: { fontSize: 15, fontWeight: '700', color: '#1F2937', flex: 1, marginRight: 8 },
-  badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
-  badgeText: { fontSize: 11, fontWeight: '700' },
-
+  kitName: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1F2937',
+  },
+  badge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  badgeText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
   datesRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 14,
-    backgroundColor: '#F9FAFB',
-    borderRadius: 10,
-    padding: 12,
+    justifyContent: 'flex-start',
   },
-  dateCol: { flex: 1 },
-  dateDivider: { paddingHorizontal: 8 },
+  dateCol: {
+    width: '45%',
+  },
   dateLabel: {
     fontSize: 10,
     fontWeight: '700',
@@ -322,22 +271,28 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     letterSpacing: 0.5,
   },
-  dateValue: { fontSize: 13, fontWeight: '600', color: '#374151' },
-
-  cardFooter: {
+  dateValue: {
+    fontSize: 13,
+    color: '#4B5563',
+  },
+  cardBottom: {
+    padding: 12,
+    alignItems: 'flex-end',
+    backgroundColor: '#FFF',
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 16,
+  },
+  cancelBtn: {
+    backgroundColor: '#EF4444',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
   },
-  daysTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#EEF2FF',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 20,
-    gap: 4,
+  cancelBtnText: {
+    color: '#FFF',
+    fontSize: 13,
+    fontWeight: '700',
   },
-  daysText: { fontSize: 12, fontWeight: '600', color: PRIMARY },
-  totalText: { fontSize: 16, fontWeight: '800', color: '#1F2937' },
 });

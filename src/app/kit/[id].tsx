@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, ActivityIndicator, StatusBar, Platform, Modal, Alert } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Image, Modal, Platform, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { auth } from '../../config/firebaseConfig';
 
 const PRIMARY = '#5B4EE4';
@@ -21,7 +21,8 @@ interface Kit {
   imageUrl?: string;
   quantity: number;
   rents: number;
-  availability: boolean;
+  availability?: boolean;
+  available?: boolean;
 }
 
 export default function KitDetailsScreen() {
@@ -43,12 +44,27 @@ export default function KitDetailsScreen() {
   const [showPicker, setShowPicker] = useState<'none' | 'start' | 'end'>('none');
 
   useEffect(() => {
-    fetchKitDetails();
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (id) {
+        fetchKitDetails();
+      }
+    });
+    return unsubscribe;
   }, [id]);
 
   const fetchKitDetails = async () => {
     try {
-      const resp = await fetch(`https://locadj.onrender.com/api/kits/${id}`);
+      const currentUser = auth.currentUser;
+      const idToken = currentUser ? await currentUser.getIdToken() : null;
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json'
+      };
+      if (idToken) {
+        headers['Authorization'] = `Bearer ${idToken}`;
+      }
+
+      const resp = await fetch(`https://locadj.onrender.com/api/kits/${id}`, { headers });
       if (!resp.ok) throw new Error('Falha ao buscar kit');
       const data = await resp.json();
       setKit(data);
@@ -115,18 +131,21 @@ export default function KitDetailsScreen() {
     setSubmitting(true);
     try {
       const currentUser = auth.currentUser;
-      const body: Record<string, unknown> = {
-        kit: { id: kit.id },
+      if (!currentUser) throw new Error('Usuário não autenticado');
+      const idToken = await currentUser.getIdToken();
+
+      const body = {
+        kitId: kit.id,
         startDateTime: formatISODateTime(startDate),
         endDateTime: formatISODateTime(endDate),
       };
-      // Inclui usuário logado para que o backend associe corretamente
-      if (currentUser?.email) {
-        body.user = { email: currentUser.email };
-      }
+
       const resp = await fetch('https://locadj.onrender.com/api/reservations', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
+        },
         body: JSON.stringify(body),
       });
 
@@ -142,7 +161,7 @@ export default function KitDetailsScreen() {
               await AsyncStorage.setItem('my_reservation_ids', JSON.stringify(ids));
             }
           }
-        } catch (_) {}
+        } catch (_) { }
 
         router.replace({
           pathname: '/reservation-success',
