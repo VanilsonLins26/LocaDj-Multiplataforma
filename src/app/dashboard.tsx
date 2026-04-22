@@ -39,6 +39,8 @@ interface DashboardData {
   };
 }
 
+import { auth } from '../config/firebaseConfig';
+
 export default function AdminDashboardScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -51,7 +53,16 @@ export default function AdminDashboardScreen() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await fetch('https://locadj.onrender.com/api/admin/dashboard');
+        const currentUser = auth.currentUser;
+        const idToken = currentUser ? await currentUser.getIdToken() : null;
+
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json'
+        };
+        if (idToken) {
+          headers['Authorization'] = `Bearer ${idToken}`;
+        }
+        const response = await fetch('https://locadj.onrender.com/api/admin/dashboard', { headers });
         if (response.ok) {
           const json = await response.json();
           setData(json);

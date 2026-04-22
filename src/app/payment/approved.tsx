@@ -19,6 +19,8 @@ const GRAY_400 = '#9CA3AF';
 const GRAY_800 = '#1F2937';
 const SUCCESS = '#10B981';
 
+import { auth } from '../../config/firebaseConfig';
+
 const { width, height } = Dimensions.get('window');
 
 export default function PaymentApprovedScreen() {
@@ -57,9 +59,19 @@ export default function PaymentApprovedScreen() {
 
   useEffect(() => {
     async function fetchApiData() {
-      if (payment_id) {
-        try {
-          const res = await fetch(`https://locadj.onrender.com/api/checkout/status/${payment_id}`);
+      try {
+        const currentUser = auth.currentUser;
+        const idToken = currentUser ? await currentUser.getIdToken() : null;
+
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json'
+        };
+        if (idToken) {
+          headers['Authorization'] = `Bearer ${idToken}`;
+        }
+
+        if (payment_id) {
+          const res = await fetch(`https://locadj.onrender.com/api/checkout/status/${payment_id}`, { headers });
           if (res.ok) {
             const data = await res.json();
             if (data.payment_type_id || data.payment_method_id) {
@@ -70,16 +82,11 @@ export default function PaymentApprovedScreen() {
               else if (type.includes('ticket') || type.includes('boleto')) setPaymentMethod('Boleto');
             }
           }
-        } catch (error) {
-          console.error("Erro ao buscar status do pagamento:", error);
         }
-      }
 
-
-      const resId = external_reference || preference_id;
-      if (resId) {
-        try {
-          const res = await fetch(`https://locadj.onrender.com/api/checkout/reservation/${resId}`);
+        const resId = external_reference || preference_id;
+        if (resId) {
+          const res = await fetch(`https://locadj.onrender.com/api/checkout/reservation/${resId}`, { headers });
           if (res.ok) {
             const data = await res.json();
             if (data.startDate) {
@@ -88,9 +95,9 @@ export default function PaymentApprovedScreen() {
               setReservationDate(formattedDate);
             }
           }
-        } catch (error) {
-          console.error("Erro ao buscar detalhes da reserva:", error);
         }
+      } catch (error) {
+        console.error("Erro ao buscar detalhes da reserva ou pagamento:", error);
       }
     }
 

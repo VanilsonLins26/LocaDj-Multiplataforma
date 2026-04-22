@@ -31,6 +31,8 @@ interface Kit {
   availability: boolean;
 }
 
+import { auth } from '../../config/firebaseConfig';
+
 export default function KitsListScreen() {
   const [kits, setKits] = useState<Kit[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,7 +47,18 @@ export default function KitsListScreen() {
 
   const fetchKits = async () => {
     try {
-      const response = await fetch('https://locadj.onrender.com/api/kits');
+      const currentUser = auth.currentUser;
+      const idToken = currentUser ? await currentUser.getIdToken() : null;
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json'
+      };
+      
+      if (idToken) {
+        headers['Authorization'] = `Bearer ${idToken}`;
+      }
+
+      const response = await fetch('https://locadj.onrender.com/api/kits', { headers });
       const data = await response.json();
       if (data && data.value) {
         setKits(data.value);
