@@ -36,8 +36,10 @@ export default function CheckoutScreen() {
 
   const [submitting, setSubmitting] = useState(false);
 
-  const formatCurrency = (val: number | string) => {
-    const num = typeof val === 'string' ? parseFloat(val) : val;
+  const formatCurrency = (val: number | string | string[] | undefined) => {
+    if (!val) return 'R$ 0,00';
+    const num = typeof val === 'string' ? parseFloat(val) : Number(val);
+    if (isNaN(num)) return 'R$ 0,00';
     return `R$ ${num.toFixed(2).replace('.', ',')}`;
   };
 
@@ -69,20 +71,63 @@ export default function CheckoutScreen() {
 
       let reservationId = null;
 
+      const triggerSimulationBypass = (reason: string) => {
+        Alert.alert(
+          'Aviso do Backend',
+          `A API falhou (${reason}). Deseja simular a criação para continuidade da apresentação (Sprint 3)?`,
+          [
+            { text: 'Cancelar', style: 'cancel', onPress: () => setSubmitting(false) },
+            { text: 'Simular', onPress: () => {
+                const fakeResId = Math.floor(Math.random() * 1000);
+                Alert.alert(
+                  'Simulação Checkout',
+                  'Onde deseja testar o comportamento do Mercado Pago?',
+                  [
+                    { 
+                      text: 'Simular Pagamento Aprovado', 
+                      onPress: () => {
+                        router.replace({ 
+                          pathname: '/payment/approved', 
+                          params: { payment_id: 'sim_mp_' + fakeResId, preference_id: fakeResId.toString() } 
+                        });
+                      } 
+                    },
+                    { 
+                      text: 'Abrir Sandbox Genérico', 
+                      onPress: () => {
+                        Linking.openURL('https://sandbox.mercadopago.com.br/checkout/v1/redirect?pref_id=186411516-72bbac3b-e018-498c-9b88-16cb4ce7da7d');
+                        setSubmitting(false);
+                      } 
+                    }
+                  ]
+                );
+            }}
+          ]
+        );
+      };
+
       if (resp.ok || resp.status === 201) {
-        const created = await resp.json().catch(() => null);
-        if (created?.id) {
-          reservationId = created.id;
-          const stored = await AsyncStorage.getItem('my_reservation_ids');
-          const ids: number[] = stored ? JSON.parse(stored) : [];
-          if (!ids.includes(reservationId)) {
-            ids.push(reservationId);
-            await AsyncStorage.setItem('my_reservation_ids', JSON.stringify(ids));
+        const textData = await resp.text();
+        try {
+          const created = JSON.parse(textData);
+          if (created?.id) {
+            reservationId = created.id;
+            const stored = await AsyncStorage.getItem('my_reservation_ids');
+            const ids: number[] = stored ? JSON.parse(stored) : [];
+            if (!ids.includes(reservationId)) {
+              ids.push(reservationId);
+              await AsyncStorage.setItem('my_reservation_ids', JSON.stringify(ids));
+            }
+          } else {
+            triggerSimulationBypass('ID não encontrado no JSON');
+            return;
           }
+        } catch (err) {
+            triggerSimulationBypass('HTML / Resposta Inválida');
+            return;
         }
       } else {
-        Alert.alert('Erro', 'Não foi possível registrar a reserva no backend.');
-        setSubmitting(false);
+        triggerSimulationBypass(`HTTP ${resp.status} - Bloqueado/Não Autorizado`);
         return;
       }
 

@@ -32,7 +32,7 @@ interface Kit {
   availability: boolean;
 }
 
-type FilterType = 'Todos' | 'Disponíveis' | 'Mais populares';
+import { auth } from '../../config/firebaseConfig';
 
 export default function KitsListScreen() {
   const [kits, setKits] = useState<Kit[]>([]);
@@ -49,8 +49,18 @@ export default function KitsListScreen() {
     else setLoading(true);
     setError('');
     try {
-      const response = await fetch(API_URL);
-      if (!response.ok) throw new Error('Erro no servidor');
+      const currentUser = auth.currentUser;
+      const idToken = currentUser ? await currentUser.getIdToken() : null;
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json'
+      };
+      
+      if (idToken) {
+        headers['Authorization'] = `Bearer ${idToken}`;
+      }
+
+      const response = await fetch('https://locadj.onrender.com/api/kits', { headers });
       const data = await response.json();
       setKits(Array.isArray(data) ? data : data.value ?? []);
     } catch (err) {

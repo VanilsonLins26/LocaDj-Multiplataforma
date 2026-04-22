@@ -48,7 +48,17 @@ export default function KitDetailsScreen() {
 
   const fetchKitDetails = async () => {
     try {
-      const resp = await fetch(`https://locadj.onrender.com/api/kits/${id}`);
+      const currentUser = auth.currentUser;
+      const idToken = currentUser ? await currentUser.getIdToken() : null;
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json'
+      };
+      if (idToken) {
+        headers['Authorization'] = `Bearer ${idToken}`;
+      }
+
+      const resp = await fetch(`https://locadj.onrender.com/api/kits/${id}`, { headers });
       if (!resp.ok) throw new Error('Falha ao buscar kit');
       const data = await resp.json();
       setKit(data);
@@ -116,9 +126,9 @@ export default function KitDetailsScreen() {
     router.push({
       pathname: '/checkout',
       params: {
-        kitId: kit.id,
+        kitId: String(kit.id),
         kitName: kit.name,
-        kitPrice: kit.pricePerDay,
+        kitPrice: String(kit.pricePerDay),
         kitImageUrl: kit.imageUrl || '',
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
