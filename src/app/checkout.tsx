@@ -151,7 +151,10 @@ export default function CheckoutScreen() {
           try {
             // Tenta tratar como JSON
             const jsonData = JSON.parse(checkoutData);
-            if (jsonData?.sandbox_init_point || jsonData?.init_point) {
+            if (jsonData?.redirectUrl) {
+               Linking.openURL(jsonData.redirectUrl);
+               return;
+            } else if (jsonData?.sandbox_init_point || jsonData?.init_point) {
                Linking.openURL(jsonData.sandbox_init_point || jsonData.init_point);
                return;
             } else if (jsonData?.url) {
