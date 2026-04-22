@@ -12,6 +12,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { auth } from '../../config/firebaseConfig';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const PRIMARY = '#5B42F3';
 const BG = '#F4F4F5';
@@ -110,29 +111,53 @@ export default function ReservationsScreen() {
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (idToken) headers['Authorization'] = `Bearer ${idToken}`;
 
-      const BASE = 'https://locadj.onrender.com/api/reservations';
-      const ids = Array.from({ length: 20 }, (_, i) => i + 1);
+      const BASE_URL = 'https://locadj.onrender.com/api/reservations';
+      
+      // 1. Tentar buscar a coleção total (se o backend filtrar pelo JWT)
+      const listResp = await fetch(BASE_URL, { headers });
+      let allData: Reservation[] = [];
+      
+      if (listResp.ok) {
+        const json = await listResp.json();
+        allData = Array.isArray(json) ? json : (json.value ?? []);
+      }
 
-      const results = await Promise.allSettled(
-        ids.map((id) =>
-          fetch(`${BASE}/${id}`, { headers }).then((r) => {
-            if (!r.ok) throw new Error('not found');
-            return r.json() as Promise<Reservation>;
-          })
-        )
-      );
+      // 2. Fallback / Complemento: buscar IDs específicos salvos no AsyncStorage (para garantir que novas apareçam)
+      const storedIdsStr = await AsyncStorage.getItem('my_reservation_ids');
+      const storedIds: number[] = storedIdsStr ? JSON.parse(storedIdsStr) : [];
+      
+      // Busca apenas os IDs que já não estão na lista principal
+      const existingIds = new Set(allData.map(r => r.id));
+      const missingIds = storedIds.filter(id => !existingIds.has(id));
 
-      const data = results
-        .filter((r): r is PromiseFulfilledResult<Reservation> => r.status === 'fulfilled')
-        .map((r) => r.value)
-        .filter(
-          (item): item is Reservation => 
-            item != null && 
-            typeof item?.id === 'number' && 
-            item.user?.email?.toLowerCase() === currentUserEmail
+      if (missingIds.length > 0) {
+        const results = await Promise.allSettled(
+          missingIds.map((id) =>
+            fetch(`${BASE_URL}/${id}`, { headers }).then((r) => {
+              if (!r.ok) throw new Error('not found');
+              return r.json() as Promise<Reservation>;
+            })
+          )
         );
 
-      setReservations(data);
+        results.forEach(res => {
+          if (res.status === 'fulfilled' && res.value) {
+            allData.push(res.value);
+          }
+        });
+      }
+
+      // Filtragem final de segurança (Garanti que pertence ao email logado e remove duplicatas)
+      const finalData = allData
+        .filter((item, index, self) => 
+          item != null && 
+          typeof item?.id === 'number' && 
+          item.user?.email?.toLowerCase() === currentUserEmail &&
+          self.findIndex(t => t.id === item.id) === index
+        )
+        .sort((a, b) => b.id - a.id); // Mais recentes primeiro
+
+      setReservations(finalData);
     } catch (_) {
       setError('Não foi possível carregar as reservas.');
     } finally {
