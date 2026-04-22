@@ -61,7 +61,7 @@ export default function LoginScreen() {
       const role = userDoc.exists() ? userDoc.data()?.role : 'user';
 
       if (role === 'admin') {
-        router.replace('/dashboard');
+        router.replace('/(admin)');
       } else {
         router.replace('/(tabs)/kits_list');
       }

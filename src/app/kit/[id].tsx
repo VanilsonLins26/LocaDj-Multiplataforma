@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, ActivityIndicator, StatusBar, Platform, Modal, Alert } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Image, Modal, Platform, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { auth } from '../../config/firebaseConfig';
 
 const PRIMARY = '#5B4EE4';
@@ -21,7 +20,8 @@ interface Kit {
   imageUrl?: string;
   quantity: number;
   rents: number;
-  availability: boolean;
+  availability?: boolean;
+  available?: boolean;
 }
 
 export default function KitDetailsScreen() {
@@ -43,7 +43,12 @@ export default function KitDetailsScreen() {
   const [showPicker, setShowPicker] = useState<'none' | 'start' | 'end'>('none');
 
   useEffect(() => {
-    fetchKitDetails();
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (id) {
+        fetchKitDetails();
+      }
+    });
+    return unsubscribe;
   }, [id]);
 
   const fetchKitDetails = async () => {
@@ -122,7 +127,7 @@ export default function KitDetailsScreen() {
 
   const handleConfirm = () => {
     if (!kit) return;
-    
+
     router.push({
       pathname: '/checkout',
       params: {
