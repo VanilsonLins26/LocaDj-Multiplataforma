@@ -29,7 +29,9 @@ export default function PaymentApprovedScreen() {
   const { payment_id, external_reference, preference_id } = useLocalSearchParams();
 
   const [paymentMethod, setPaymentMethod] = useState("A definir");
-  const [reservationDate, setReservationDate] = useState("A definir");
+  const [paymentDate, setPaymentDate] = useState("A definir");
+  const [paymentAmount, setPaymentAmount] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const scaleValue = useRef(new Animated.Value(0)).current;
   const fadeValue = useRef(new Animated.Value(0)).current;
@@ -71,38 +73,73 @@ export default function PaymentApprovedScreen() {
         }
 
         if (payment_id) {
-          const res = await fetch(`https://locadj.onrender.com/api/checkout/status/${payment_id}`, { headers });
-          if (res.ok) {
-            const data = await res.json();
-            if (data.payment_type_id || data.payment_method_id) {
-              const type = (data.payment_type_id || data.payment_method_id).toLowerCase();
-              if (type.includes('credit')) setPaymentMethod('Cartão de Crédito');
-              else if (type.includes('debit')) setPaymentMethod('Cartão de Débito');
-              else if (type.includes('pix')) setPaymentMethod('Pix');
-              else if (type.includes('ticket') || type.includes('boleto')) setPaymentMethod('Boleto');
-            }
-          }
-        }
+          const pId = String(payment_id).replace('sim_mp_', '');
 
-        const resId = external_reference || preference_id;
-        if (resId) {
-          const res = await fetch(`https://locadj.onrender.com/api/checkout/reservation/${resId}`, { headers });
-          if (res.ok) {
-            const data = await res.json();
-            if (data.startDate) {
-              const dateObj = new Date(data.startDate);
-              const formattedDate = `${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth() + 1).toString().padStart(2, '0')}/${dateObj.getFullYear()}`;
-              setReservationDate(formattedDate);
+          if (!payment_id.toString().startsWith('sim_mp_')) {
+            const res = await fetch(`https://locadj.onrender.com/api/checkout/status/${pId}`, { headers });
+            if (res.ok) {
+              const data = await res.json();
+              if (data.paymentMethod) {
+                const type = String(data.paymentMethod).toLowerCase();
+
+                const creditBrands = ['visa', 'master', 'mastercard', 'amex', 'elo', 'hipercard', 'diners', 'cabal', 'credit'];
+                const debitBrands = ['maestro', 'visa_electron', 'debit'];
+
+                if (creditBrands.some(b => type.includes(b))) {
+                  // Se quiser exibir a bandeira: setPaymentMethod('Cartão de Crédito');
+                  setPaymentMethod(type === 'visa' || type === 'master' || type === 'amex' || type === 'elo'
+                    ? `Cartão de Crédito (${type.charAt(0).toUpperCase() + type.slice(1)})`
+                    : 'Cartão de Crédito');
+                }
+                else if (debitBrands.some(b => type.includes(b))) setPaymentMethod('Cartão de Débito');
+                else if (type.includes('pix')) setPaymentMethod('Pix');
+                else if (type.includes('ticket') || type.includes('boleto') || type.includes('bolbradesco') || type.includes('pec')) setPaymentMethod('Boleto');
+                else if (type.includes('account_money')) setPaymentMethod('Saldo em Conta (MP)');
+                else setPaymentMethod(data.paymentMethod);
+              }
+              if (data.amount) {
+                setPaymentAmount(`R$ ${Number(data.amount).toFixed(2).replace('.', ',')}`);
+              }
+              if (data.paymentDate) {
+                let dateObj: Date;
+                if (Array.isArray(data.paymentDate) && data.paymentDate.length >= 3) {
+                  dateObj = new Date(data.paymentDate[0], data.paymentDate[1] - 1, data.paymentDate[2]);
+                } else {
+                  dateObj = new Date(data.paymentDate);
+                }
+
+                if (isNaN(dateObj.getTime())) {
+                  const match = String(data.paymentDate).match(/^(\d{4})-(\d{2})-(\d{2})/);
+                  if (match) {
+                    setPaymentDate(`${match[3]}/${match[2]}/${match[1]}`);
+                  } else {
+                    setPaymentDate(String(data.paymentDate));
+                  }
+                } else {
+                  const formattedDate = `${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth() + 1).toString().padStart(2, '0')}/${dateObj.getFullYear()}`;
+                  setPaymentDate(formattedDate);
+                }
+              }
             }
           }
         }
       } catch (error) {
         console.error("Erro ao buscar detalhes da reserva ou pagamento:", error);
+      } finally {
+        setLoading(false);
       }
     }
 
     fetchApiData();
   }, [payment_id, external_reference, preference_id]);
+
+  if (loading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <StatusBar barStyle="light-content" backgroundColor={PRIMARY} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -140,13 +177,19 @@ export default function PaymentApprovedScreen() {
               <Text style={[styles.summaryValue, { color: SUCCESS }]}>Confirmado</Text>
             </View>
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Método de Pagamento</Text>
+              <Text style={styles.summaryLabel}>Forma de Pagamento</Text>
               <Text style={styles.summaryValue}>{paymentMethod}</Text>
             </View>
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Data da Reserva</Text>
-              <Text style={styles.summaryValue}>{reservationDate}</Text>
+              <Text style={styles.summaryLabel}>Data de Aprovação</Text>
+              <Text style={styles.summaryValue}>{paymentDate}</Text>
             </View>
+            {paymentAmount && (
+              <View style={[styles.summaryRow, { marginTop: 8, borderTopWidth: 1, borderTopColor: GRAY_100, paddingTop: 16 }]}>
+                <Text style={[styles.summaryLabel, { color: GRAY_800, fontWeight: '700' }]}>Valor Total Pago</Text>
+                <Text style={[styles.summaryValue, { fontSize: 18, color: PRIMARY }]}>{paymentAmount}</Text>
+              </View>
+            )}
           </View>
 
         </Animated.View>
@@ -166,7 +209,7 @@ export default function PaymentApprovedScreen() {
 
           <TouchableOpacity
             style={styles.secondaryBtn}
-            onPress={() => router.replace('/home')}
+            onPress={() => router.replace('/(tabs)/kits_list')}
             activeOpacity={0.6}
           >
             <Text style={styles.secondaryBtnText}>Voltar para o Início</Text>
