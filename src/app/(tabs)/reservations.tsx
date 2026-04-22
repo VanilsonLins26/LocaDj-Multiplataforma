@@ -1,10 +1,17 @@
-import { Feather, Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { collection, getDocs, query, where } from 'firebase/firestore';
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { auth, db } from '../../config/firebaseConfig';
+import { Feather, Ionicons } from '@expo/vector-icons';
+import { auth } from '../../config/firebaseConfig';
+import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const PRIMARY = '#5B42F3';
 const BG = '#F4F4F5';
@@ -14,40 +21,88 @@ export default function ReservationsScreen() {
   const insets = useSafeAreaInsets();
   const [reservations, setReservations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    async function fetchReservations() {
-      if (!auth.currentUser) {
-        setLoading(false);
-        return;
-      }
-      try {
-        const idToken = await auth.currentUser.getIdToken();
-        const BASE = 'https://locadj.onrender.com/api/reservations';
+  const fetchReservations = useCallback(async (isRefresh = false) => {
+    if (isRefresh) setRefreshing(true);
+    else setLoading(true);
+    setError('');
 
-        const response = await fetch(BASE, {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${idToken}`,
-            'Content-Type': 'application/json',
-          },
-        });
+    const currentUser = auth.currentUser;
+    const currentUserEmail = currentUser?.email?.toLowerCase();
 
-        if (!response.ok) {
-          throw new Error('Falha ao buscar reservas do backend');
-        }
-
-        const data = await response.json();
-        setReservations(data);
-      } catch (error) {
-        console.error("Erro ao carregar reservas:", error);
-      } finally {
-        setLoading(false);
-      }
+    if (!currentUserEmail) {
+      setReservations([]);
+      setLoading(false);
+      setRefreshing(false);
+      return;
     }
 
-    fetchReservations();
+    try {
+      const idToken = await currentUser.getIdToken();
+      const headers: Record<string, string> = { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${idToken}`
+      };
+
+      const BASE_URL = 'https://locadj.onrender.com/api/reservations';
+      
+      // 1. Tentar buscar a coleção total
+      const listResp = await fetch(BASE_URL, { headers });
+      let allData: any[] = [];
+      
+      if (listResp.ok) {
+        const json = await listResp.json();
+        allData = Array.isArray(json) ? json : (json.value ?? []);
+      }
+
+      // 2. Fallback / Complemento: buscar IDs específicos salvos no AsyncStorage
+      const storedIdsStr = await AsyncStorage.getItem('my_reservation_ids');
+      const storedIds: number[] = storedIdsStr ? JSON.parse(storedIdsStr) : [];
+      
+      const existingIds = new Set(allData.map(r => r.id));
+      const missingIds = storedIds.filter(id => !existingIds.has(id));
+
+      if (missingIds.length > 0) {
+        const results = await Promise.allSettled(
+          missingIds.map((id) =>
+            fetch(`${BASE_URL}/${id}`, { headers }).then((r) => {
+              if (!r.ok) throw new Error('not found');
+              return r.json();
+            })
+          )
+        );
+
+        results.forEach(res => {
+          if (res.status === 'fulfilled' && res.value) {
+            allData.push(res.value);
+          }
+        });
+      }
+
+      // Filtragem final e ordenação
+      const finalData = allData
+        .filter((item, index, self) => 
+          item != null && 
+          item.user?.email?.toLowerCase() === currentUserEmail &&
+          self.findIndex(t => t.id === item.id) === index
+        )
+        .sort((a, b) => b.id - a.id);
+
+      setReservations(finalData);
+    } catch (err) {
+      console.error("Erro ao carregar reservas:", err);
+      setError('Não foi possível carregar as reservas.');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchReservations();
+  }, [fetchReservations]);
 
   const renderBadge = (status: string) => {
     if (status.toLowerCase().includes('confirmada')) {

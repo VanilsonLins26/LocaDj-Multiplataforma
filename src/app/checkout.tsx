@@ -49,15 +49,16 @@ export default function CheckoutScreen() {
       const currentUser = auth.currentUser;
       const token = await currentUser?.getIdToken();
 
-      const body: Record<string, unknown> = {
-        kit: { id: Number(kitId) },
-        startDateTime: startDate,
-        endDateTime: endDate,
-      };
+      const startObj = new Date(startDate as string);
+      const endObj = new Date(endDate as string);
+      const pad = (n: number) => n.toString().padStart(2, '0');
+      const formatLocal = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 
-      if (currentUser?.email) {
-        body.user = { email: currentUser.email };
-      }
+      const body = {
+        kitId: Number(kitId),
+        startDateTime: formatLocal(startObj),
+        endDateTime: formatLocal(endObj),
+      };
 
       // 1. Criar a reserva no backend
       const resp = await fetch('https://locadj.onrender.com/api/reservations', {
@@ -127,7 +128,10 @@ export default function CheckoutScreen() {
             return;
         }
       } else {
-        triggerSimulationBypass(`HTTP ${resp.status} - Bloqueado/Não Autorizado`);
+        const errorMsg = resp.status === 409 ? 'Conflito (Reserva já existente ou datas indisponíveis)' :
+                        resp.status === 401 || resp.status === 403 ? 'Não Autorizado / Login necessário' :
+                        `HTTP ${resp.status}`;
+        triggerSimulationBypass(errorMsg);
         return;
       }
 
@@ -150,7 +154,10 @@ export default function CheckoutScreen() {
           try {
             // Tenta tratar como JSON
             const jsonData = JSON.parse(checkoutData);
-            if (jsonData?.sandbox_init_point || jsonData?.init_point) {
+            if (jsonData?.redirectUrl) {
+               Linking.openURL(jsonData.redirectUrl);
+               return;
+            } else if (jsonData?.sandbox_init_point || jsonData?.init_point) {
                Linking.openURL(jsonData.sandbox_init_point || jsonData.init_point);
                return;
             } else if (jsonData?.url) {
