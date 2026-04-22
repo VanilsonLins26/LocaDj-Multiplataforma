@@ -195,13 +195,25 @@ export default function KitDetailsScreen() {
 
           <View style={styles.datesRow}>
             <TouchableOpacity style={styles.dateBox} activeOpacity={0.8} onPress={() => setShowPicker('start')}>
-              <Text style={styles.dateType}>Início</Text>
-              <Text style={styles.dateValue}>{formatVisibleDate(startDate)}</Text>
+              <View style={styles.dateBoxHeader}>
+                <Ionicons name="calendar-outline" size={16} color={GRAY_500} />
+                <Text style={styles.dateType}>INÍCIO</Text>
+              </View>
+              <View style={styles.dateBoxValueRow}>
+                <Text style={styles.dateValue}>{formatVisibleDate(startDate)}</Text>
+                <Ionicons name="chevron-down" size={18} color={PRIMARY} />
+              </View>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.dateBox} activeOpacity={0.8} onPress={() => setShowPicker('end')}>
-              <Text style={styles.dateType}>Término</Text>
-              <Text style={styles.dateValue}>{formatVisibleDate(endDate)}</Text>
+              <View style={styles.dateBoxHeader}>
+                <Ionicons name="calendar-outline" size={16} color={GRAY_500} />
+                <Text style={styles.dateType}>TÉRMINO</Text>
+              </View>
+              <View style={styles.dateBoxValueRow}>
+                <Text style={styles.dateValue}>{formatVisibleDate(endDate)}</Text>
+                <Ionicons name="chevron-down" size={18} color={PRIMARY} />
+              </View>
             </TouchableOpacity>
           </View>
         </View>
@@ -279,8 +291,10 @@ const styles = StyleSheet.create({
   kitTitle: { fontSize: 22, fontWeight: '800', color: GRAY_900, marginBottom: 36 },
   dateLabel: { fontSize: 14, fontWeight: '700', color: GRAY_900, marginBottom: 12 },
   datesRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 16 },
-  dateBox: { flex: 1, borderWidth: 1, borderColor: GRAY_200, borderRadius: 16, padding: 16, backgroundColor: '#FFF' },
-  dateType: { fontSize: 12, color: GRAY_500, marginBottom: 6 },
+  dateBox: { flex: 1, borderWidth: 1, borderColor: GRAY_200, borderRadius: 16, padding: 14, backgroundColor: '#F9FAFB' },
+  dateBoxHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 8, gap: 6 },
+  dateBoxValueRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  dateType: { fontSize: 11, fontWeight: '700', color: GRAY_500, letterSpacing: 0.5 },
   dateValue: { fontSize: 15, fontWeight: '700', color: GRAY_900 },
   footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, paddingTop: 16, borderTopWidth: 1, borderTopColor: GRAY_200, backgroundColor: '#FFFFFF' },
   footerTotalLabel: { fontSize: 12, color: GRAY_500, marginBottom: 4 },

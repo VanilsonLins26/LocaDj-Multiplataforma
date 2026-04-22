@@ -1,21 +1,21 @@
+import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Linking from 'expo-linking';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  Image,
-  TouchableOpacity,
   ActivityIndicator,
   Alert,
-  StatusBar,
   Dimensions,
+  Image,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { auth } from '../config/firebaseConfig';
-import * as Linking from 'expo-linking';
 
 const PRIMARY = '#5B4EE4';
 const GRAY_100 = '#F3F4F6';
@@ -31,7 +31,7 @@ const { width } = Dimensions.get('window');
 export default function CheckoutScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  
+
   const { kitId, kitName, kitPrice, kitImageUrl, startDate, endDate, total, days } = useLocalSearchParams();
 
   const [submitting, setSubmitting] = useState(false);
@@ -49,21 +49,26 @@ export default function CheckoutScreen() {
       const currentUser = auth.currentUser;
       const token = await currentUser?.getIdToken();
 
-      const startObj = new Date(startDate as string);
-      const endObj = new Date(endDate as string);
-      const pad = (n: number) => n.toString().padStart(2, '0');
-      const formatLocal = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      const formatToBackendDate = (isoString?: string | string[]) => {
+        if (!isoString) return '';
+        const str = Array.isArray(isoString) ? isoString[0] : isoString;
+        const d = new Date(str);
+        if (isNaN(d.getTime())) return '';
+        const pad = (n: number) => n.toString().padStart(2, '0');
+        // O regex do spring boot exige formato YYYY-MM-DDTHH:mm
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      };
 
       const body = {
         kitId: Number(kitId),
-        startDateTime: formatLocal(startObj),
-        endDateTime: formatLocal(endObj),
+        startDateTime: formatToBackendDate(startDate),
+        endDateTime: formatToBackendDate(endDate),
       };
 
       // 1. Criar a reserva no backend
       const resp = await fetch('https://locadj.onrender.com/api/reservations', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         },
@@ -78,31 +83,33 @@ export default function CheckoutScreen() {
           `A API falhou (${reason}). Deseja simular a criação para continuidade da apresentação (Sprint 3)?`,
           [
             { text: 'Cancelar', style: 'cancel', onPress: () => setSubmitting(false) },
-            { text: 'Simular', onPress: () => {
+            {
+              text: 'Simular', onPress: () => {
                 const fakeResId = Math.floor(Math.random() * 1000);
                 Alert.alert(
                   'Simulação Checkout',
                   'Onde deseja testar o comportamento do Mercado Pago?',
                   [
-                    { 
-                      text: 'Simular Pagamento Aprovado', 
+                    {
+                      text: 'Simular Pagamento Aprovado',
                       onPress: () => {
-                        router.replace({ 
-                          pathname: '/payment/approved', 
-                          params: { payment_id: 'sim_mp_' + fakeResId, preference_id: fakeResId.toString() } 
+                        router.replace({
+                          pathname: '/payment/approved',
+                          params: { payment_id: 'sim_mp_' + fakeResId, preference_id: fakeResId.toString() }
                         });
-                      } 
+                      }
                     },
-                    { 
-                      text: 'Abrir Sandbox Genérico', 
+                    {
+                      text: 'Abrir Sandbox Genérico',
                       onPress: () => {
                         Linking.openURL('https://sandbox.mercadopago.com.br/checkout/v1/redirect?pref_id=186411516-72bbac3b-e018-498c-9b88-16cb4ce7da7d');
                         setSubmitting(false);
-                      } 
+                      }
                     }
                   ]
                 );
-            }}
+              }
+            }
           ]
         );
       };
@@ -124,52 +131,53 @@ export default function CheckoutScreen() {
             return;
           }
         } catch (err) {
-            triggerSimulationBypass('HTML / Resposta Inválida');
-            return;
+          triggerSimulationBypass('HTML / Resposta Inválida');
+          return;
         }
       } else {
-        const errorMsg = resp.status === 409 ? 'Conflito (Reserva já existente ou datas indisponíveis)' :
-                        resp.status === 401 || resp.status === 403 ? 'Não Autorizado / Login necessário' :
-                        `HTTP ${resp.status}`;
-        triggerSimulationBypass(errorMsg);
+        triggerSimulationBypass(`HTTP ${resp.status} - Bloqueado/Não Autorizado`);
         return;
       }
 
       // 2. Enviar POST para rotear o Mercado Pago
       if (reservationId) {
+        const successUrl = Linking.createURL('/payment/approved');
+        const failureUrl = Linking.createURL('/payment/rejected');
+        const pendingUrl = Linking.createURL('/payment/pending');
+
         const checkoutResp = await fetch('https://locadj.onrender.com/api/checkout', {
           method: 'POST',
-          headers: { 
+          headers: {
             'Content-Type': 'application/json',
             ...(token ? { 'Authorization': `Bearer ${token}` } : {})
           },
           body: JSON.stringify({
             reservationId: reservationId,
-            token: token
+            successUrl: successUrl,
+            failureUrl: failureUrl,
+            pendingUrl: pendingUrl
           })
         });
 
         if (checkoutResp.ok) {
           const checkoutData = await checkoutResp.text();
           try {
-            // Tenta tratar como JSON
             const jsonData = JSON.parse(checkoutData);
             if (jsonData?.redirectUrl) {
-               Linking.openURL(jsonData.redirectUrl);
-               return;
+              Linking.openURL(jsonData.redirectUrl);
+              return;
             } else if (jsonData?.sandbox_init_point || jsonData?.init_point) {
-               Linking.openURL(jsonData.sandbox_init_point || jsonData.init_point);
-               return;
+              Linking.openURL(jsonData.sandbox_init_point || jsonData.init_point);
+              return;
             } else if (jsonData?.url) {
-               Linking.openURL(jsonData.url);
-               return;
+              Linking.openURL(jsonData.url);
+              return;
             }
           } catch {
-             // Caso a API retorne a URL diretamente como String
-             if (checkoutData.startsWith('http')) {
-               Linking.openURL(checkoutData);
-               return;
-             }
+            if (checkoutData.startsWith('http')) {
+              Linking.openURL(checkoutData);
+              return;
+            }
           }
           // Caso consiga sucesso mas não ache URL do mercado pago, 
           // exibe mensagem simulada e vai para a listagem
@@ -194,8 +202,8 @@ export default function CheckoutScreen() {
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity 
-            onPress={() => router.back()} 
+          <TouchableOpacity
+            onPress={() => router.back()}
             style={styles.backBtnWrapper}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
@@ -232,7 +240,7 @@ export default function CheckoutScreen() {
           </View>
 
           <Text style={styles.sectionTitle}>Meio de Pagamento</Text>
-          
+
           {/* Payment Method Selector */}
           <View style={styles.paymentMethodCard}>
             <View style={styles.paymentContent}>
