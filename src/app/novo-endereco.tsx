@@ -92,6 +92,26 @@ export default function NovoEnderecoScreen() {
     return digits;
   }
 
+  async function fetchAddressByCep(cepCode: string) {
+    const numericCep = cepCode.replace(/\D/g, '');
+    if (numericCep.length !== 8) return;
+
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${numericCep}/json/`);
+      const data = await response.json();
+      
+      if (!data.erro) {
+        setRua(data.logradouro || '');
+        setBairro(data.bairro || '');
+        if (data.localidade && data.uf) {
+          setCidadeEstado(`${data.localidade} - ${data.uf}`);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao buscar CEP:', error);
+    }
+  }
+
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -122,7 +142,13 @@ export default function NovoEnderecoScreen() {
               placeholderTextColor="#9CA3AF"
               keyboardType="numeric"
               value={cep}
-              onChangeText={(v) => setCep(formatCep(v))}
+              onChangeText={(v) => {
+                const formatted = formatCep(v);
+                setCep(formatted);
+                if (formatted.replace(/\D/g, '').length === 8) {
+                  fetchAddressByCep(formatted);
+                }
+              }}
               maxLength={9}
             />
           </InputGroup>
