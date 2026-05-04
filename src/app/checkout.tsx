@@ -165,17 +165,21 @@ export default function CheckoutScreen() {
             const jsonData = JSON.parse(checkoutData);
             if (jsonData?.redirectUrl) {
               Linking.openURL(jsonData.redirectUrl);
+              router.replace('/payment/pending');
               return;
             } else if (jsonData?.sandbox_init_point || jsonData?.init_point) {
               Linking.openURL(jsonData.sandbox_init_point || jsonData.init_point);
+              router.replace('/payment/pending');
               return;
             } else if (jsonData?.url) {
               Linking.openURL(jsonData.url);
+              router.replace('/payment/pending');
               return;
             }
           } catch {
             if (checkoutData.startsWith('http')) {
               Linking.openURL(checkoutData);
+              router.replace('/payment/pending');
               return;
             }
           }

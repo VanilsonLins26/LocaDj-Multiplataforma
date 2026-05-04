@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -6,15 +6,16 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { auth } from '../../config/firebaseConfig';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const PRIMARY = '#5B42F3';
-const BG = '#F4F4F5';
+const BG = '#F4F5F7';
 
 export default function ReservationsScreen() {
   const router = useRouter();
@@ -48,7 +49,6 @@ export default function ReservationsScreen() {
 
       const BASE_URL = 'https://locadj.onrender.com/api/reservations';
       
-      // 1. Tentar buscar a coleção total
       const listResp = await fetch(BASE_URL, { headers });
       let allData: any[] = [];
       
@@ -57,7 +57,6 @@ export default function ReservationsScreen() {
         allData = Array.isArray(json) ? json : (json.value ?? []);
       }
 
-      // 2. Fallback / Complemento: buscar IDs específicos salvos no AsyncStorage
       const storedIdsStr = await AsyncStorage.getItem('my_reservation_ids');
       const storedIds: number[] = storedIdsStr ? JSON.parse(storedIdsStr) : [];
       
@@ -81,7 +80,6 @@ export default function ReservationsScreen() {
         });
       }
 
-      // Filtragem final e ordenação
       const finalData = allData
         .filter((item, index, self) => 
           item != null && 
@@ -100,82 +98,120 @@ export default function ReservationsScreen() {
     }
   }, []);
 
-  useEffect(() => {
-    fetchReservations();
-  }, [fetchReservations]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchReservations();
+    }, [fetchReservations])
+  );
 
   const renderBadge = (status: string) => {
-    if (status.toLowerCase().includes('confirmada')) {
+    const s = (status || '').toUpperCase();
+    if (s === 'PENDENTE') {
+      return (
+        <View style={[styles.badge, { backgroundColor: '#FEF3C7' }]}>
+          <Text style={[styles.badgeText, { color: '#B45309' }]}>Pendente</Text>
+        </View>
+      );
+    }
+    if (s === 'CONFIRMADA' || s === 'CONCLUIDA') {
       return (
         <View style={[styles.badge, { backgroundColor: '#D1FAE5' }]}>
-          <Text style={[styles.badgeText, { color: '#065F46' }]}>Confirmada</Text>
+          <Text style={[styles.badgeText, { color: '#065F46' }]}>
+            {s === 'CONCLUIDA' ? 'Concluída' : 'Confirmada'}
+          </Text>
         </View>
       );
     }
     return (
-      <View style={[styles.badge, { backgroundColor: '#FEF3C7' }]}>
-        <Text style={[styles.badgeText, { color: '#92400E' }]}>Pendente {'>'}</Text>
+      <View style={[styles.badge, { backgroundColor: '#DBEAFE' }]}>
+        <Text style={[styles.badgeText, { color: '#1D4ED8' }]}>{s.replace('_', ' ')}</Text>
       </View>
     );
   };
 
   const formatVisibleDate = (isoString?: string) => {
     if (!isoString) return '--/--/----';
-    const split = isoString.split('T');
-    if (split.length > 0) {
-       const datePart = split[0];
-       const parts = datePart.split('-');
-       if (parts.length === 3) {
-         const [y, m, d] = parts;
-         return `${d}/${m}/${y}`;
-       }
-    }
-    return isoString;
+    
+    const str = isoString.endsWith('Z') ? isoString : `${isoString}Z`;
+    const dateObj = new Date(str);
+    
+    if (isNaN(dateObj.getTime())) return isoString;
+    
+    // Converte para Horário de Brasília (UTC-3)
+    const brtDate = new Date(dateObj.getTime() - (3 * 60 * 60 * 1000));
+    
+    const d = String(brtDate.getUTCDate()).padStart(2, '0');
+    const m = String(brtDate.getUTCMonth() + 1).padStart(2, '0');
+    const y = brtDate.getUTCFullYear();
+    
+    return `${d}/${m}/${y}`;
   };
 
   const renderItem = ({ item }: { item: any }) => {
     const kitName = item.kit?.name || item.kitName || 'Kit sem nome';
+    const userName = item.user?.name || auth.currentUser?.displayName || 'Usuário';
     const startDate = item.startDateTime ? formatVisibleDate(item.startDateTime) : (item.startDate || '--/--/----');
     const endDate = item.endDateTime ? formatVisibleDate(item.endDateTime) : (item.endDate || '--/--/----');
+    const price = item.totalAmount ? `R$ ${item.totalAmount.toFixed(2).replace('.', ',')}` : 'R$ 0,00';
+    const daily = item.daily || 1;
+    const imageUrl = item.kit?.imageUrl;
 
     return (
-      <View style={styles.card}>
-        <View style={styles.cardTop}>
+      <TouchableOpacity 
+        style={styles.card} 
+        activeOpacity={0.9} 
+        onPress={() => router.push(`/reservation/${item.id}`)}
+      >
+        <View style={styles.imageContainer}>
+          {imageUrl ? (
+            <Image source={{ uri: imageUrl }} style={styles.cardImage} resizeMode="cover" />
+          ) : (
+            <View style={styles.placeholderImage}>
+              <Ionicons name="image-outline" size={32} color="#9CA3AF" />
+            </View>
+          )}
+        </View>
+        
+        <View style={styles.cardBody}>
           <View style={styles.cardHeader}>
-            <Text style={styles.kitName}>{kitName}</Text>
-            {renderBadge(item.status || 'Pendente')}
+            <Text style={styles.kitName} numberOfLines={1}>{kitName}</Text>
+            {renderBadge(item.status || 'PENDENTE')}
+          </View>
+          
+          <View style={styles.userRow}>
+            <Ionicons name="person-outline" size={14} color="#9CA3AF" />
+            <Text style={styles.userName}>{userName.toUpperCase()}</Text>
           </View>
 
-          <View style={styles.datesRow}>
+          <View style={styles.datesBox}>
             <View style={styles.dateCol}>
               <Text style={styles.dateLabel}>INÍCIO</Text>
               <Text style={styles.dateValue}>{startDate}</Text>
             </View>
+            <Feather name="arrow-right" size={16} color="#9CA3AF" />
             <View style={styles.dateCol}>
               <Text style={styles.dateLabel}>FIM</Text>
               <Text style={styles.dateValue}>{endDate}</Text>
             </View>
           </View>
-        </View>
 
-        <View style={styles.cardBottom}>
-          <TouchableOpacity style={styles.cancelBtn} activeOpacity={0.8}>
-            <Feather name="x-circle" size={14} color="#FFF" style={{ marginRight: 6 }} />
-            <Text style={styles.cancelBtnText}>Cancelar</Text>
-          </TouchableOpacity>
+          <View style={styles.cardFooter}>
+            <View style={styles.durationBadge}>
+              <Feather name="clock" size={12} color="#5B42F3" />
+              <Text style={styles.durationText}>{daily} {daily > 1 ? 'dias' : 'dia'}</Text>
+            </View>
+            <Text style={styles.priceText}>{price}</Text>
+          </View>
         </View>
-      </View>
+      </TouchableOpacity>
     );
   };
 
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 12 }]}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-          <Ionicons name="chevron-back" size={28} color="#FFF" />
-        </TouchableOpacity>
         <Text style={styles.headerTitle}>Minhas Reservas</Text>
-        <View style={{ width: 40 }} />
+        <Text style={styles.headerSubtitle}>{reservations.length} registros</Text>
       </View>
 
       {loading ? (
@@ -185,7 +221,7 @@ export default function ReservationsScreen() {
       ) : (
         <FlatList
           data={reservations}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => String(item.id)}
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
@@ -218,20 +254,18 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: PRIMARY,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingBottom: 20,
-  },
-  backButton: {
-    padding: 4,
-    marginLeft: -4,
+    paddingHorizontal: 24,
+    paddingBottom: 24,
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: '700',
     color: '#FFF',
+    marginBottom: 4,
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.8)',
   },
   loadingContainer: {
     flex: 1,
@@ -278,30 +312,45 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: '#FFF',
     borderRadius: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#F3F4F6',
-    elevation: 2,
+    marginBottom: 20,
+    overflow: 'hidden',
+    elevation: 3,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
-  cardTop: {
+  imageContainer: {
+    height: 140,
+    backgroundColor: '#E5E7EB',
+    width: '100%',
+  },
+  cardImage: {
+    width: '100%',
+    height: '100%',
+  },
+  placeholderImage: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F3F4F6',
+  },
+  cardBody: {
     padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
   },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 8,
   },
   kitName: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#1F2937',
+    color: '#111827',
+    flex: 1,
+    marginRight: 8,
   },
   badge: {
     paddingHorizontal: 10,
@@ -312,12 +361,28 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
   },
-  datesRow: {
+  userRow: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  userName: {
+    fontSize: 12,
+    color: '#9CA3AF',
+    marginLeft: 6,
+    letterSpacing: 0.5,
+  },
+  datesBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#F9FAFB',
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 16,
   },
   dateCol: {
-    width: '45%',
+    flex: 1,
   },
   dateLabel: {
     fontSize: 10,
@@ -327,27 +392,33 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   dateValue: {
-    fontSize: 13,
-    color: '#4B5563',
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#374151',
   },
-  cardBottom: {
-    padding: 12,
-    alignItems: 'flex-end',
-    backgroundColor: '#FFF',
-    borderBottomLeftRadius: 16,
-    borderBottomRightRadius: 16,
-  },
-  cancelBtn: {
-    backgroundColor: '#EF4444',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
+  cardFooter: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
   },
-  cancelBtnText: {
-    color: '#FFF',
-    fontSize: 13,
-    fontWeight: '700',
+  durationBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EEECFC',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  durationText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#5B42F3',
+    marginLeft: 6,
+  },
+  priceText: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#111827',
   },
 });
+

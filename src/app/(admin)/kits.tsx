@@ -52,7 +52,7 @@ function KitCard({
   const formatPrice = (val: number) =>
     `R$ ${val.toFixed(2).replace('.', ',')}`;
 
-  const isAvailable = kit.availability ?? kit.available ?? false;
+  const isAvailable = kit.availability ?? kit.available ?? true;
 
   return (
     <View style={styles.card}>
