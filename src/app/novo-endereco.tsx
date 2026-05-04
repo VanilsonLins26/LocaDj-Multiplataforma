@@ -11,21 +11,80 @@ import {
   Switch,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+import { addressService } from '../services/addressService';
+import { ActivityIndicator, Alert } from 'react-native';
 
 export default function NovoEnderecoScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
 
-  const [cep, setCep] = useState('');
-  const [rua, setRua] = useState('');
-  const [numero, setNumero] = useState('');
-  const [complemento, setComplemento] = useState('');
-  const [bairro, setBairro] = useState('');
-  const [cidadeEstado, setCidadeEstado] = useState('');
-  const [salvarComo, setSalvarComo] = useState('');
-  const [isPrimary, setIsPrimary] = useState(false);
+  const isEditMode = params.editMode === 'true';
+  const editId = params.id as string;
+
+  const [cep, setCep] = useState((params.cep as string) || '');
+  const [rua, setRua] = useState((params.rua as string) || '');
+  const [numero, setNumero] = useState((params.numero as string) || '');
+  const [complemento, setComplemento] = useState((params.complemento as string) || '');
+  const [bairro, setBairro] = useState((params.bairro as string) || '');
+  const [cidadeEstado, setCidadeEstado] = useState((params.cidadeEstado as string) || '');
+  const [salvarComo, setSalvarComo] = useState((params.salvarComo as string) || '');
+  const [isPrimary, setIsPrimary] = useState(params.isPrimary === 'true');
+  const [loading, setLoading] = useState(false);
+
+  function goBackOrRedirect() {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/meus-enderecos');
+    }
+  }
+
+  async function handleSave() {
+    if (!cep || !rua || !numero || !bairro || !cidadeEstado || !salvarComo) {
+      Alert.alert('Erro', 'Por favor, preencha todos os campos obrigatórios.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const [city, state] = cidadeEstado.split(' - ');
+      
+      const addressData = {
+        label: salvarComo,
+        street: rua,
+        number: numero,
+        complement: complemento,
+        neighborhood: bairro,
+        city: city || cidadeEstado,
+        state: state || '',
+        zipCode: cep.replace(/\D/g, ''),
+        isPrimary: isPrimary,
+      };
+
+      if (isEditMode && editId) {
+        await addressService.updateAddress(editId, addressData);
+      } else {
+        await addressService.createAddress(addressData);
+      }
+
+      if (Platform.OS === 'web') {
+        alert(isEditMode ? 'Endereço atualizado com sucesso!' : 'Endereço salvo com sucesso!');
+        goBackOrRedirect();
+      } else {
+        Alert.alert('Sucesso', isEditMode ? 'Endereço atualizado com sucesso!' : 'Endereço salvo com sucesso!', [
+          { text: 'OK', onPress: () => goBackOrRedirect() }
+        ]);
+      }
+    } catch (error) {
+      console.error('Erro ao salvar endereço:', error);
+      Alert.alert('Erro', 'Não foi possível salvar o endereço.');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   function formatCep(value: string) {
     const digits = value.replace(/\D/g, '').slice(0, 8);
@@ -39,10 +98,10 @@ export default function NovoEnderecoScreen() {
 
       {/* Header */}
       <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 12 }]}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()} activeOpacity={0.7}>
+        <TouchableOpacity style={styles.backButton} onPress={goBackOrRedirect} activeOpacity={0.7}>
           <Feather name="arrow-left" size={24} color="#FFF" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Novo Endereço</Text>
+        <Text style={styles.headerTitle}>{isEditMode ? 'Editar Endereço' : 'Novo Endereço'}</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -164,8 +223,17 @@ export default function NovoEnderecoScreen() {
 
         {/* Footer Button */}
         <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 20) }]}>
-          <TouchableOpacity style={styles.saveButton} activeOpacity={0.8}>
-            <Text style={styles.saveButtonText}>Salvar Endereço</Text>
+          <TouchableOpacity 
+            style={[styles.saveButton, loading && { opacity: 0.7 }]} 
+            activeOpacity={0.8}
+            onPress={handleSave}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#FFF" />
+            ) : (
+              <Text style={styles.saveButtonText}>Salvar Endereço</Text>
+            )}
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
