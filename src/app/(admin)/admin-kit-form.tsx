@@ -80,9 +80,21 @@ export default function AdminKitFormScreen() {
     };
   };
 
-  // Fetch existing kit data if editing
+  // Fetch existing kit data if editing ou limpa o form se for novo
   useEffect(() => {
-    if (!isEditing || !kitId) return;
+    if (!isEditing || !kitId) {
+      setForm({
+        name: '',
+        description: '',
+        pricePerDay: '',
+        quantity: '',
+        imageUrl: '',
+        availability: true,
+      });
+      setErrors({});
+      setLoading(false);
+      return;
+    }
 
     const fetchKit = async () => {
       try {
@@ -100,7 +112,7 @@ export default function AdminKitFormScreen() {
         });
       } catch {
         Alert.alert('Erro', 'Não foi possível carregar os dados do kit.', [
-          { text: 'OK', onPress: () => router.back() },
+          { text: 'OK', onPress: () => router.replace('/(admin)/kits') },
         ]);
       } finally {
         setLoading(false);
@@ -168,7 +180,7 @@ export default function AdminKitFormScreen() {
       Alert.alert(
         'Sucesso!',
         isEditing ? 'Kit atualizado com sucesso.' : 'Kit criado com sucesso.',
-        [{ text: 'OK', onPress: () => router.back() }]
+        [{ text: 'OK', onPress: () => router.replace('/(admin)/kits') }]
       );
     } catch (err: any) {
       Alert.alert('Erro', err?.message || 'Não foi possível salvar o kit. Tente novamente.');
@@ -202,7 +214,7 @@ export default function AdminKitFormScreen() {
       <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) }]}>
         <TouchableOpacity
           style={styles.backBtn}
-          onPress={() => router.back()}
+          onPress={() => router.replace('/(admin)/kits')}
           activeOpacity={0.8}
         >
           <Ionicons name="chevron-back" size={24} color={WHITE} />
