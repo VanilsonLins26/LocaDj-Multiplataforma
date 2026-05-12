@@ -82,6 +82,13 @@ export default function AdminTabsLayout() {
           headerShown: false,
         }}
       />
+      <Tabs.Screen
+        name="user/[id]"
+        options={{
+          href: null,
+          headerShown: false,
+        }}
+      />
     </Tabs>
   );
 }
