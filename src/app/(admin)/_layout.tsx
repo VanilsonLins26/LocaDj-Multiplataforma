@@ -76,6 +76,13 @@ export default function AdminTabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="change-password"
+        options={{
+          href: null,
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
         name="admin-kit-form"
         options={{
           href: null,
