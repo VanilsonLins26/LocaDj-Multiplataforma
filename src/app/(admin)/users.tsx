@@ -70,22 +70,36 @@ export default function AdminUsersScreen() {
 
   const renderItem = ({ item }: { item: User }) => (
     <View style={styles.userCard}>
-      <View style={styles.userInfo}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>
-            {item.name ? item.name.charAt(0).toUpperCase() : '?'}
+      <View style={styles.cardHeader}>
+        <View style={styles.userInfo}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>
+              {item.name ? item.name.charAt(0).toUpperCase() : '?'}
+            </Text>
+          </View>
+          <View style={styles.userDetails}>
+            <Text style={styles.userName}>{item.name}</Text>
+            <Text style={styles.userEmail}>{item.email}</Text>
+            <Text style={styles.userPhone}>{item.phone || 'Sem telefone'}</Text>
+          </View>
+        </View>
+        <View style={[styles.roleBadge, item.role === 'admin' ? styles.roleAdmin : styles.roleUser]}>
+          <Text style={[styles.roleText, item.role === 'admin' ? styles.roleTextAdmin : styles.roleTextUser]}>
+            {item.role === 'admin' ? 'Admin' : 'Usuário'}
           </Text>
         </View>
-        <View style={styles.userDetails}>
-          <Text style={styles.userName}>{item.name}</Text>
-          <Text style={styles.userEmail}>{item.email}</Text>
-          <Text style={styles.userPhone}>{item.phone || 'Sem telefone'}</Text>
-        </View>
       </View>
-      <View style={[styles.roleBadge, item.role === 'admin' ? styles.roleAdmin : styles.roleUser]}>
-        <Text style={[styles.roleText, item.role === 'admin' ? styles.roleTextAdmin : styles.roleTextUser]}>
-          {item.role === 'admin' ? 'Admin' : 'Usuário'}
-        </Text>
+      <View style={styles.cardActions}>
+        <TouchableOpacity 
+          style={styles.detailsButton} 
+          onPress={() => router.push({
+            pathname: '/(admin)/user/[id]',
+            params: { id: item.id }
+          })}
+        >
+          <Text style={styles.detailsButtonText}>Ver Detalhes da Conta</Text>
+          <Ionicons name="chevron-forward" size={16} color={PRIMARY} />
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -197,9 +211,6 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
   userCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: GRAY_100,
@@ -211,6 +222,28 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  cardActions: {
+    borderTopWidth: 1,
+    borderTopColor: GRAY_100,
+    paddingTop: 12,
+  },
+  detailsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  detailsButtonText: {
+    color: PRIMARY,
+    fontSize: 14,
+    fontWeight: '600',
+    marginRight: 4,
   },
   userInfo: {
     flexDirection: 'row',
