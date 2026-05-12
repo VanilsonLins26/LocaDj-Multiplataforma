@@ -74,17 +74,31 @@ export default function AdminChangePasswordScreen() {
   const [novaSenha, setNovaSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const passwordsMatch = novaSenha.length > 0 && novaSenha === confirmarSenha;
   const allRequirementsMet = novaSenha.length > 0 && REQUIREMENTS.every((r) => r.test(novaSenha));
   const canSave = senhaAtual.length > 0 && allRequirementsMet && passwordsMatch && !loading;
 
   const handleChangePassword = async () => {
-    if (!canSave) return;
+    setErrorMessage('');
+    if (!senhaAtual) {
+      setErrorMessage('Por favor, digite sua senha atual.');
+      return;
+    }
+    if (!allRequirementsMet) {
+      setErrorMessage('A nova senha não atende a todos os requisitos de segurança.');
+      return;
+    }
+    if (!passwordsMatch) {
+      setErrorMessage('As senhas não coincidem.');
+      return;
+    }
+    if (loading) return;
     
     const user = auth.currentUser;
     if (!user || !user.email) {
-      Alert.alert('Erro', 'Usuário não autenticado.');
+      setErrorMessage('Usuário não autenticado.');
       return;
     }
 
@@ -102,12 +116,13 @@ export default function AdminChangePasswordScreen() {
       setSenhaAtual('');
       setNovaSenha('');
       setConfirmarSenha('');
+      setErrorMessage('');
     } catch (error: any) {
       console.error(error);
       if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-        Alert.alert('Erro', 'A senha atual está incorreta.');
+        setErrorMessage('A senha atual está incorreta.');
       } else {
-        Alert.alert('Erro', 'Ocorreu um erro ao alterar a senha. Tente novamente mais tarde.');
+        setErrorMessage(`Erro ao alterar senha: ${error.message}`);
       }
     } finally {
       setLoading(false);
@@ -125,11 +140,11 @@ export default function AdminChangePasswordScreen() {
         <Text style={styles.headerTitle}>Mudar Senha</Text>
       </View>
 
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView
-          contentContainerStyle={[styles.scrollContent, { paddingBottom: Math.max(insets.bottom, 20) + 80 }]}
+          contentContainerStyle={[styles.scrollContent, { flexGrow: 1, paddingBottom: Math.max(insets.bottom, 20) + 40 }]}
           showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
+          keyboardShouldPersistTaps="always"
         >
           <Text style={styles.description}>
             Mantenha sua conta de administrador segura atualizando sua senha regularmente.
@@ -185,23 +200,29 @@ export default function AdminChangePasswordScreen() {
               </Text>
             </View>
           )}
-        </ScrollView>
 
-        {/* Footer Button */}
-        <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 20) + 70 }]}>
-          <TouchableOpacity
-            style={[styles.saveButton, !canSave && styles.saveButtonDisabled]}
-            activeOpacity={canSave ? 0.8 : 1}
-            disabled={!canSave}
-            onPress={handleChangePassword}
-          >
-            {loading ? (
-              <ActivityIndicator color={WHITE} />
-            ) : (
-              <Text style={styles.saveButtonText}>Salvar Nova Senha</Text>
-            )}
-          </TouchableOpacity>
-        </View>
+          {errorMessage ? (
+            <View style={styles.errorBox}>
+              <Ionicons name="warning" size={20} color="#EF4444" />
+              <Text style={styles.errorTextMsg}>{errorMessage}</Text>
+            </View>
+          ) : null}
+          
+          {/* Footer Button */}
+          <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 20) + 70 }]}>
+            <TouchableOpacity
+              style={[styles.saveButton, !canSave && styles.saveButtonDisabled]}
+              activeOpacity={0.8}
+              onPress={handleChangePassword}
+            >
+              {loading ? (
+                <ActivityIndicator color={WHITE} />
+              ) : (
+                <Text style={styles.saveButtonText}>Salvar Nova Senha</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </View>
   );
@@ -327,5 +348,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: WHITE,
+  },
+  errorBox: {
+    flexDirection: 'row',
+    backgroundColor: '#FEF2F2',
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  errorTextMsg: {
+    color: '#EF4444',
+    marginLeft: 8,
+    fontSize: 14,
+    fontWeight: '500',
+    flex: 1,
   },
 });
