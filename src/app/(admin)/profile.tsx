@@ -32,14 +32,26 @@ export default function AdminProfileScreen() {
         </View>
         <Text style={styles.emailText}>{auth.currentUser?.email || 'Admin'}</Text>
 
-        <TouchableOpacity 
-          style={styles.logoutButton} 
-          onPress={handleLogout}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="log-out-outline" size={24} color={WHITE} style={{ marginRight: 8 }} />
-          <Text style={styles.logoutText}>Sair da Conta</Text>
-        </TouchableOpacity>
+        <View style={styles.actionsContainer}>
+          <TouchableOpacity 
+            style={styles.actionButton} 
+            onPress={() => router.push('/(admin)/change-password')}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="lock-closed-outline" size={24} color={HEADER} style={{ marginRight: 12 }} />
+            <Text style={styles.actionText}>Mudar Senha</Text>
+            <Ionicons name="chevron-forward" size={20} color="#9CA3AF" style={{ marginLeft: 'auto' }} />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.logoutButton} 
+            onPress={handleLogout}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="log-out-outline" size={24} color={WHITE} style={{ marginRight: 8 }} />
+            <Text style={styles.logoutText}>Sair da Conta</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -83,13 +95,42 @@ const styles = StyleSheet.create({
     color: '#1F2937',
     marginBottom: 40,
   },
+  actionsContainer: {
+    width: '100%',
+    gap: 16,
+  },
+  actionButton: {
+    backgroundColor: WHITE,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+  },
+  actionText: {
+    color: '#1F2937',
+    fontSize: 16,
+    fontWeight: '600',
+  },
   logoutButton: {
     backgroundColor: '#EF4444',
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    borderRadius: 12,
+    justifyContent: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 16,
+    marginTop: 10,
+    shadowColor: '#EF4444',
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
   },
   logoutText: {
     color: WHITE,
