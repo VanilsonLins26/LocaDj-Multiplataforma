@@ -121,6 +121,8 @@ export default function AdminChangePasswordScreen() {
       console.error(error);
       if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
         setErrorMessage('A senha atual está incorreta.');
+      } else if (error.code === 'auth/too-many-requests') {
+        setErrorMessage('Muitas tentativas falhas. Sua conta foi temporariamente bloqueada para essa ação. Tente novamente mais tarde.');
       } else {
         setErrorMessage(`Erro ao alterar senha: ${error.message}`);
       }
