@@ -7,11 +7,14 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
+  Modal,
+  TextInput,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db, auth } from '../../../config/firebaseConfig';
 
 const PRIMARY = '#5B4EE4';
@@ -29,6 +32,7 @@ interface User {
   role: string;
   cpf?: string;
   createdAt: any;
+  ratings?: Record<string, { score: number; feedback: string; createdAt: string }>;
 }
 
 export default function AdminUserDetailsScreen() {
@@ -38,6 +42,47 @@ export default function AdminUserDetailsScreen() {
   const [user, setUser] = useState<User | null>(null);
   const [reservations, setReservations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Modal Rating States
+  const [ratingModalVisible, setRatingModalVisible] = useState(false);
+  const [selectedReservation, setSelectedReservation] = useState<any>(null);
+  const [ratingScore, setRatingScore] = useState('');
+  const [ratingFeedback, setRatingFeedback] = useState('');
+  const [savingRating, setSavingRating] = useState(false);
+
+  const handleSaveRating = async () => {
+    if (!selectedReservation || !user) return;
+    const scoreNum = parseFloat(ratingScore.replace(',', '.'));
+    if (isNaN(scoreNum) || scoreNum < 0 || scoreNum > 10) {
+      Alert.alert('Nota Inválida', 'Por favor, insira uma nota numérica entre 0 e 10.');
+      return;
+    }
+    
+    setSavingRating(true);
+    try {
+      const userRef = doc(db, 'users', user.id);
+      const newRatings = {
+        ...(user.ratings || {}),
+        [selectedReservation.id]: {
+          score: scoreNum,
+          feedback: ratingFeedback.trim(),
+          createdAt: new Date().toISOString()
+        }
+      };
+      
+      await updateDoc(userRef, { ratings: newRatings });
+      setUser({ ...user, ratings: newRatings });
+      
+      setRatingModalVisible(false);
+      setRatingScore('');
+      setRatingFeedback('');
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Erro', 'Não foi possível salvar a avaliação.');
+    } finally {
+      setSavingRating(false);
+    }
+  };
 
   const fetchUserDetailsAndReservations = useCallback(async () => {
     try {
@@ -223,10 +268,12 @@ export default function AdminUserDetailsScreen() {
               const price = item.totalAmount ? `R$ ${item.totalAmount.toFixed(2).replace('.', ',')}` : 'R$ 0,00';
               const daily = item.daily || 1;
               const imageUrl = item.kit?.imageUrl;
+              const existingRating = user?.ratings?.[item.id];
 
               return (
                 <View key={item.id} style={styles.reservationCard}>
-                  <View style={styles.imageContainer}>
+                  <View style={styles.reservationMainContent}>
+                    <View style={styles.imageContainer}>
                     {imageUrl ? (
                       <Image source={{ uri: imageUrl }} style={styles.cardImage} resizeMode="cover" />
                     ) : (
@@ -256,12 +303,99 @@ export default function AdminUserDetailsScreen() {
                       <Text style={styles.priceText}>{price}</Text>
                     </View>
                   </View>
+                  </View>
+
+                  {/* Rating Section */}
+                  <View style={styles.ratingSection}>
+                    {existingRating ? (
+                      <View style={styles.existingRatingBox}>
+                        <View style={styles.ratingHeaderBox}>
+                          <Ionicons name="star" size={16} color="#F59E0B" />
+                          <Text style={styles.ratingScoreText}>Nota: {existingRating.score}/10</Text>
+                        </View>
+                        {existingRating.feedback ? (
+                          <Text style={styles.ratingFeedbackText}>Feedback: {existingRating.feedback}</Text>
+                        ) : null}
+                      </View>
+                    ) : (
+                      <TouchableOpacity 
+                        style={styles.rateButton}
+                        onPress={() => {
+                          setSelectedReservation(item);
+                          setRatingScore('');
+                          setRatingFeedback('');
+                          setRatingModalVisible(true);
+                        }}
+                      >
+                        <Ionicons name="star-outline" size={16} color={PRIMARY} />
+                        <Text style={styles.rateButtonText}>Avaliar Locação</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
                 </View>
               );
             })
           )}
         </View>
       </ScrollView>
+
+      {/* Modal de Avaliação */}
+      <Modal
+        visible={ratingModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setRatingModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Avaliar Aluguel</Text>
+              <TouchableOpacity onPress={() => setRatingModalVisible(false)}>
+                <Ionicons name="close" size={24} color={GRAY_500} />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.modalSubtitle}>
+              Locação de: {selectedReservation?.kit?.name || selectedReservation?.kitName || ''}
+            </Text>
+
+            <Text style={styles.inputLabel}>Nota (0 a 10)</Text>
+            <TextInput
+              style={styles.scoreInput}
+              placeholder="Ex: 10"
+              placeholderTextColor={GRAY_300}
+              keyboardType="numeric"
+              value={ratingScore}
+              onChangeText={setRatingScore}
+              maxLength={4}
+            />
+
+            <Text style={styles.inputLabel}>Feedback (Opcional)</Text>
+            <TextInput
+              style={styles.feedbackInput}
+              placeholder="Ex: Entregou no prazo, tudo certo."
+              placeholderTextColor={GRAY_300}
+              multiline
+              textAlignVertical="top"
+              value={ratingFeedback}
+              onChangeText={setRatingFeedback}
+            />
+
+            <TouchableOpacity 
+              style={[styles.saveRatingBtn, (!ratingScore || savingRating) && styles.saveRatingBtnDisabled]}
+              onPress={handleSaveRating}
+              disabled={!ratingScore || savingRating}
+            >
+              {savingRating ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.saveRatingBtnText}>Salvar Avaliação</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
     </SafeAreaView>
   );
 }
@@ -408,7 +542,6 @@ const styles = StyleSheet.create({
     color: GRAY_500,
   },
   reservationCard: {
-    flexDirection: 'row',
     backgroundColor: '#fff',
     borderRadius: 16,
     marginBottom: 16,
@@ -418,6 +551,9 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
+  },
+  reservationMainContent: {
+    flexDirection: 'row',
   },
   imageContainer: {
     width: 100,
@@ -497,5 +633,113 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     color: GRAY_900,
+  },
+  ratingSection: {
+    borderTopWidth: 1,
+    borderTopColor: GRAY_100,
+    backgroundColor: '#FAFAFA',
+  },
+  rateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+  },
+  rateButtonText: {
+    marginLeft: 6,
+    fontSize: 14,
+    fontWeight: '600',
+    color: PRIMARY,
+  },
+  existingRatingBox: {
+    padding: 12,
+  },
+  ratingHeaderBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  ratingScoreText: {
+    marginLeft: 4,
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#B45309',
+  },
+  ratingFeedbackText: {
+    fontSize: 13,
+    color: GRAY_500,
+    lineHeight: 18,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    width: '90%',
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 24,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: GRAY_900,
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: GRAY_500,
+    marginBottom: 20,
+  },
+  inputLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: GRAY_900,
+    marginBottom: 8,
+  },
+  scoreInput: {
+    borderWidth: 1,
+    borderColor: GRAY_300,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    height: 48,
+    fontSize: 16,
+    color: GRAY_900,
+    marginBottom: 16,
+    backgroundColor: '#fff',
+  },
+  feedbackInput: {
+    borderWidth: 1,
+    borderColor: GRAY_300,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingTop: 12,
+    height: 100,
+    fontSize: 15,
+    color: GRAY_900,
+    marginBottom: 24,
+    backgroundColor: '#fff',
+  },
+  saveRatingBtn: {
+    backgroundColor: PRIMARY,
+    height: 48,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  saveRatingBtnDisabled: {
+    backgroundColor: GRAY_300,
+  },
+  saveRatingBtnText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });

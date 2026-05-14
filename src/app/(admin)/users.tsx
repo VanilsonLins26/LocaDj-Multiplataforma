@@ -28,6 +28,7 @@ interface User {
   phone: string;
   role: string;
   createdAt: any;
+  ratings?: Record<string, { score: number; feedback: string }>;
 }
 
 export default function AdminUsersScreen() {
@@ -68,7 +69,18 @@ export default function AdminUsersScreen() {
     (user.email?.toLowerCase() || '').includes(searchQuery.toLowerCase())
   );
 
-  const renderItem = ({ item }: { item: User }) => (
+  const renderItem = ({ item }: { item: User }) => {
+    let avgScore = 0;
+    let ratingCount = 0;
+    if (item.ratings) {
+      const scores = Object.values(item.ratings).map(r => r.score);
+      if (scores.length > 0) {
+        ratingCount = scores.length;
+        avgScore = scores.reduce((a, b) => a + b, 0) / scores.length;
+      }
+    }
+
+    return (
     <View style={styles.userCard}>
       <View style={styles.cardHeader}>
         <View style={styles.userInfo}>
@@ -89,6 +101,17 @@ export default function AdminUsersScreen() {
           </Text>
         </View>
       </View>
+
+      <View style={[styles.ratingContainer, ratingCount === 0 && styles.ratingContainerEmpty]}>
+        <Ionicons name="star" size={16} color={ratingCount > 0 ? "#F59E0B" : "#9CA3AF"} />
+        <Text style={[styles.ratingText, ratingCount === 0 && styles.ratingTextEmpty]}>
+          Média: {ratingCount > 0 ? (Number.isInteger(avgScore) ? avgScore : avgScore.toFixed(1)) : '-'}
+          <Text style={[styles.ratingCount, ratingCount === 0 && styles.ratingCountEmpty]}>
+            {ratingCount > 0 ? `/10 (${ratingCount} ${ratingCount === 1 ? 'avaliação' : 'avaliações'})` : ' (sem avaliações)'}
+          </Text>
+        </Text>
+      </View>
+
       <View style={styles.cardActions}>
         <TouchableOpacity 
           style={styles.detailsButton} 
@@ -102,7 +125,8 @@ export default function AdminUsersScreen() {
         </TouchableOpacity>
       </View>
     </View>
-  );
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -227,7 +251,37 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFBEB',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
     marginBottom: 12,
+    alignSelf: 'flex-start',
+  },
+  ratingContainerEmpty: {
+    backgroundColor: '#F3F4F6',
+  },
+  ratingText: {
+    marginLeft: 6,
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#B45309',
+  },
+  ratingTextEmpty: {
+    color: '#6B7280',
+  },
+  ratingCount: {
+    fontSize: 11,
+    fontWeight: '400',
+    color: '#92400E',
+  },
+  ratingCountEmpty: {
+    color: '#9CA3AF',
   },
   cardActions: {
     borderTopWidth: 1,
