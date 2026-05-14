@@ -60,7 +60,6 @@ export default function AdminUserDetailsScreen() {
     
     setSavingRating(true);
     try {
-      const userRef = doc(db, 'users', user.id);
       const newRatings = {
         ...(user.ratings || {}),
         [selectedReservation.id]: {
@@ -70,8 +69,14 @@ export default function AdminUserDetailsScreen() {
         }
       };
       
-      await updateDoc(userRef, { ratings: newRatings });
-      setUser({ ...user, ratings: newRatings });
+      if (user.id === 'mock-user-123') {
+        // Apenas simula a atualização local
+        setUser({ ...user, ratings: newRatings });
+      } else {
+        const userRef = doc(db, 'users', user.id);
+        await updateDoc(userRef, { ratings: newRatings });
+        setUser({ ...user, ratings: newRatings });
+      }
       
       setRatingModalVisible(false);
       setRatingScore('');
@@ -87,6 +92,72 @@ export default function AdminUserDetailsScreen() {
   const fetchUserDetailsAndReservations = useCallback(async () => {
     try {
       setLoading(true);
+
+      if (id === 'mock-user-123') {
+        const mockUser: User = {
+          id: 'mock-user-123',
+          name: 'Usuário Exemplo',
+          email: 'exemplo@locadj.com',
+          phone: '(11) 98765-4321',
+          role: 'user',
+          cpf: '123.456.789-00',
+          createdAt: new Date().toISOString(),
+          ratings: {
+            'loc1': { score: 10, feedback: 'Excelente!', createdAt: new Date().toISOString() },
+            'loc2': { score: 8, feedback: 'Entregou um pouco atrasado.', createdAt: new Date().toISOString() },
+            'loc3': { score: 9, feedback: 'Ótimo estado.', createdAt: new Date().toISOString() }
+          }
+        };
+        
+        const mockReservations = [
+          {
+            id: 'loc1',
+            kit: { name: 'Kit CDJ 2000 Nexus + DJM 900' },
+            startDateTime: new Date().toISOString(),
+            endDateTime: new Date(Date.now() + 86400000).toISOString(),
+            totalAmount: 450.00,
+            daily: 1,
+            status: 'CONCLUIDA',
+            user: { email: 'exemplo@locadj.com' }
+          },
+          {
+            id: 'loc2',
+            kit: { name: 'Pioneer DDJ-1000' },
+            startDateTime: new Date(Date.now() - 86400000 * 5).toISOString(),
+            endDateTime: new Date(Date.now() - 86400000 * 3).toISOString(),
+            totalAmount: 300.00,
+            daily: 2,
+            status: 'CONCLUIDA',
+            user: { email: 'exemplo@locadj.com' }
+          },
+          {
+            id: 'loc3',
+            kit: { name: 'Kit Caixa Ativa JBL' },
+            startDateTime: new Date(Date.now() - 86400000 * 10).toISOString(),
+            endDateTime: new Date(Date.now() - 86400000 * 9).toISOString(),
+            totalAmount: 150.00,
+            daily: 1,
+            status: 'CONCLUIDA',
+            user: { email: 'exemplo@locadj.com' }
+          },
+          {
+            id: 'loc4',
+            kit: { name: 'Mesa de Som Yamaha 10 canais' },
+            startDateTime: new Date(Date.now() - 86400000 * 15).toISOString(),
+            endDateTime: new Date(Date.now() - 86400000 * 13).toISOString(),
+            totalAmount: 120.00,
+            daily: 2,
+            status: 'CONCLUIDA',
+            user: { email: 'exemplo@locadj.com' }
+          }
+        ];
+
+        setUser(mockUser);
+        setReservations(mockReservations);
+        setLoading(false);
+        return;
+      }
+
       // Fetch User Details from Firebase
       const userDocRef = doc(db, 'users', id as string);
       const userSnapshot = await getDoc(userDocRef);
