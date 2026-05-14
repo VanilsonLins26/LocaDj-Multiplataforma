@@ -112,7 +112,9 @@ export default function AdminChangePasswordScreen() {
       // Atualizar a senha
       await updatePassword(user, novaSenha);
       
-      Alert.alert('Sucesso', 'Senha alterada com sucesso!');
+      Alert.alert('Sucesso', 'Senha alterada com sucesso!', [
+        { text: 'OK', onPress: () => router.back() }
+      ]);
       setSenhaAtual('');
       setNovaSenha('');
       setConfirmarSenha('');
