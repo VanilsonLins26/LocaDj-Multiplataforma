@@ -89,6 +89,23 @@ export default function AdminUsersScreen() {
         fetchedUsers.forEach(user => { user.rentalCount = 0; });
       }
 
+      // Adicionar usuário fixo de exemplo
+      const mockUser: User = {
+        id: 'mock-user-123',
+        name: 'Usuário Exemplo',
+        email: 'exemplo@locadj.com',
+        phone: '(11) 98765-4321',
+        role: 'user',
+        createdAt: new Date().toISOString(),
+        ratings: {
+          'loc1': { score: 10, feedback: 'Excelente!' },
+          'loc2': { score: 8, feedback: 'Entregou um pouco atrasado.' },
+          'loc3': { score: 9, feedback: 'Ótimo estado.' }
+        },
+        rentalCount: 4, // Exemplo com 4 locações, mas apenas 3 avaliadas
+      };
+      fetchedUsers.unshift(mockUser);
+
       setUsers(fetchedUsers);
     } catch (error) {
       console.error('Erro ao buscar usuários:', error);
