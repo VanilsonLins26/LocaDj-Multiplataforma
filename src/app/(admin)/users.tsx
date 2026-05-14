@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
-import { db } from '../../config/firebaseConfig';
+import { db, auth } from '../../config/firebaseConfig';
 import { useRouter } from 'expo-router';
 
 const PRIMARY = '#5B4EE4';
@@ -29,6 +29,7 @@ interface User {
   role: string;
   createdAt: any;
   ratings?: Record<string, { score: number; feedback: string }>;
+  rentalCount?: number;
 }
 
 export default function AdminUsersScreen() {
@@ -46,6 +47,48 @@ export default function AdminUsersScreen() {
       querySnapshot.forEach((doc) => {
         fetchedUsers.push({ id: doc.id, ...doc.data() } as User);
       });
+      
+      try {
+        const currentUser = auth.currentUser;
+        if (currentUser) {
+          const idToken = await currentUser.getIdToken();
+          const headers: Record<string, string> = { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${idToken}`
+          };
+
+          const BASE_URL = 'https://locadj.onrender.com/api/reservations';
+          const listResp = await fetch(BASE_URL, { headers });
+          let allData: any[] = [];
+          
+          if (listResp.ok) {
+            const json = await listResp.json();
+            allData = Array.isArray(json) ? json : (json.value ?? []);
+            
+            const emailCounts: Record<string, number> = {};
+            allData.forEach(item => {
+              if (item && item.user && item.user.email) {
+                const email = item.user.email.toLowerCase();
+                emailCounts[email] = (emailCounts[email] || 0) + 1;
+              }
+            });
+            
+            fetchedUsers.forEach(user => {
+               if (user.email) {
+                 user.rentalCount = emailCounts[user.email.toLowerCase()] || 0;
+               }
+            });
+          } else {
+             fetchedUsers.forEach(user => { user.rentalCount = 0; });
+          }
+        } else {
+           fetchedUsers.forEach(user => { user.rentalCount = 0; });
+        }
+      } catch (apiError) {
+        console.error('Erro na API de reservas:', apiError);
+        fetchedUsers.forEach(user => { user.rentalCount = 0; });
+      }
+
       setUsers(fetchedUsers);
     } catch (error) {
       console.error('Erro ao buscar usuários:', error);
@@ -102,14 +145,25 @@ export default function AdminUsersScreen() {
         </View>
       </View>
 
-      <View style={[styles.ratingContainer, ratingCount === 0 && styles.ratingContainerEmpty]}>
-        <Ionicons name="star" size={16} color={ratingCount > 0 ? "#F59E0B" : "#9CA3AF"} />
-        <Text style={[styles.ratingText, ratingCount === 0 && styles.ratingTextEmpty]}>
-          Média: {ratingCount > 0 ? (Number.isInteger(avgScore) ? avgScore : avgScore.toFixed(1)) : '-'}
-          <Text style={[styles.ratingCount, ratingCount === 0 && styles.ratingCountEmpty]}>
-            {ratingCount > 0 ? `/10 (${ratingCount} ${ratingCount === 1 ? 'avaliação' : 'avaliações'})` : ' (sem avaliações)'}
+      <View style={styles.statsRow}>
+        <View style={[styles.ratingContainer, ratingCount === 0 && styles.ratingContainerEmpty]}>
+          <Ionicons name="star" size={16} color={ratingCount > 0 ? "#F59E0B" : "#9CA3AF"} />
+          <Text style={[styles.ratingText, ratingCount === 0 && styles.ratingTextEmpty]}>
+            Média: {ratingCount > 0 ? (Number.isInteger(avgScore) ? avgScore : avgScore.toFixed(1)) : '-'}
+            <Text style={[styles.ratingCount, ratingCount === 0 && styles.ratingCountEmpty]}>
+              {ratingCount > 0 ? `/10 (${ratingCount} ${ratingCount === 1 ? 'avaliação' : 'avaliações'})` : ' (sem avaliações)'}
+            </Text>
           </Text>
-        </Text>
+        </View>
+
+        {item.rentalCount !== undefined && (
+          <View style={[styles.rentalContainer, item.rentalCount === 0 && styles.rentalContainerEmpty]}>
+            <Ionicons name="calendar" size={16} color={item.rentalCount > 0 ? "#059669" : "#9CA3AF"} />
+            <Text style={[styles.rentalText, item.rentalCount === 0 && styles.rentalTextEmpty]}>
+              {item.rentalCount > 0 ? `Já alugou ${item.rentalCount} ${item.rentalCount === 1 ? 'vez' : 'vezes'}` : 'Nunca fez um aluguel'}
+            </Text>
+          </View>
+        )}
       </View>
 
       <View style={styles.cardActions}>
@@ -253,6 +307,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 8,
   },
+  statsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 12,
+  },
   ratingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -260,8 +320,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
-    marginBottom: 12,
-    alignSelf: 'flex-start',
   },
   ratingContainerEmpty: {
     backgroundColor: '#F3F4F6',
@@ -282,6 +340,26 @@ const styles = StyleSheet.create({
   },
   ratingCountEmpty: {
     color: '#9CA3AF',
+  },
+  rentalContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#D1FAE5',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  rentalContainerEmpty: {
+    backgroundColor: '#F3F4F6',
+  },
+  rentalText: {
+    marginLeft: 6,
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#065F46',
+  },
+  rentalTextEmpty: {
+    color: '#6B7280',
   },
   cardActions: {
     borderTopWidth: 1,
