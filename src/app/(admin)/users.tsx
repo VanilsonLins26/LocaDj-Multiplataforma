@@ -7,7 +7,8 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   RefreshControl,
-  TextInput
+  TextInput,
+  Image
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -27,6 +28,7 @@ interface User {
   email: string;
   phone: string;
   role: string;
+  avatar?: string;
   createdAt: any;
   ratings?: Record<string, { score: number; feedback: string }>;
   rentalCount?: number;
@@ -96,6 +98,7 @@ export default function AdminUsersScreen() {
         email: 'exemplo@locadj.com',
         phone: '(11) 98765-4321',
         role: 'user',
+        avatar: 'https://api.dicebear.com/9.x/avataaars/png?seed=Felix&backgroundColor=b6e3f4',
         createdAt: new Date().toISOString(),
         ratings: {
           'loc1': { score: 10, feedback: 'Excelente!' },
@@ -145,9 +148,13 @@ export default function AdminUsersScreen() {
       <View style={styles.cardHeader}>
         <View style={styles.userInfo}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {item.name ? item.name.charAt(0).toUpperCase() : '?'}
-            </Text>
+            {item.avatar ? (
+              <Image source={{ uri: item.avatar }} style={styles.avatarImg} />
+            ) : (
+              <Text style={styles.avatarText}>
+                {item.name ? item.name.charAt(0).toUpperCase() : '?'}
+              </Text>
+            )}
           </View>
           <View style={styles.userDetails}>
             <Text style={styles.userName}>{item.name}</Text>
@@ -407,6 +414,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
+    overflow: 'hidden',
+  },
+  avatarImg: {
+    width: '100%',
+    height: '100%',
   },
   avatarText: {
     fontSize: 20,

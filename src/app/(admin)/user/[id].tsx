@@ -30,6 +30,7 @@ interface User {
   email: string;
   phone: string;
   role: string;
+  avatar?: string;
   cpf?: string;
   createdAt: any;
   ratings?: Record<string, { score: number; feedback: string; createdAt: string }>;
@@ -101,6 +102,7 @@ export default function AdminUserDetailsScreen() {
           phone: '(11) 98765-4321',
           role: 'user',
           cpf: '123.456.789-00',
+          avatar: 'https://api.dicebear.com/9.x/avataaars/png?seed=Felix&backgroundColor=b6e3f4',
           createdAt: new Date().toISOString(),
           ratings: {
             'loc1': { score: 10, feedback: 'Excelente!', createdAt: new Date().toISOString() },
@@ -288,9 +290,13 @@ export default function AdminUserDetailsScreen() {
           <Text style={styles.sectionTitle}>Informações Pessoais</Text>
           <View style={styles.infoCard}>
             <View style={styles.avatarLarge}>
-              <Text style={styles.avatarTextLarge}>
-                {user.name ? user.name.charAt(0).toUpperCase() : '?'}
-              </Text>
+              {user.avatar ? (
+                <Image source={{ uri: user.avatar }} style={styles.avatarImgLarge} />
+              ) : (
+                <Text style={styles.avatarTextLarge}>
+                  {user.name ? user.name.charAt(0).toUpperCase() : '?'}
+                </Text>
+              )}
             </View>
             <Text style={styles.userName}>{user.name}</Text>
             <View style={[styles.roleBadge, user.role === 'admin' ? styles.roleAdmin : styles.roleUser, { alignSelf: 'center', marginBottom: 16 }]}>
@@ -552,6 +558,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignSelf: 'center',
     marginBottom: 16,
+    overflow: 'hidden',
+  },
+  avatarImgLarge: {
+    width: '100%',
+    height: '100%',
   },
   avatarTextLarge: {
     fontSize: 32,
