@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { signOut } from 'firebase/auth';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -56,11 +56,15 @@ export default function PerfilScreen() {
         {/* Profile Card */}
         <View style={styles.profileCard}>
           <View style={styles.avatarContainer}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>
-                {userData?.name ? userData.name.substring(0, 2).toUpperCase() : 'US'}
-              </Text>
-            </View>
+            {(userData?.avatar || auth.currentUser?.photoURL) ? (
+              <Image source={{ uri: userData?.avatar || auth.currentUser?.photoURL }} style={styles.avatarImage} />
+            ) : (
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>
+                  {userData?.name ? userData.name.substring(0, 2).toUpperCase() : 'US'}
+                </Text>
+              </View>
+            )}
           </View>
 
           <Text style={styles.userName}>{userData?.name || auth.currentUser?.displayName || 'Usuário'}</Text>
@@ -177,6 +181,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#E0FCE8',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 6,
+    borderColor: '#FFF',
+  },
+  avatarImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     borderWidth: 6,
     borderColor: '#FFF',
   },

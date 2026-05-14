@@ -11,7 +11,19 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { auth, db } from '../config/firebaseConfig';
+import { auth, db, storage } from '../config/firebaseConfig';
+import { ref, uploadString, getDownloadURL } from 'firebase/storage';
+import { Image, Modal, Alert } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+
+const AVATARS = [
+  'https://api.dicebear.com/9.x/avataaars/png?seed=Felix&backgroundColor=b6e3f4',
+  'https://api.dicebear.com/9.x/avataaars/png?seed=Aneka&backgroundColor=c0aede',
+  'https://api.dicebear.com/9.x/avataaars/png?seed=Max&backgroundColor=ffdfbf',
+  'https://api.dicebear.com/9.x/avataaars/png?seed=Luna&backgroundColor=ffd5dc',
+  'https://api.dicebear.com/9.x/avataaars/png?seed=Leo&backgroundColor=d1d4f9',
+  'https://api.dicebear.com/9.x/avataaars/png?seed=Mia&backgroundColor=b6e3f4'
+];
 
 
 
@@ -45,6 +57,10 @@ export default function RegisterScreen() {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [avatar, setAvatar] = useState('');
+  const [localPhotoUri, setLocalPhotoUri] = useState<string | null>(null);
+  const [base64Data, setBase64Data] = useState<string | null>(null);
+  const [avatarModalVisible, setAvatarModalVisible] = useState(false);
 
   const strength = getStrength(password);
 
@@ -62,6 +78,29 @@ export default function RegisterScreen() {
     setError(''); return true;
   }
 
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permissão necessária', 'Precisamos de permissão para acessar sua galeria.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.3,
+      base64: true, // Adicionado aqui
+    });
+
+    if (!result.canceled) {
+      setLocalPhotoUri(result.assets[0].uri);
+      setAvatar(result.assets[0].uri); // Show preview
+      setBase64Data(result.assets[0].base64 || null); // Guardar o base64
+      setAvatarModalVisible(false);
+    }
+  };
+
   async function handleRegister() {
     if (!validateStep2()) return;
     setLoading(true);
@@ -69,29 +108,49 @@ export default function RegisterScreen() {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+      const isCustomUpload = localPhotoUri && avatar === localPhotoUri;
 
-      await updateProfile(user, { displayName: name });
-
+      // 1. SALVAR IMEDIATAMENTE NO FIRESTORE (Dados básicos)
       await setDoc(doc(db, 'users', user.uid), {
         name,
         email,
         phone,
+        avatar: isCustomUpload ? '' : avatar, // Firestore não aceita path local, salvamos vazio
         role: 'user',
-        createdAt: serverTimestamp()
+        createdAt: new Date().toISOString()
       });
 
+      // 2. ATUALIZAR PERFIL LOCAL (Para visualização imediata)
+      await updateProfile(user, { displayName: name, photoURL: avatar });
+
+      // 3. INICIAR UPLOAD EM SEGUNDO PLANO
+      if (isCustomUpload && base64Data) {
+        (async () => {
+          try {
+            const fileRef = ref(storage, `avatars/${user.uid}`);
+            await uploadString(fileRef, base64Data, 'base64');
+            const downloadUrl = await getDownloadURL(fileRef);
+
+            // Atualizar Firestore e Perfil
+            await setDoc(doc(db, 'users', user.uid), { avatar: downloadUrl }, { merge: true });
+            await updateProfile(user, { photoURL: downloadUrl });
+          } catch (uploadErr: any) {
+            console.error("Erro no upload em segundo plano:", uploadErr);
+          }
+        })();
+      }
 
       router.replace('/(tabs)/kits_list');
 
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      if (err.code === 'auth/email-already-in-use') {
-        setError('Este e-mail já está cadastrado.');
-      } else if (err.code === 'auth/invalid-email') {
-        setError('O formato do e-mail é inválido.');
-      } else {
-        setError('Erro ao criar conta. Verifique sua conexão e tente novamente.');
-      }
+      let msg = 'Erro ao criar conta. Verifique sua conexão.';
+      if (err.code === 'auth/email-already-in-use') msg = 'Este e-mail já está cadastrado.';
+      else if (err.code === 'auth/invalid-email') msg = 'O formato do e-mail é inválido.';
+      else if (err.message) msg = `Erro: ${err.message}`;
+      
+      Alert.alert("Ops!", msg);
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -148,9 +207,18 @@ export default function RegisterScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.iconContainer}>
-            <View style={styles.iconCircle}>
-              <Ionicons name="person-outline" size={36} color={PRIMARY} />
-            </View>
+            <TouchableOpacity activeOpacity={0.8} onPress={() => setAvatarModalVisible(true)}>
+              {avatar ? (
+                <Image source={{ uri: avatar }} style={styles.avatarImage} />
+              ) : (
+                <View style={styles.iconCircle}>
+                  <Ionicons name="person-outline" size={36} color={PRIMARY} />
+                </View>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity activeOpacity={0.7} onPress={() => setAvatarModalVisible(true)} style={{ marginTop: 8 }}>
+              <Text style={styles.changePhotoText}>{avatar ? 'Alterar avatar' : 'Escolher avatar'}</Text>
+            </TouchableOpacity>
           </View>
 
           <Text style={styles.title}>Criar conta</Text>
@@ -308,6 +376,43 @@ export default function RegisterScreen() {
 
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Modal de Seleção de Avatar */}
+      <Modal visible={avatarModalVisible} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Escolha um Avatar</Text>
+              <TouchableOpacity onPress={() => setAvatarModalVisible(false)}>
+                <Ionicons name="close" size={24} color={GRAY_500} />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.avatarGrid}>
+              {/* Option to Upload */}
+              <TouchableOpacity style={styles.uploadOption} onPress={pickImage}>
+                <View style={styles.uploadIconCircle}>
+                  <Ionicons name="camera" size={30} color={PRIMARY} />
+                </View>
+                <Text style={styles.uploadText}>Upload</Text>
+              </TouchableOpacity>
+
+              {AVATARS.map((url, idx) => (
+                <TouchableOpacity 
+                  key={idx} 
+                  style={[styles.avatarOption, avatar === url && !localPhotoUri && styles.avatarOptionSelected]}
+                  onPress={() => { setAvatar(url); setLocalPhotoUri(null); setAvatarModalVisible(false); }}
+                >
+                  <Image source={{ uri: url }} style={styles.avatarOptionImg} />
+                </TouchableOpacity>
+              ))}
+            </View>
+            <TouchableOpacity style={styles.removeAvatarBtn} onPress={() => { setAvatar(''); setLocalPhotoUri(null); setAvatarModalVisible(false); }}>
+              <Text style={styles.removeAvatarText}>Continuar sem Foto</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
     </SafeAreaView>
   );
 }
@@ -355,4 +460,38 @@ const styles = StyleSheet.create({
   btnPrimary: { backgroundColor: PRIMARY, borderRadius: 16, height: 54, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', shadowColor: PRIMARY, shadowOpacity: 0.3, shadowRadius: 10, shadowOffset: { width: 0, height: 5 }, elevation: 6 },
   btnDisabled: { opacity: 0.5 },
   btnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  avatarImage: { width: 80, height: 80, borderRadius: 40, borderWidth: 2, borderColor: PRIMARY },
+  changePhotoText: { fontSize: 13, fontWeight: '600', color: PRIMARY },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalContent: { backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 40 },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  modalTitle: { fontSize: 18, fontWeight: 'bold', color: GRAY_900 },
+  avatarGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 16, justifyContent: 'center', marginBottom: 20 },
+  avatarOption: { width: 70, height: 70, borderRadius: 35, borderWidth: 3, borderColor: 'transparent', overflow: 'hidden' },
+  avatarOptionSelected: { borderColor: PRIMARY },
+  avatarOptionImg: { width: '100%', height: '100%' },
+  removeAvatarBtn: { alignItems: 'center', paddingVertical: 12 },
+  removeAvatarText: { fontSize: 15, fontWeight: '600', color: GRAY_500 },
+  uploadOption: {
+    width: 70,
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  uploadIconCircle: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: '#EEF2FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: GRAY_300,
+    borderStyle: 'dashed',
+    marginBottom: 4,
+  },
+  uploadText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: PRIMARY,
+  },
 });
