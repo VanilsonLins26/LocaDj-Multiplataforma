@@ -64,7 +64,7 @@ export default function MeusDadosScreen() {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 0.3,
+      quality: 0.15,   // baixo para manter base64 pequeno
       base64: true,
     });
 
@@ -80,41 +80,60 @@ export default function MeusDadosScreen() {
     if (!auth.currentUser) return;
     setSaving(true);
     try {
-      // 1. SALVAR DADOS BÁSICOS IMEDIATAMENTE
       const isCustomUpload = localPhotoUri && avatar === localPhotoUri;
       const docRef = doc(db, 'users', auth.currentUser.uid);
-      
+
+      // Se for upload de imagem local, salva base64 no Firestore para exibição imediata.
+      // O Firebase Auth NÃO aceita base64 em photoURL (erro: photo URL too long).
+      let finalAvatarUrl = avatar;
+      if (isCustomUpload && base64Data) {
+        finalAvatarUrl = `data:image/jpeg;base64,${base64Data}`;
+      }
+
+      // 1. SALVAR DADOS NO FIRESTORE (avatar pode ser base64 ou URL)
       await setDoc(docRef, {
         name,
         phone,
-        // No Firestore guardamos o que já era oficial ou vazio, não o path local
-        avatar: isCustomUpload ? (auth.currentUser.photoURL || '') : avatar
+        avatar: finalAvatarUrl,
       }, { merge: true });
 
-      // 2. ATUALIZAR PERFIL LOCAL (Visualização imediata no dispositivo)
-      await updateProfile(auth.currentUser, { displayName: name, photoURL: avatar });
+      // 2. ATUALIZAR FIREBASE AUTH — photoURL só aceita https://, não base64
+      const authPhotoURL = finalAvatarUrl.startsWith('data:')
+        ? (auth.currentUser.photoURL || '')  // mantém a URL anterior no Auth
+        : finalAvatarUrl;
+      await updateProfile(auth.currentUser, { displayName: name, photoURL: authPhotoURL });
 
-      // 3. UPLOAD DA FOTO (NÃO BLOQUEANTE)
-      if (isCustomUpload && base64Data) {
-        (async () => {
-          try {
-            const fileRef = ref(storage, `avatars/${auth.currentUser?.uid}`);
-            await uploadString(fileRef, base64Data, 'base64');
-            const downloadUrl = await getDownloadURL(fileRef);
+      setLocalPhotoUri(null);
+      setAvatar(finalAvatarUrl);
 
-            await setDoc(docRef, { avatar: downloadUrl }, { merge: true });
-            await updateProfile(auth.currentUser!, { photoURL: downloadUrl });
-            setLocalPhotoUri(null);
-            setBase64Data(null);
-            setAvatar(downloadUrl);
-          } catch (uploadErr: any) {
-            console.error("Erro no upload:", uploadErr);
-          }
-        })();
-      }
-
-      await updateProfile(auth.currentUser, { displayName: name, photoURL: finalAvatarUrl });
       alert('Dados atualizados com sucesso!');
+
+      // 3. UPLOAD PARA STORAGE EM BACKGROUND — quando terminar, substitui o base64 pela URL real
+      if (isCustomUpload && base64Data && auth.currentUser) {
+        const uid = auth.currentUser.uid;
+        const b64 = base64Data;
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('timeout')), 25000)
+        );
+        Promise.race([
+          (async () => {
+            const fileRef = ref(storage, `avatars/${uid}`);
+            await uploadString(fileRef, b64, 'base64');
+            const downloadUrl = await getDownloadURL(fileRef);
+            // Atualiza Firestore e Auth com a URL real do Storage
+            await setDoc(doc(db, 'users', uid), { avatar: downloadUrl }, { merge: true });
+            if (auth.currentUser) {
+              await updateProfile(auth.currentUser, { photoURL: downloadUrl });
+            }
+            setAvatar(downloadUrl);
+            setBase64Data(null);
+          })(),
+          timeoutPromise,
+        ]).catch((err) => {
+          console.warn('Upload para Storage falhou ou deu timeout:', err?.message);
+          // avatar base64 já salvo no Firestore — não afeta o usuário
+        });
+      }
     } catch (error: any) {
       console.error(error);
       if (error.code === 'permission-denied') {
