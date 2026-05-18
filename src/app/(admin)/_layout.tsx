@@ -90,6 +90,13 @@ export default function AdminTabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="admin-profile-data"
+        options={{
+          href: null,
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
         name="user/[id]"
         options={{
           href: null,
