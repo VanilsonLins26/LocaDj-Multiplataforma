@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { BarChart, PieChart } from 'react-native-gifted-charts';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { auth } from '../../config/firebaseConfig';
 
 const { width } = Dimensions.get('window');
 
@@ -49,20 +50,33 @@ export default function AdminDashboardScreen() {
   const [selectedPieInfo, setSelectedPieInfo] = useState<{ name: string, value: number } | null>(null);
 
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const response = await fetch('https://locadj.onrender.com/api/admin/dashboard');
-        if (response.ok) {
-          const json = await response.json();
-          setData(json);
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        try {
+          const token = await user.getIdToken();
+          const headers = {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          };
+
+          const response = await fetch('https://locadj.onrender.com/api/admin/dashboard', { headers });
+          if (response.ok) {
+            const json = await response.json();
+            setData(json);
+          } else {
+            console.error('Failed to fetch dashboard data, status:', response.status);
+          }
+        } catch (error) {
+          console.error('Failed to fetch dashboard data:', error);
+        } finally {
+          setLoading(false);
         }
-      } catch (error) {
-        console.error('Failed to fetch dashboard data:', error);
-      } finally {
+      } else {
         setLoading(false);
       }
-    }
-    fetchData();
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const formatBarChartData = () => {
