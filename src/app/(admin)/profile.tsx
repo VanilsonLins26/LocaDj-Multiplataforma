@@ -1,6 +1,6 @@
 import { Feather, Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import React, { useCallback, useState } from 'react';
 import {
   Alert,
   ScrollView,
@@ -29,16 +29,18 @@ export default function AdminProfileScreen() {
   const [emailVerified, setEmailVerified] = useState(false);
   const [initial, setInitial] = useState('A');
 
-  useEffect(() => {
-    const user = auth.currentUser;
-    if (user) {
-      const name = user.displayName || 'Administrador';
-      setDisplayName(name);
-      setEmail(user.email || '');
-      setEmailVerified(user.emailVerified);
-      setInitial((user.displayName || user.email || 'A')[0].toUpperCase());
-    }
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      const user = auth.currentUser;
+      if (user) {
+        const name = user.displayName || 'Administrador';
+        setDisplayName(name);
+        setEmail(user.email || '');
+        setEmailVerified(user.emailVerified);
+        setInitial((user.displayName || user.email || 'A')[0].toUpperCase());
+      }
+    }, [])
+  );
 
   const handleLogout = () => {
     Alert.alert(
