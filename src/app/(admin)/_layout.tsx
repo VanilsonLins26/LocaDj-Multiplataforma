@@ -103,6 +103,13 @@ export default function AdminTabsLayout() {
           headerShown: false,
         }}
       />
+      <Tabs.Screen
+        name="reservation/[id]"
+        options={{
+          href: null,
+          headerShown: false,
+        }}
+      />
     </Tabs>
   );
 }

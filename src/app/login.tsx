@@ -67,14 +67,14 @@ export default function LoginScreen() {
       }
 
     } catch (err: any) {
-      console.error(err);
+      console.log('Login error:', err.code, err.message);
 
-      if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
+      if (err.code === 'auth/invalid-credential' || err.code === 'auth/invalid-email' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
         setError('E-mail ou senha incorretos.');
       } else if (err.code === 'auth/too-many-requests') {
         setError('Muitas tentativas. Tente novamente mais tarde.');
       } else {
-        setError('Erro ao entrar. Verifique sua conexão.');
+        setError('Erro ao entrar. Verifique seus dados e tente novamente.');
       }
       shake();
     } finally {
