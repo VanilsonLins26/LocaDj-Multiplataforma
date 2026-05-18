@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { initializeApp, getApp, getApps } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 
 // IMPORTAÇÃO CORRETA:
 import {
@@ -37,4 +38,5 @@ try {
 }
 
 export const db = getFirestore(app);
+export const storage = getStorage(app);
 export { app, auth };
