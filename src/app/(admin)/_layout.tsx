@@ -82,6 +82,13 @@ export default function AdminTabsLayout() {
           headerShown: false,
         }}
       />
+      <Tabs.Screen
+        name="admin-profile-data"
+        options={{
+          href: null,
+          headerShown: false,
+        }}
+      />
     </Tabs>
   );
 }
