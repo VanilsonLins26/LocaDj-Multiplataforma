@@ -56,10 +56,13 @@ export default function AdminUsersScreen() {
           const idToken = await currentUser.getIdToken();
           const headers: Record<string, string> = { 
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${idToken}`
+            'Authorization': `Bearer ${idToken}`,
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
           };
 
-          const BASE_URL = 'https://locadj.onrender.com/api/reservations';
+          const BASE_URL = 'https://locadj.onrender.com/api/reservations/all';
           const listResp = await fetch(BASE_URL, { headers });
           let allData: any[] = [];
           
@@ -193,10 +196,7 @@ export default function AdminUsersScreen() {
       <View style={styles.cardActions}>
         <TouchableOpacity 
           style={styles.detailsButton} 
-          onPress={() => router.push({
-            pathname: '/(admin)/user/[id]',
-            params: { id: item.id }
-          })}
+          onPress={() => router.push(`/(admin)/user/${item.id}` as any)}
         >
           <Text style={styles.detailsButtonText}>Ver Detalhes da Conta</Text>
           <Ionicons name="chevron-forward" size={16} color={PRIMARY} />

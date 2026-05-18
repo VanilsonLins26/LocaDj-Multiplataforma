@@ -179,10 +179,13 @@ export default function AdminUserDetailsScreen() {
         const idToken = await currentUser.getIdToken();
         const headers: Record<string, string> = { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${idToken}`
+          'Authorization': `Bearer ${idToken}`,
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
         };
 
-        const BASE_URL = 'https://locadj.onrender.com/api/reservations';
+        const BASE_URL = 'https://locadj.onrender.com/api/reservations/all';
         const listResp = await fetch(BASE_URL, { headers });
         let allData: any[] = [];
         

@@ -261,13 +261,6 @@ export default function AdminKitsScreen() {
       {/* Header */}
       <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) }]}>
         <Text style={styles.headerTitle}>Gerenciar Kits</Text>
-        <TouchableOpacity
-          style={styles.addHeaderBtn}
-          onPress={handleAdd}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="add" size={22} color={WHITE} />
-        </TouchableOpacity>
       </View>
 
       {/* Search */}
@@ -370,7 +363,7 @@ export default function AdminKitsScreen() {
         <TouchableOpacity
           style={[
             styles.fab,
-            { bottom: Math.max(insets.bottom, 16) + 70 },
+            { bottom: insets.bottom + 24 },
           ]}
           onPress={handleAdd}
           activeOpacity={0.85}
@@ -399,16 +392,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
   },
-  addHeaderBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
 
   // Search
+
   searchWrapper: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 12 },
   searchContainer: {
     flexDirection: 'row',
