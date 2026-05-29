@@ -5,6 +5,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import React, { useRef, useState } from 'react';
 import {
   ActivityIndicator, Animated,
+  Image,
   KeyboardAvoidingView, Platform, ScrollView,
   StyleSheet,
   Text, TextInput, TouchableOpacity,
@@ -13,13 +14,14 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { auth, db } from '../config/firebaseConfig';
 
-const PRIMARY = '#5B4EE4';
+const PRIMARY = '#8B5CF6';
 const SUCCESS = '#14D88A';
 const ERROR = '#EF4444';
-const GRAY_100 = '#F3F4F6';
-const GRAY_300 = '#D1D5DB';
-const GRAY_500 = '#6B7280';
-const GRAY_900 = '#111827';
+const BG_DARK = '#000000ff';
+const BORDER_DARK = '#27272A';
+const TEXT_LIGHT = '#FFFFFF';
+const TEXT_MUTED = '#A1A1AA';
+const PLACEHOLDER_COLOR = '#52525B';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -91,29 +93,27 @@ export default function LoginScreen() {
       >
         <View style={styles.header}>
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Ionicons name="arrow-back" size={22} color={GRAY_900} />
+            <Ionicons name="arrow-back" size={20} color={TEXT_MUTED} />
           </TouchableOpacity>
         </View>
 
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
 
-          <View style={styles.iconContainer}>
-            <View style={styles.iconCircle}>
-              <Ionicons name="mail-outline" size={36} color={PRIMARY} />
-            </View>
+          <View style={styles.logoContainer}>
+            <Image source={require('../../assets/images/dj.gif')} style={styles.logo} resizeMode="contain" />
           </View>
 
           <Text style={styles.title}>Bem-vindo!</Text>
           <Text style={styles.subtitle}>Entre com seus dados para continuar</Text>
 
-          <Animated.View style={{ transform: [{ translateX: shakeAnim }] }}>
+          <Animated.View style={{ transform: [{ translateX: shakeAnim }], marginTop: 24 }}>
             <Text style={styles.label}>E-MAIL</Text>
             <View style={[styles.inputWrap, emailFocused && styles.inputFocused, !!error && styles.inputError]}>
-              <Ionicons name="mail-outline" size={18} color={emailFocused ? PRIMARY : GRAY_500} style={styles.inputIcon} />
+              <Ionicons name="mail-outline" size={20} color={TEXT_MUTED} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder="seu@email.com"
-                placeholderTextColor={GRAY_300}
+                placeholderTextColor={PLACEHOLDER_COLOR}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -122,18 +122,15 @@ export default function LoginScreen() {
                 onFocus={() => setEmailFocused(true)}
                 onBlur={() => setEmailFocused(false)}
               />
-              {email.length > 0 && email.includes('@') && (
-                <Ionicons name="checkmark-circle" size={18} color={SUCCESS} />
-              )}
             </View>
 
             <Text style={styles.label}>SENHA</Text>
             <View style={[styles.inputWrap, passFocused && styles.inputFocused, !!error && styles.inputError]}>
-              <Ionicons name="lock-closed-outline" size={18} color={passFocused ? PRIMARY : GRAY_500} style={styles.inputIcon} />
+              <Ionicons name="lock-closed-outline" size={20} color={TEXT_MUTED} style={styles.inputIcon} />
               <TextInput
                 style={[styles.input, { flex: 1 }]}
                 placeholder="••••••••"
-                placeholderTextColor={GRAY_300}
+                placeholderTextColor={PLACEHOLDER_COLOR}
                 secureTextEntry={!showPassword}
                 value={password}
                 onChangeText={v => { setPassword(v); setError(''); }}
@@ -141,7 +138,7 @@ export default function LoginScreen() {
                 onBlur={() => setPassFocused(false)}
               />
               <TouchableOpacity onPress={() => setShowPassword(!showPassword)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={18} color={GRAY_500} />
+                <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color={TEXT_MUTED} />
               </TouchableOpacity>
             </View>
 
@@ -186,31 +183,31 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#fff' },
-  header: { paddingHorizontal: 20, paddingVertical: 12 },
-  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: GRAY_100, alignItems: 'center', justifyContent: 'center' },
-  scroll: { flexGrow: 1, paddingHorizontal: 28, paddingTop: 16, paddingBottom: 40 },
-  iconContainer: { alignItems: 'center', marginBottom: 28 },
-  iconCircle: { width: 88, height: 88, borderRadius: 44, backgroundColor: '#EEF2FF', alignItems: 'center', justifyContent: 'center' },
-  title: { fontSize: 26, fontWeight: '700', color: GRAY_900, textAlign: 'center', marginBottom: 8 },
-  subtitle: { fontSize: 15, color: GRAY_500, textAlign: 'center', marginBottom: 36, lineHeight: 22 },
-  label: { fontSize: 11, fontWeight: '700', color: GRAY_900, letterSpacing: 0.8, marginBottom: 8 },
-  inputWrap: { flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: GRAY_300, borderRadius: 14, backgroundColor: GRAY_100, paddingHorizontal: 14, marginBottom: 20, minHeight: 54 },
-  inputFocused: { borderColor: PRIMARY, backgroundColor: '#F5F3FF' },
-  inputError: { borderColor: ERROR },
-  inputIcon: { marginRight: 10 },
-  input: { flex: 1, fontSize: 15, color: GRAY_900, paddingVertical: 14 },
+  safe: { flex: 1, backgroundColor: BG_DARK },
+  header: { paddingHorizontal: 24, paddingVertical: 12 },
+  backBtn: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: BORDER_DARK, alignItems: 'center', justifyContent: 'center' },
+  scroll: { flexGrow: 1, paddingHorizontal: 32, paddingTop: 16, paddingBottom: 40 },
+  logoContainer: { alignItems: 'center', marginBottom: 24, height: 160 },
+  logo: { flex: 1, width: '100%' },
+  title: { fontSize: 32, fontWeight: '700', color: TEXT_LIGHT, textAlign: 'center', marginBottom: 8 },
+  subtitle: { fontSize: 14, color: TEXT_MUTED, textAlign: 'center', marginBottom: 20 },
+  label: { fontSize: 11, fontWeight: '700', color: TEXT_LIGHT, letterSpacing: 1, marginBottom: 12, marginTop: 12 },
+  inputWrap: { flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: BORDER_DARK, paddingBottom: 12, marginBottom: 24 },
+  inputFocused: { borderBottomColor: PRIMARY },
+  inputError: { borderBottomColor: ERROR },
+  inputIcon: { marginRight: 12 },
+  input: { flex: 1, fontSize: 16, color: TEXT_LIGHT, paddingVertical: 0 },
   errorRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: -12, marginBottom: 12 },
   errorText: { fontSize: 13, color: ERROR },
-  forgotWrap: { alignItems: 'flex-end', marginBottom: 28 },
-  forgotText: { fontSize: 14, color: PRIMARY, fontWeight: '600' },
-  btnPrimary: { backgroundColor: PRIMARY, borderRadius: 16, height: 54, alignItems: 'center', justifyContent: 'center', shadowColor: PRIMARY, shadowOpacity: 0.35, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, elevation: 8 },
+  forgotWrap: { alignItems: 'flex-end', marginBottom: 32, marginTop: -8 },
+  forgotText: { fontSize: 13, color: TEXT_MUTED, fontWeight: '500' },
+  btnPrimary: { backgroundColor: PRIMARY, borderRadius: 12, height: 56, alignItems: 'center', justifyContent: 'center' },
   btnDisabled: { opacity: 0.6 },
-  btnText: { color: '#fff', fontSize: 16, fontWeight: '700', letterSpacing: 0.3 },
-  divider: { flexDirection: 'row', alignItems: 'center', marginVertical: 28, gap: 12 },
-  dividerLine: { flex: 1, height: 1, backgroundColor: GRAY_300 },
-  dividerText: { fontSize: 13, color: GRAY_500, fontWeight: '500' },
+  btnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  divider: { flexDirection: 'row', alignItems: 'center', marginVertical: 32, gap: 16 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: BORDER_DARK },
+  dividerText: { fontSize: 13, color: TEXT_MUTED, fontWeight: '500' },
   bottomRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
-  bottomText: { fontSize: 15, color: GRAY_500 },
-  link: { fontSize: 15, color: PRIMARY, fontWeight: '700' },
+  bottomText: { fontSize: 14, color: TEXT_MUTED },
+  link: { fontSize: 14, color: TEXT_LIGHT, fontWeight: '600' },
 });

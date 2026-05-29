@@ -25,24 +25,22 @@ const AVATARS = [
   'https://api.dicebear.com/9.x/avataaars/png?seed=Mia&backgroundColor=b6e3f4'
 ];
 
-
-
-const PRIMARY = '#5B4EE4';
+const PRIMARY = '#8B5CF6';
 const SUCCESS = '#14D88A';
 const ERROR = '#EF4444';
-const GRAY_100 = '#F3F4F6';
-const GRAY_300 = '#D1D5DB';
-const GRAY_500 = '#6B7280';
-const GRAY_900 = '#111827';
+const BG_DARK = '#09090B';
+const BORDER_DARK = '#27272A';
+const TEXT_LIGHT = '#FFFFFF';
+const TEXT_MUTED = '#A1A1AA';
+const PLACEHOLDER_COLOR = '#52525B';
 
 function getStrength(p: string): { bars: number; label: string; color: string } {
-  if (!p) return { bars: 0, label: '', color: GRAY_300 };
+  if (!p) return { bars: 0, label: '', color: BORDER_DARK };
   if (p.length < 4) return { bars: 1, label: 'Muito fraca', color: ERROR };
   if (p.length < 6) return { bars: 2, label: 'Fraca', color: '#F97316' };
   if (p.length < 8) return { bars: 3, label: 'Boa', color: '#EAB308' };
   return { bars: 4, label: 'Forte', color: SUCCESS };
 }
-
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -90,13 +88,13 @@ export default function RegisterScreen() {
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.3,
-      base64: true, // Adicionado aqui
+      base64: true,
     });
 
     if (!result.canceled) {
       setLocalPhotoUri(result.assets[0].uri);
-      setAvatar(result.assets[0].uri); // Show preview
-      setBase64Data(result.assets[0].base64 || null); // Guardar o base64
+      setAvatar(result.assets[0].uri); 
+      setBase64Data(result.assets[0].base64 || null); 
       setAvatarModalVisible(false);
     }
   };
@@ -110,20 +108,17 @@ export default function RegisterScreen() {
       const user = userCredential.user;
       const isCustomUpload = localPhotoUri && avatar === localPhotoUri;
 
-      // 1. SALVAR IMEDIATAMENTE NO FIRESTORE (Dados básicos)
       await setDoc(doc(db, 'users', user.uid), {
         name,
         email,
         phone,
-        avatar: isCustomUpload ? '' : avatar, // Firestore não aceita path local, salvamos vazio
+        avatar: isCustomUpload ? '' : avatar, 
         role: 'user',
         createdAt: new Date().toISOString()
       });
 
-      // 2. ATUALIZAR PERFIL LOCAL (Para visualização imediata)
       await updateProfile(user, { displayName: name, photoURL: avatar });
 
-      // 3. INICIAR UPLOAD EM SEGUNDO PLANO
       if (isCustomUpload && base64Data) {
         (async () => {
           try {
@@ -131,7 +126,6 @@ export default function RegisterScreen() {
             await uploadString(fileRef, base64Data, 'base64');
             const downloadUrl = await getDownloadURL(fileRef);
 
-            // Atualizar Firestore e Perfil
             await setDoc(doc(db, 'users', user.uid), { avatar: downloadUrl }, { merge: true });
             await updateProfile(user, { photoURL: downloadUrl });
           } catch (uploadErr: any) {
@@ -165,14 +159,13 @@ export default function RegisterScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
-        {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.backBtn}
             onPress={() => { setError(''); step > 1 ? setStep(step - 1) : router.back(); }}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <Ionicons name="arrow-back" size={22} color={GRAY_900} />
+            <Ionicons name="arrow-back" size={20} color={TEXT_MUTED} />
           </TouchableOpacity>
 
           <View style={styles.stepsRow}>
@@ -185,20 +178,20 @@ export default function RegisterScreen() {
                   <View style={styles.stepItem}>
                     <View style={[styles.stepCircle, active && styles.stepActive, done && styles.stepDone]}>
                       {done
-                        ? <Ionicons name="checkmark" size={13} color="#fff" />
-                        : <Text style={[styles.stepNum, (active || done) && { color: '#fff' }]}>{n}</Text>
+                        ? <Ionicons name="checkmark" size={14} color={PRIMARY} />
+                        : <Text style={[styles.stepNum, active && { color: PRIMARY }]}>{n}</Text>
                       }
                     </View>
-                    <Text style={[styles.stepLabel, active && { color: PRIMARY }]}>{s.label}</Text>
+                    <Text style={[styles.stepLabel, active && { color: TEXT_LIGHT }]}>{s.label}</Text>
                   </View>
                   {i < steps.length - 1 && (
-                    <View style={[styles.stepLine, done && { backgroundColor: SUCCESS }]} />
+                    <View style={[styles.stepLine, done && { backgroundColor: PRIMARY }]} />
                   )}
                 </React.Fragment>
               );
             })}
           </View>
-          <View style={{ width: 40 }} />
+          <View style={{ width: 44 }} />
         </View>
 
         <ScrollView
@@ -212,11 +205,14 @@ export default function RegisterScreen() {
                 <Image source={{ uri: avatar }} style={styles.avatarImage} />
               ) : (
                 <View style={styles.iconCircle}>
-                  <Ionicons name="person-outline" size={36} color={PRIMARY} />
+                  <Ionicons name="camera-outline" size={32} color={PRIMARY} />
+                  <View style={styles.addBadge}>
+                    <Ionicons name="add" size={14} color={BG_DARK} />
+                  </View>
                 </View>
               )}
             </TouchableOpacity>
-            <TouchableOpacity activeOpacity={0.7} onPress={() => setAvatarModalVisible(true)} style={{ marginTop: 8 }}>
+            <TouchableOpacity activeOpacity={0.7} onPress={() => setAvatarModalVisible(true)} style={{ marginTop: 12 }}>
               <Text style={styles.changePhotoText}>{avatar ? 'Alterar avatar' : 'Escolher avatar'}</Text>
             </TouchableOpacity>
           </View>
@@ -224,16 +220,15 @@ export default function RegisterScreen() {
           <Text style={styles.title}>Criar conta</Text>
           <Text style={styles.subtitle}>Preencha seus dados para começar</Text>
 
-          {/* ─── PASSO 1 ─── */}
           {step === 1 && (
             <>
               <Text style={styles.label}>NOME COMPLETO</Text>
               <View style={styles.inputWrap}>
-                <Ionicons name="person-outline" size={18} color={GRAY_500} style={styles.inputIcon} />
+                <Ionicons name="person-outline" size={20} color={TEXT_MUTED} style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   placeholder="Seu nome completo"
-                  placeholderTextColor={GRAY_300}
+                  placeholderTextColor={PLACEHOLDER_COLOR}
                   value={name}
                   onChangeText={v => { setName(v); setError(''); }}
                 />
@@ -241,11 +236,11 @@ export default function RegisterScreen() {
 
               <Text style={styles.label}>E-MAIL</Text>
               <View style={styles.inputWrap}>
-                <Ionicons name="mail-outline" size={18} color={GRAY_500} style={styles.inputIcon} />
+                <Ionicons name="mail-outline" size={20} color={TEXT_MUTED} style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   placeholder="seu@email.com"
-                  placeholderTextColor={GRAY_300}
+                  placeholderTextColor={PLACEHOLDER_COLOR}
                   keyboardType="email-address"
                   autoCapitalize="none"
                   value={email}
@@ -255,11 +250,11 @@ export default function RegisterScreen() {
 
               <Text style={styles.label}>TELEFONE</Text>
               <View style={styles.inputWrap}>
-                <Ionicons name="call-outline" size={18} color={GRAY_500} style={styles.inputIcon} />
+                <Ionicons name="call-outline" size={20} color={TEXT_MUTED} style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   placeholder="(00) 00000-0000"
-                  placeholderTextColor={GRAY_300}
+                  placeholderTextColor={PLACEHOLDER_COLOR}
                   keyboardType="phone-pad"
                   value={phone}
                   onChangeText={v => { setPhone(v); setError(''); }}
@@ -284,22 +279,21 @@ export default function RegisterScreen() {
             </>
           )}
 
-          {/* ─── PASSO 2 ─── */}
           {step === 2 && (
             <>
               <Text style={styles.label}>SENHA</Text>
               <View style={styles.inputWrap}>
-                <Ionicons name="lock-closed-outline" size={18} color={GRAY_500} style={styles.inputIcon} />
+                <Ionicons name="lock-closed-outline" size={20} color={TEXT_MUTED} style={styles.inputIcon} />
                 <TextInput
                   style={[styles.input, { flex: 1 }]}
                   placeholder="Mínimo 6 caracteres"
-                  placeholderTextColor={GRAY_300}
+                  placeholderTextColor={PLACEHOLDER_COLOR}
                   secureTextEntry={!showPass}
                   value={password}
                   onChangeText={v => { setPassword(v); setError(''); }}
                 />
                 <TouchableOpacity onPress={() => setShowPass(!showPass)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                  <Ionicons name={showPass ? 'eye-off-outline' : 'eye-outline'} size={18} color={GRAY_500} />
+                  <Ionicons name={showPass ? 'eye-off-outline' : 'eye-outline'} size={20} color={TEXT_MUTED} />
                 </TouchableOpacity>
               </View>
 
@@ -307,7 +301,7 @@ export default function RegisterScreen() {
                 <View style={styles.strengthWrap}>
                   <View style={styles.strengthBars}>
                     {[1, 2, 3, 4].map(i => (
-                      <View key={i} style={[styles.strengthBar, { backgroundColor: i <= strength.bars ? strength.color : GRAY_300 }]} />
+                      <View key={i} style={[styles.strengthBar, { backgroundColor: i <= strength.bars ? strength.color : BORDER_DARK }]} />
                     ))}
                   </View>
                   <Text style={[styles.strengthLabel, { color: strength.color }]}>{strength.label}</Text>
@@ -316,11 +310,11 @@ export default function RegisterScreen() {
 
               <Text style={styles.label}>CONFIRMAR SENHA</Text>
               <View style={styles.inputWrap}>
-                <Ionicons name="lock-closed-outline" size={18} color={GRAY_500} style={styles.inputIcon} />
+                <Ionicons name="lock-closed-outline" size={20} color={TEXT_MUTED} style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   placeholder="Repita a senha"
-                  placeholderTextColor={GRAY_300}
+                  placeholderTextColor={PLACEHOLDER_COLOR}
                   secureTextEntry
                   value={confirmPassword}
                   onChangeText={v => { setConfirmPassword(v); setError(''); }}
@@ -328,7 +322,7 @@ export default function RegisterScreen() {
                 {confirmPassword.length > 0 && (
                   <Ionicons
                     name={password === confirmPassword ? 'checkmark-circle' : 'close-circle'}
-                    size={18}
+                    size={20}
                     color={password === confirmPassword ? SUCCESS : ERROR}
                   />
                 )}
@@ -367,28 +361,32 @@ export default function RegisterScreen() {
             </>
           )}
 
-          <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 24 }}>
-            <Text style={{ fontSize: 15, color: GRAY_500 }}>Já tem conta? </Text>
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>ou</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          <View style={styles.bottomRow}>
+            <Text style={styles.bottomText}>Já tem conta? </Text>
             <TouchableOpacity onPress={() => router.replace('/login')} hitSlop={{ top: 8, bottom: 8 }}>
-              <Text style={{ fontSize: 15, color: PRIMARY, fontWeight: '700' }}>Entrar</Text>
+              <Text style={styles.link}>Entrar</Text>
             </TouchableOpacity>
           </View>
 
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* Modal de Seleção de Avatar */}
       <Modal visible={avatarModalVisible} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Escolha um Avatar</Text>
               <TouchableOpacity onPress={() => setAvatarModalVisible(false)}>
-                <Ionicons name="close" size={24} color={GRAY_500} />
+                <Ionicons name="close" size={24} color={TEXT_MUTED} />
               </TouchableOpacity>
             </View>
             <View style={styles.avatarGrid}>
-              {/* Option to Upload */}
               <TouchableOpacity style={styles.uploadOption} onPress={pickImage}>
                 <View style={styles.uploadIconCircle}>
                   <Ionicons name="camera" size={30} color={PRIMARY} />
@@ -412,86 +410,76 @@ export default function RegisterScreen() {
           </View>
         </View>
       </Modal>
-
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#fff' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 12 },
-  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: GRAY_100, alignItems: 'center', justifyContent: 'center' },
+  safe: { flex: 1, backgroundColor: BG_DARK },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingVertical: 12 },
+  backBtn: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: BORDER_DARK, alignItems: 'center', justifyContent: 'center' },
 
   stepsRow: { flexDirection: 'row', alignItems: 'center' },
-  stepItem: { alignItems: 'center', gap: 4 },
-  stepCircle: { width: 30, height: 30, borderRadius: 15, backgroundColor: GRAY_100, alignItems: 'center', justifyContent: 'center' },
-  stepActive: { backgroundColor: PRIMARY },
-  stepDone: { backgroundColor: SUCCESS },
-  stepNum: { fontSize: 12, fontWeight: '700', color: GRAY_500 },
-  stepLabel: { fontSize: 10, color: GRAY_500, fontWeight: '600' },
-  stepLine: { width: 32, height: 2, backgroundColor: GRAY_300, marginHorizontal: 6, marginBottom: 14 },
+  stepItem: { alignItems: 'center', gap: 6 },
+  stepCircle: { width: 34, height: 34, borderRadius: 17, borderWidth: 1, borderColor: BORDER_DARK, alignItems: 'center', justifyContent: 'center' },
+  stepActive: { borderColor: PRIMARY },
+  stepDone: { borderColor: PRIMARY },
+  stepNum: { fontSize: 13, fontWeight: '700', color: TEXT_MUTED },
+  stepLabel: { fontSize: 11, color: TEXT_MUTED, fontWeight: '600' },
+  stepLine: { width: 32, height: 1, backgroundColor: BORDER_DARK, marginHorizontal: 8, marginBottom: 16 },
 
-  scroll: { flexGrow: 1, paddingHorizontal: 28, paddingTop: 24, paddingBottom: 40 },
+  scroll: { flexGrow: 1, paddingHorizontal: 32, paddingTop: 24, paddingBottom: 40 },
 
-  iconContainer: { alignItems: 'center', marginBottom: 24 },
-  iconCircle: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#EEF2FF', alignItems: 'center', justifyContent: 'center' },
+  iconContainer: { alignItems: 'center', marginBottom: 32 },
+  iconCircle: { width: 88, height: 88, borderRadius: 44, borderWidth: 1, borderColor: PRIMARY, alignItems: 'center', justifyContent: 'center' },
+  addBadge: { position: 'absolute', bottom: 4, right: 4, width: 22, height: 22, borderRadius: 11, backgroundColor: PRIMARY, alignItems: 'center', justifyContent: 'center' },
 
-  title: { fontSize: 24, fontWeight: '700', color: GRAY_900, textAlign: 'center', marginBottom: 6 },
-  subtitle: { fontSize: 14, color: GRAY_500, textAlign: 'center', marginBottom: 32, lineHeight: 20 },
+  title: { fontSize: 32, fontWeight: '700', color: TEXT_LIGHT, textAlign: 'center', marginBottom: 8 },
+  subtitle: { fontSize: 14, color: TEXT_MUTED, textAlign: 'center', marginBottom: 32 },
 
-  label: { fontSize: 11, fontWeight: '700', color: GRAY_900, letterSpacing: 0.8, marginBottom: 8 },
-  inputWrap: { flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: GRAY_300, borderRadius: 14, backgroundColor: GRAY_100, paddingHorizontal: 14, marginBottom: 20, minHeight: 54 },
-  inputIcon: { marginRight: 10 },
-  input: { flex: 1, fontSize: 15, color: GRAY_900, paddingVertical: 14 },
+  label: { fontSize: 11, fontWeight: '700', color: TEXT_LIGHT, letterSpacing: 1, marginBottom: 12, marginTop: 12 },
+  inputWrap: { flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: BORDER_DARK, paddingBottom: 12, marginBottom: 24 },
+  inputIcon: { marginRight: 12 },
+  input: { flex: 1, fontSize: 16, color: TEXT_LIGHT, paddingVertical: 0 },
 
-  strengthWrap: { marginTop: -12, marginBottom: 20 },
-  strengthBars: { flexDirection: 'row', gap: 6, marginBottom: 4 },
+  strengthWrap: { marginTop: -12, marginBottom: 24 },
+  strengthBars: { flexDirection: 'row', gap: 6, marginBottom: 6 },
   strengthBar: { flex: 1, height: 4, borderRadius: 2 },
   strengthLabel: { fontSize: 12, fontWeight: '600' },
 
-  checkRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginBottom: 24 },
-  checkbox: { width: 22, height: 22, borderRadius: 6, borderWidth: 2, borderColor: GRAY_300, alignItems: 'center', justifyContent: 'center', marginTop: 1, flexShrink: 0 },
+  checkRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginBottom: 24, marginTop: 8 },
+  checkbox: { width: 24, height: 24, borderRadius: 8, borderWidth: 2, borderColor: BORDER_DARK, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   checkboxActive: { backgroundColor: PRIMARY, borderColor: PRIMARY },
-  checkText: { fontSize: 13, color: GRAY_500, lineHeight: 20, flex: 1 },
+  checkText: { fontSize: 14, color: TEXT_MUTED, lineHeight: 22, flex: 1 },
 
-  errorRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginTop: -8, marginBottom: 16 },
-  errorText: { fontSize: 13, color: ERROR, flex: 1, lineHeight: 18 },
+  errorRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: -12, marginBottom: 24 },
+  errorText: { fontSize: 13, color: ERROR, flex: 1 },
 
-  btnPrimary: { backgroundColor: PRIMARY, borderRadius: 16, height: 54, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', shadowColor: PRIMARY, shadowOpacity: 0.3, shadowRadius: 10, shadowOffset: { width: 0, height: 5 }, elevation: 6 },
-  btnDisabled: { opacity: 0.5 },
-  btnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
-  avatarImage: { width: 80, height: 80, borderRadius: 40, borderWidth: 2, borderColor: PRIMARY },
-  changePhotoText: { fontSize: 13, fontWeight: '600', color: PRIMARY },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  modalContent: { backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 40 },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  modalTitle: { fontSize: 18, fontWeight: 'bold', color: GRAY_900 },
-  avatarGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 16, justifyContent: 'center', marginBottom: 20 },
+  btnPrimary: { backgroundColor: PRIMARY, borderRadius: 12, height: 56, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
+  btnDisabled: { opacity: 0.6 },
+  btnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+
+  avatarImage: { width: 88, height: 88, borderRadius: 44, borderWidth: 1, borderColor: PRIMARY },
+  changePhotoText: { fontSize: 13, fontWeight: '500', color: TEXT_MUTED },
+
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
+  modalContent: { backgroundColor: '#18181B', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 40 },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
+  modalTitle: { fontSize: 18, fontWeight: '700', color: TEXT_LIGHT },
+  avatarGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 16, justifyContent: 'center', marginBottom: 24 },
   avatarOption: { width: 70, height: 70, borderRadius: 35, borderWidth: 3, borderColor: 'transparent', overflow: 'hidden' },
   avatarOptionSelected: { borderColor: PRIMARY },
   avatarOptionImg: { width: '100%', height: '100%' },
   removeAvatarBtn: { alignItems: 'center', paddingVertical: 12 },
-  removeAvatarText: { fontSize: 15, fontWeight: '600', color: GRAY_500 },
-  uploadOption: {
-    width: 70,
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  uploadIconCircle: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: '#EEF2FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: GRAY_300,
-    borderStyle: 'dashed',
-    marginBottom: 4,
-  },
-  uploadText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: PRIMARY,
-  },
+  removeAvatarText: { fontSize: 15, fontWeight: '600', color: TEXT_MUTED },
+  uploadOption: { width: 70, alignItems: 'center', marginBottom: 8 },
+  uploadIconCircle: { width: 70, height: 70, borderRadius: 35, backgroundColor: BORDER_DARK, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: BORDER_DARK, borderStyle: 'dashed', marginBottom: 8 },
+  uploadText: { fontSize: 12, fontWeight: '600', color: TEXT_MUTED },
+
+  divider: { flexDirection: 'row', alignItems: 'center', marginVertical: 32, gap: 16 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: BORDER_DARK },
+  dividerText: { fontSize: 13, color: TEXT_MUTED, fontWeight: '500' },
+  bottomRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
+  bottomText: { fontSize: 14, color: TEXT_MUTED },
+  link: { fontSize: 14, color: TEXT_LIGHT, fontWeight: '600' },
 });
