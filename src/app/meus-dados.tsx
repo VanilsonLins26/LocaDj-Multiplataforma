@@ -118,7 +118,7 @@ export default function MeusDadosScreen() {
         Promise.race([
           (async () => {
             const fileRef = ref(storage, `avatars/${uid}`);
-            await uploadString(fileRef, b64, 'base64');
+            await uploadString(fileRef, b64, 'base64', { contentType: 'image/jpeg' });
             const downloadUrl = await getDownloadURL(fileRef);
             // Atualiza Firestore e Auth com a URL real do Storage
             await setDoc(doc(db, 'users', uid), { avatar: downloadUrl }, { merge: true });
