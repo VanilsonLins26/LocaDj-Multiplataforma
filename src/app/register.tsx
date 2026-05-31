@@ -108,28 +108,37 @@ export default function RegisterScreen() {
       const user = userCredential.user;
       const isCustomUpload = localPhotoUri && avatar === localPhotoUri;
 
+      let initialAvatar = avatar;
+
+      if (isCustomUpload && base64Data) {
+        initialAvatar = `data:image/jpeg;base64,${base64Data}`;
+      }
+
       await setDoc(doc(db, 'users', user.uid), {
         name,
         email,
         phone,
-        avatar: isCustomUpload ? '' : avatar, 
+        avatar: initialAvatar, 
         role: 'user',
         createdAt: new Date().toISOString()
       });
 
-      await updateProfile(user, { displayName: name, photoURL: avatar });
+      // Firebase Auth não aceita base64 longo na propriedade photoURL.
+      const authPhotoURL = initialAvatar.startsWith('data:') ? '' : initialAvatar;
+      await updateProfile(user, { displayName: name, photoURL: authPhotoURL });
 
+      // Envia para o Storage em segundo plano para não travar a tela de carregamento
       if (isCustomUpload && base64Data) {
         (async () => {
           try {
             const fileRef = ref(storage, `avatars/${user.uid}`);
-            await uploadString(fileRef, base64Data, 'base64');
+            await uploadString(fileRef, base64Data, 'base64', { contentType: 'image/jpeg' });
             const downloadUrl = await getDownloadURL(fileRef);
 
             await setDoc(doc(db, 'users', user.uid), { avatar: downloadUrl }, { merge: true });
             await updateProfile(user, { photoURL: downloadUrl });
-          } catch (uploadErr: any) {
-            console.error("Erro no upload em segundo plano:", uploadErr);
+          } catch (uploadErr) {
+            console.error("Erro no upload da foto em segundo plano:", uploadErr);
           }
         })();
       }
