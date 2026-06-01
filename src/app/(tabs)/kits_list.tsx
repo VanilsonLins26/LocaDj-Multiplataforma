@@ -34,6 +34,8 @@ interface Kit {
   available?: boolean;
 }
 
+type FilterType = 'Todos' | 'Disponíveis' | 'Mais populares';
+
 
 export default function KitsListScreen() {
   const [kits, setKits] = useState<Kit[]>([]);

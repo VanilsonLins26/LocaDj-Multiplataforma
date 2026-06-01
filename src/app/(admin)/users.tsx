@@ -24,6 +24,19 @@ const TEXT_LIGHT = '#FFFFFF';
 const TEXT_MUTED = '#A1A1AA';
 const PRIMARY = '#8B5CF6';
 
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  role: string;
+  avatar?: string;
+  cpf?: string;
+  createdAt: any;
+  ratings?: Record<string, { score: number; feedback: string; createdAt: string }>;
+  rentalCount?: number;
+}
+
 export default function AdminUsersScreen() {
   const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);

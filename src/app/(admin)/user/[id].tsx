@@ -43,6 +43,7 @@ export default function AdminUserDetailsScreen() {
   const [user, setUser] = useState<User | null>(null);
   const [reservations, setReservations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'locacoes' | 'feedbacks'>('locacoes');
 
   // Modal Rating States
   const [ratingModalVisible, setRatingModalVisible] = useState(false);
@@ -191,13 +192,18 @@ export default function AdminUserDetailsScreen() {
           allData = Array.isArray(json) ? json : (json.value ?? []);
         }
 
+        const uniqueIds = new Set();
         const finalData = allData
-          .filter((item, index, self) => 
-            item != null && 
-            item.user?.email?.toLowerCase() === fetchedUser.email.toLowerCase() &&
-            self.findIndex(t => t.id === item.id) === index
-          )
-          .sort((a, b) => b.id - a.id);
+          .filter((item) => {
+            if (!item || !item.id || !item.user?.email) return false;
+            if (item.user.email.toLowerCase() !== fetchedUser.email.toLowerCase()) return false;
+            
+            const idStr = String(item.id);
+            if (uniqueIds.has(idStr)) return false;
+            uniqueIds.add(idStr);
+            return true;
+          })
+          .sort((a, b) => Number(b.id) - Number(a.id));
 
         setReservations(finalData);
       }
@@ -274,6 +280,16 @@ export default function AdminUserDetailsScreen() {
     );
   }
 
+  // Cálculos de Reputação
+  let ratingCount = 0;
+  let totalScore = 0;
+  if (user.ratings) {
+    const ratingsArray = Object.values(user.ratings);
+    ratingCount = ratingsArray.length;
+    totalScore = ratingsArray.reduce((acc, curr: any) => acc + curr.score, 0);
+  }
+  const avgScore = ratingCount > 0 ? totalScore / ratingCount : 0;
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -284,7 +300,7 @@ export default function AdminUserDetailsScreen() {
         <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Informações do Usuário */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Informações Pessoais</Text>
@@ -299,10 +315,23 @@ export default function AdminUserDetailsScreen() {
               )}
             </View>
             <Text style={styles.userName}>{user.name}</Text>
-            <View style={[styles.roleBadge, user.role === 'admin' ? styles.roleAdmin : styles.roleUser, { alignSelf: 'center', marginBottom: 24 }]}>
+            <View style={[styles.roleBadge, user.role === 'admin' ? styles.roleAdmin : styles.roleUser, { alignSelf: 'center', marginBottom: 12 }]}>
               <Text style={[styles.roleText, user.role === 'admin' ? styles.roleTextAdmin : styles.roleTextUser]}>
                 {user.role === 'admin' ? 'Admin' : 'Usuário'}
               </Text>
+            </View>
+
+            {/* Painel de Reputação (Avaliações) */}
+            <View style={styles.reputationBox}>
+              <Ionicons name="star" size={20} color={ratingCount > 0 ? "#F59E0B" : TEXT_MUTED} />
+              <View style={styles.reputationTexts}>
+                <Text style={styles.reputationTitle}>Reputação do Cliente</Text>
+                <Text style={styles.reputationSubtitle}>
+                  {ratingCount > 0 
+                    ? `Nota Média: ${Number.isInteger(avgScore) ? avgScore : avgScore.toFixed(1)}/10 (${ratingCount} avaliações)` 
+                    : 'Nenhuma avaliação recebida ainda.'}
+                </Text>
+              </View>
             </View>
 
             <View style={styles.infoRow}>
@@ -328,9 +357,30 @@ export default function AdminUserDetailsScreen() {
           </View>
         </View>
 
+        {/* Abas de Navegação */}
+        <View style={styles.tabsContainer}>
+          <TouchableOpacity 
+            style={[styles.tabButton, activeTab === 'locacoes' && styles.tabButtonActive]}
+            onPress={() => setActiveTab('locacoes')}
+          >
+            <Text style={[styles.tabButtonText, activeTab === 'locacoes' && styles.tabButtonTextActive]}>
+              Locações ({reservations.length})
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.tabButton, activeTab === 'feedbacks' && styles.tabButtonActive]}
+            onPress={() => setActiveTab('feedbacks')}
+          >
+            <Text style={[styles.tabButtonText, activeTab === 'feedbacks' && styles.tabButtonTextActive]}>
+              Feedbacks ({ratingCount})
+            </Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Locações do Usuário */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Histórico de Locações ({reservations.length})</Text>
+        {activeTab === 'locacoes' && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Histórico de Locações</Text>
           
           {reservations.length === 0 ? (
              <View style={styles.emptyContainer}>
@@ -345,7 +395,7 @@ export default function AdminUserDetailsScreen() {
               const price = item.totalAmount ? `R$ ${item.totalAmount.toFixed(2).replace('.', ',')}` : 'R$ 0,00';
               const daily = item.daily || 1;
               const imageUrl = item.kit?.imageUrl;
-              const existingRating = user?.ratings?.[item.id];
+              const existingRating = user?.ratings?.[String(item.id)];
 
               return (
                 <View key={item.id} style={styles.reservationCard}>
@@ -382,37 +432,77 @@ export default function AdminUserDetailsScreen() {
                   </View>
 
                   {/* Rating Section */}
-                  <View style={styles.ratingSection}>
-                    {existingRating ? (
-                      <View style={styles.existingRatingBox}>
-                        <View style={styles.ratingHeaderBox}>
-                          <Ionicons name="star" size={14} color="#EAB308" />
-                          <Text style={styles.ratingScoreText}>Nota: {existingRating.score}/10</Text>
+                  {(existingRating || item.status === 'CONCLUIDA') && (
+                    <View style={styles.ratingSection}>
+                      {existingRating ? (
+                        <View style={styles.existingRatingBox}>
+                          <View style={styles.ratingHeaderBox}>
+                            <Ionicons name="star" size={14} color="#EAB308" />
+                            <Text style={styles.ratingScoreText}>Nota: {existingRating.score}/10</Text>
+                          </View>
+                          {existingRating.feedback ? (
+                            <Text style={styles.ratingFeedbackText}>Feedback: <Text style={{fontStyle: 'italic'}}>{existingRating.feedback}</Text></Text>
+                          ) : null}
                         </View>
-                        {existingRating.feedback ? (
-                          <Text style={styles.ratingFeedbackText}>Feedback: <Text style={{fontStyle: 'italic'}}>{existingRating.feedback}</Text></Text>
-                        ) : null}
-                      </View>
-                    ) : (
-                      <TouchableOpacity 
-                        style={styles.rateButton}
-                        onPress={() => {
-                          setSelectedReservation(item);
-                          setRatingScore('');
-                          setRatingFeedback('');
-                          setRatingModalVisible(true);
-                        }}
-                      >
-                        <Ionicons name="star-outline" size={16} color={PRIMARY} />
-                        <Text style={styles.rateButtonText}>Avaliar Locação</Text>
-                      </TouchableOpacity>
-                    )}
-                  </View>
+                      ) : (
+                        <TouchableOpacity 
+                          style={styles.rateButton}
+                          onPress={() => {
+                            setSelectedReservation(item);
+                            setRatingScore('');
+                            setRatingFeedback('');
+                            setRatingModalVisible(true);
+                          }}
+                        >
+                          <Ionicons name="star-outline" size={16} color={PRIMARY} />
+                          <Text style={styles.rateButtonText}>Avaliar Locação</Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  )}
                 </View>
               );
             })
           )}
-        </View>
+          </View>
+        )}
+
+        {/* Histórico de Avaliações */}
+        {activeTab === 'feedbacks' && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Feedbacks Recebidos</Text>
+            {Object.entries(user.ratings)
+              .sort((a, b) => new Date(b[1].createdAt).getTime() - new Date(a[1].createdAt).getTime())
+              .map(([resId, rating]) => {
+                const relatedRes = reservations.find(r => String(r.id) === resId);
+                const kitNameText = relatedRes?.kit?.name || relatedRes?.kitName || 'Locação Finalizada';
+                
+                return (
+                  <View key={resId} style={styles.feedbackCard}>
+                    <View style={styles.feedbackHeader}>
+                      <Text style={styles.feedbackKitName} numberOfLines={1}>{kitNameText}</Text>
+                      <View style={styles.feedbackScoreBadge}>
+                        <Ionicons name="star" size={12} color="#D97706" />
+                        <Text style={styles.feedbackScoreText}>{rating.score}</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.feedbackDate}>{formatDateString(rating.createdAt)}</Text>
+                    {rating.feedback ? (
+                      <Text style={styles.feedbackText}>"{rating.feedback}"</Text>
+                    ) : (
+                      <Text style={styles.feedbackTextEmpty}>Nenhum comentário adicionado pelo administrador.</Text>
+                    )}
+                  </View>
+                );
+            })}
+            {(!user?.ratings || Object.keys(user.ratings).length === 0) && (
+              <View style={styles.emptyContainer}>
+                <Ionicons name="chatbubble-ellipses-outline" size={48} color={BORDER} />
+                <Text style={styles.emptyText}>Nenhum feedback recebido ainda.</Text>
+              </View>
+            )}
+          </View>
+        )}
       </ScrollView>
 
       {/* Modal de Avaliação */}
@@ -607,6 +697,30 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     flex: 1,
   },
+  reputationBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFBEB',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#FEF3C7',
+  },
+  reputationTexts: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  reputationTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#92400E',
+  },
+  reputationSubtitle: {
+    fontSize: 12,
+    color: '#B45309',
+    marginTop: 2,
+  },
   emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -641,10 +755,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   cardImage: {
+    ...StyleSheet.absoluteFillObject,
     width: '100%',
     height: '100%',
   },
   placeholderImage: {
+    ...StyleSheet.absoluteFillObject,
     width: '100%',
     height: '100%',
     justifyContent: 'center',
@@ -771,12 +887,12 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '700',
     color: TEXT_LIGHT,
   },
   modalSubtitle: {
     fontSize: 14,
-    color: TEXT_MUTED,
+    color: '#6B7280',
     marginBottom: 20,
   },
   inputLabel: {
@@ -787,8 +903,8 @@ const styles = StyleSheet.create({
   },
   scoreInput: {
     borderWidth: 1,
-    borderColor: BORDER,
-    backgroundColor: '#09090B',
+    borderColor: '#3F3F46',
+    backgroundColor: '#18181B',
     borderRadius: 8,
     paddingHorizontal: 12,
     height: 48,
@@ -798,11 +914,11 @@ const styles = StyleSheet.create({
   },
   feedbackInput: {
     borderWidth: 1,
-    borderColor: BORDER,
-    backgroundColor: '#09090B',
+    borderColor: '#3F3F46',
+    backgroundColor: '#18181B',
     borderRadius: 8,
     paddingHorizontal: 12,
-    paddingVertical: 12,
+    paddingTop: 12,
     height: 100,
     fontSize: 15,
     color: TEXT_LIGHT,
@@ -823,5 +939,84 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 15,
     fontWeight: 'bold',
+  },
+  feedbackCard: {
+    backgroundColor: CARD_BG,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: BORDER,
+    marginBottom: 12,
+  },
+  feedbackHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  feedbackKitName: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: TEXT_LIGHT,
+    flex: 1,
+    marginRight: 12,
+  },
+  feedbackScoreBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+  },
+  feedbackScoreText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#D97706',
+    marginLeft: 4,
+  },
+  feedbackDate: {
+    fontSize: 12,
+    color: TEXT_MUTED,
+    marginBottom: 8,
+  },
+  feedbackText: {
+    fontSize: 14,
+    color: '#E4E4E7',
+    fontStyle: 'italic',
+    lineHeight: 20,
+  },
+  feedbackTextEmpty: {
+    fontSize: 13,
+    color: TEXT_MUTED,
+    fontStyle: 'italic',
+  },
+  tabsContainer: {
+    flexDirection: 'row',
+    marginBottom: 20,
+    backgroundColor: CARD_BG,
+    borderRadius: 12,
+    padding: 6,
+    borderWidth: 1,
+    borderColor: BORDER,
+  },
+  tabButton: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderRadius: 8,
+  },
+  tabButtonActive: {
+    backgroundColor: '#27272A',
+  },
+  tabButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: TEXT_MUTED,
+  },
+  tabButtonTextActive: {
+    color: TEXT_LIGHT,
   },
 });

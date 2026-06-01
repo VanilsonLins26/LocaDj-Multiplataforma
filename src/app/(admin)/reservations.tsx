@@ -29,6 +29,8 @@ interface Reservation {
   id: number;
   startDateTime: string;
   endDateTime: string;
+  startDate?: string;
+  endDate?: string;
   status: string;
   user: {
     name: string;
@@ -251,7 +253,7 @@ export default function AdminReservationsScreen() {
 
           <TouchableOpacity
             style={styles.detailsBtn}
-            onPress={() => router.push(`/(admin)/reservation/${item.id}`)}
+            onPress={() => router.push(`/(admin)/admin-reservation/${item.id}`)}
             activeOpacity={0.8}
           >
             <Text style={styles.detailsBtnText}>Detalhes</Text>
