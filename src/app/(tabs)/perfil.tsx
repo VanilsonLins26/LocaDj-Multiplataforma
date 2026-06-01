@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { signOut } from 'firebase/auth';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -7,12 +7,13 @@ import { useCallback } from 'react';
 import { Feather } from '@expo/vector-icons';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../../config/firebaseConfig';
+import { useIsLandscape } from '../../hooks/useIsLandscape';
 
-const { width } = Dimensions.get('window');
 
 export default function PerfilScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { isLandscape } = useIsLandscape();
   const [userData, setUserData] = React.useState<any>(null);
 
   useFocusEffect(
@@ -42,14 +43,14 @@ export default function PerfilScreen() {
   return (
     <View style={styles.container}>
       {/* Header Background */}
-      <View style={[styles.headerBackground, { height: 160 + insets.top }]} />
+      <View style={[styles.headerBackground, { height: isLandscape ? 80 + insets.top : 160 + insets.top }]} />
 
       <ScrollView
-        contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 40 }]}
+        contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + (isLandscape ? 8 : 20), paddingBottom: insets.bottom + 40 }]}
         showsVerticalScrollIndicator={false}
       >
         {/* Header Title */}
-        <View style={styles.headerTop}>
+        <View style={[styles.headerTop, isLandscape && { marginBottom: 20 }]}>
           <Text style={styles.headerTitle}>Meu Perfil</Text>
         </View>
 

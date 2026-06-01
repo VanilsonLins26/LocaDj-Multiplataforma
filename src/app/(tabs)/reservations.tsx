@@ -13,6 +13,7 @@ import { Feather, Ionicons } from '@expo/vector-icons';
 import { auth } from '../../config/firebaseConfig';
 import { useRouter, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useIsLandscape } from '../../hooks/useIsLandscape';
 
 const PRIMARY = '#5B42F3';
 const BG = '#F4F5F7';
@@ -20,6 +21,7 @@ const BG = '#F4F5F7';
 export default function ReservationsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { isLandscape } = useIsLandscape();
   const [reservations, setReservations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -209,8 +211,8 @@ export default function ReservationsScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 12 }]}>
-        <Text style={styles.headerTitle}>Minhas Reservas</Text>
+      <View style={[styles.header, { paddingTop: isLandscape ? Math.max(insets.top, 12) + 4 : Math.max(insets.top, 20) + 12, paddingBottom: isLandscape ? 12 : 24 }]}>
+        <Text style={[styles.headerTitle, isLandscape && { fontSize: 18 }]}>Minhas Reservas</Text>
         <Text style={styles.headerSubtitle}>{reservations.length} registros</Text>
       </View>
 

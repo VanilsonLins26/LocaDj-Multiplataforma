@@ -3,12 +3,14 @@ import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useIsLandscape } from '../../hooks/useIsLandscape';
 
 const PRIMARY = '#5B4EE4';
 const GRAY_400 = '#9CA3AF';
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
+  const { isLandscape } = useIsLandscape();
 
   return (
     <Tabs
@@ -20,14 +22,14 @@ export default function TabsLayout() {
           backgroundColor: '#FFFFFF',
           borderTopWidth: 1,
           borderTopColor: '#F3F4F6',
-          height: 60 + insets.bottom,
-          paddingBottom: 8 + (insets.bottom > 0 ? insets.bottom - 4 : 0),
-          paddingTop: 6,
+          height: isLandscape ? 44 + insets.bottom : 60 + insets.bottom,
+          paddingBottom: isLandscape ? 4 + (insets.bottom > 0 ? insets.bottom - 4 : 0) : 8 + (insets.bottom > 0 ? insets.bottom - 4 : 0),
+          paddingTop: isLandscape ? 4 : 6,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: isLandscape ? 10 : 12,
           fontWeight: '600',
-          marginTop: 4,
+          marginTop: isLandscape ? 2 : 4,
         },
       }}>
       <Tabs.Screen
@@ -35,7 +37,7 @@ export default function TabsLayout() {
         options={{
           title: 'Início',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home-outline" size={size + 2} color={color} />
+            <Ionicons name="home-outline" size={isLandscape ? size - 2 : size + 2} color={color} />
           ),
         }}
       />
@@ -44,7 +46,7 @@ export default function TabsLayout() {
         options={{
           title: 'Reservas',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="calendar-outline" size={size + 2} color={color} />
+            <Ionicons name="calendar-outline" size={isLandscape ? size - 2 : size + 2} color={color} />
           ),
         }}
       />
@@ -53,7 +55,7 @@ export default function TabsLayout() {
         options={{
           title: 'Perfil',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" size={size + 2} color={color} />
+            <Ionicons name="person-outline" size={isLandscape ? size - 2 : size + 2} color={color} />
           ),
         }}
       />
