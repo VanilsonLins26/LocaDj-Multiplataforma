@@ -8,11 +8,14 @@ import {
   ScrollView,
   Image,
   Alert,
+  Modal,
+  TextInput,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { auth } from '../../../config/firebaseConfig';
+import { auth, db } from '../../../config/firebaseConfig';
+import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
 
 const PRIMARY = '#5B4EE4';
 const BG = '#F4F5F8';
@@ -37,6 +40,12 @@ export default function AdminReservationDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState('');
+
+  // Rating Modal States
+  const [ratingModalVisible, setRatingModalVisible] = useState(false);
+  const [ratingScore, setRatingScore] = useState('');
+  const [ratingFeedback, setRatingFeedback] = useState('');
+  const [savingRating, setSavingRating] = useState(false);
 
   useEffect(() => {
     fetchReservationDetails();
@@ -93,8 +102,6 @@ export default function AdminReservationDetailScreen() {
 
       if (!resp.ok) throw new Error('Erro ao atualizar status');
 
-      Alert.alert('Sucesso', successMessage);
-
       // Atualização Otimista da UI
       let newStatus = currentStatus;
       if (endpoint === 'left-for-delivery') newStatus = 'SAIU_PARA_ENTREGA';
@@ -105,11 +112,74 @@ export default function AdminReservationDetailScreen() {
 
       // Busca os dados atualizados em background sem mostrar o spinner (evita flicker na tela)
       fetchReservationDetails(true);
+
+      if (endpoint === 'completed') {
+        // Mostra a tela de avaliação ao concluir
+        setRatingModalVisible(true);
+      } else {
+        Alert.alert('Sucesso', successMessage);
+      }
     } catch (err) {
       console.error(err);
       Alert.alert('Erro', 'Não foi possível atualizar o status da reserva.');
     } finally {
       setUpdating(false);
+    }
+  };
+
+  const handleSaveRating = async () => {
+    if (!reservation || !reservation.user || !reservation.user.email) {
+      Alert.alert('Erro', 'Não foi possível identificar o usuário desta reserva.');
+      return;
+    }
+
+    const scoreNum = parseFloat(ratingScore.replace(',', '.'));
+    if (isNaN(scoreNum) || scoreNum < 0 || scoreNum > 10) {
+      Alert.alert('Nota Inválida', 'Por favor, insira uma nota numérica entre 0 e 10.');
+      return;
+    }
+
+    setSavingRating(true);
+    try {
+      const userEmail = reservation.user.email.toLowerCase();
+      
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef, where('email', '==', userEmail));
+      const querySnapshot = await getDocs(q);
+      
+      if (querySnapshot.empty) {
+        Alert.alert('Aviso', 'Usuário não encontrado no banco de dados. A avaliação não foi salva, mas a reserva foi concluída.');
+        setRatingModalVisible(false);
+        router.navigate('/(admin)/reservations');
+        return;
+      }
+      
+      const userDoc = querySnapshot.docs[0];
+      const userData = userDoc.data();
+      
+      const newRatings = {
+        ...(userData.ratings || {}),
+        [reservation.id]: {
+          score: scoreNum,
+          feedback: ratingFeedback.trim(),
+          createdAt: new Date().toISOString()
+        }
+      };
+      
+      const userDocRef = doc(db, 'users', userDoc.id);
+      await updateDoc(userDocRef, { ratings: newRatings });
+      
+      Alert.alert('Sucesso', 'Reserva finalizada e usuário avaliado!');
+      setRatingModalVisible(false);
+      setRatingScore('');
+      setRatingFeedback('');
+      router.navigate('/(admin)/reservations');
+      
+    } catch (error) {
+      console.error('Erro ao salvar avaliação:', error);
+      Alert.alert('Erro', 'Falha ao salvar a avaliação.');
+    } finally {
+      setSavingRating(false);
     }
   };
 
@@ -356,6 +426,67 @@ export default function AdminReservationDetailScreen() {
         )}
 
       </ScrollView>
+
+      {/* Modal de Avaliação do Cliente */}
+      <Modal
+        visible={ratingModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setRatingModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Avaliar Cliente</Text>
+              <TouchableOpacity onPress={() => {
+                setRatingModalVisible(false);
+                router.navigate('/(admin)/reservations'); // Ao fechar sem avaliar, volta pra lista
+              }}>
+                <Ionicons name="close" size={24} color="#6B7280" />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.modalSubtitle}>
+              Como foi a experiência de locação com {reservation?.user?.name || 'este usuário'}?
+            </Text>
+
+            <Text style={styles.inputLabel}>Nota (0 a 10)</Text>
+            <TextInput
+              style={styles.scoreInput}
+              placeholder="Ex: 10"
+              placeholderTextColor="#D1D5DB"
+              keyboardType="numeric"
+              value={ratingScore}
+              onChangeText={setRatingScore}
+              maxLength={4}
+            />
+
+            <Text style={styles.inputLabel}>Feedback (Opcional)</Text>
+            <TextInput
+              style={styles.feedbackInput}
+              placeholder="Ex: Entregou no prazo, equipamento bem cuidado."
+              placeholderTextColor="#D1D5DB"
+              multiline
+              textAlignVertical="top"
+              value={ratingFeedback}
+              onChangeText={setRatingFeedback}
+            />
+
+            <TouchableOpacity 
+              style={[styles.saveRatingBtn, (!ratingScore || savingRating) && styles.saveRatingBtnDisabled]}
+              onPress={handleSaveRating}
+              disabled={!ratingScore || savingRating}
+            >
+              {savingRating ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.saveRatingBtnText}>Salvar Avaliação</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
     </View>
   );
 }
@@ -423,5 +554,18 @@ const styles = StyleSheet.create({
   actionBtnText: { color: WHITE, fontSize: 14, fontWeight: '700' },
 
   errorBackBtn: { marginTop: 24, backgroundColor: PRIMARY, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8 },
-  errorBackBtnText: { color: '#FFF', fontSize: 16, fontWeight: '600' }
+  errorBackBtnText: { color: '#FFF', fontSize: 16, fontWeight: '600' },
+
+  // Rating Modal Styles
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
+  modalContent: { width: '90%', backgroundColor: WHITE, borderRadius: 16, padding: 24 },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  modalTitle: { fontSize: 18, fontWeight: '700', color: TEXT_DARK },
+  modalSubtitle: { fontSize: 14, color: TEXT_GRAY, marginBottom: 20 },
+  inputLabel: { fontSize: 13, fontWeight: '600', color: TEXT_DARK, marginBottom: 8 },
+  scoreInput: { borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 8, paddingHorizontal: 12, height: 48, fontSize: 16, color: TEXT_DARK, marginBottom: 16, backgroundColor: WHITE },
+  feedbackInput: { borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 8, paddingHorizontal: 12, paddingTop: 12, height: 100, fontSize: 16, color: TEXT_DARK, marginBottom: 24, backgroundColor: WHITE },
+  saveRatingBtn: { backgroundColor: PRIMARY, paddingVertical: 14, borderRadius: 12, alignItems: 'center' },
+  saveRatingBtnDisabled: { backgroundColor: '#A78BFA' },
+  saveRatingBtnText: { color: WHITE, fontSize: 15, fontWeight: '700' }
 });
