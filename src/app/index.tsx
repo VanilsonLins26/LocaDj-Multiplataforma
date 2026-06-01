@@ -5,27 +5,115 @@ import { doc, getDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Dimensions,
+  Platform,
   ScrollView,
   StatusBar,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
-  View
+  View,
+  Image
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
+import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { auth, db } from '../config/firebaseConfig';
 
-const PRIMARY = '#5245F1';
-const DARK_BG = '#040417';
-const WHITE = '#FFFFFF';
-const GRAY_500 = '#6B7280';
-const GRAY_100 = '#F3F4F6';
-const { width } = Dimensions.get('window');
+const PRIMARY = '#8b5cf6'; // vibrant purple matching the image
+const DARK_BG = '#04040a'; // very dark background
+const GRAY_400 = '#9ca3af';
+
+const AnimatedLight = ({ color, size, top, left, right, bottom, delay = 0, moveX = 100, moveY = 100, duration = 8000 }: any) => {
+  const opacity = useSharedValue(0.6);
+  const scale = useSharedValue(1);
+  const translateX = useSharedValue(0);
+  const translateY = useSharedValue(0);
+  const gradId = `grad-${color.replace('#', '')}-${size}`; // Unique-ish ID based on props
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      opacity.value = withRepeat(
+        withSequence(
+          withTiming(1, { duration: 3000, easing: Easing.inOut(Easing.ease) }),
+          withTiming(0.5, { duration: 3000, easing: Easing.inOut(Easing.ease) })
+        ),
+        -1,
+        true
+      );
+      scale.value = withRepeat(
+        withSequence(
+          withTiming(1.3, { duration: 4000, easing: Easing.inOut(Easing.ease) }),
+          withTiming(1, { duration: 4000, easing: Easing.inOut(Easing.ease) })
+        ),
+        -1,
+        true
+      );
+      translateX.value = withRepeat(
+        withTiming(moveX, { duration: duration, easing: Easing.inOut(Easing.ease) }),
+        -1,
+        true
+      );
+      translateY.value = withRepeat(
+        withTiming(moveY, { duration: duration * 1.2, easing: Easing.inOut(Easing.ease) }),
+        -1,
+        true
+      );
+    }, delay);
+    return () => clearTimeout(timer);
+  }, [delay, moveX, moveY, duration]);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      opacity: opacity.value,
+      transform: [
+        { translateX: translateX.value },
+        { translateY: translateY.value },
+        { scale: scale.value }
+      ],
+    };
+  });
+
+  return (
+    <Animated.View
+      style={[
+        {
+          position: 'absolute',
+          width: size,
+          height: size,
+          top,
+          left,
+          right,
+          bottom,
+        },
+        animatedStyle,
+      ]}
+      pointerEvents="none"
+    >
+      <Svg height={size} width={size}>
+        <Defs>
+          <RadialGradient id={gradId} cx="50%" cy="50%" rx="50%" ry="50%" fx="50%" fy="50%">
+            <Stop offset="0%" stopColor={color} stopOpacity="0.6" />
+            <Stop offset="40%" stopColor={color} stopOpacity="0.2" />
+            <Stop offset="70%" stopColor={color} stopOpacity="0.05" />
+            <Stop offset="100%" stopColor={color} stopOpacity="0" />
+          </RadialGradient>
+        </Defs>
+        <Rect x="0" y="0" width={size} height={size} fill={`url(#${gradId})`} />
+      </Svg>
+    </Animated.View>
+  );
+};
 
 export default function LandingScreen() {
   const router = useRouter();
-
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
@@ -44,7 +132,6 @@ export default function LandingScreen() {
           router.replace('/(tabs)/kits_list');
         }
       } else {
-
         setIsChecking(false);
       }
     });
@@ -60,128 +147,119 @@ export default function LandingScreen() {
       </View>
     );
   }
-  const features = [
-    { icon: 'musical-notes-outline' as const, title: 'EquipaDJ', desc: 'Alugue equipamentos de alta qualidade para suas festas e eventos.' },
-    { icon: 'calendar-outline' as const, title: 'Agende Online', desc: 'Reserve com facilidade pelo app, sem burocracia.' },
-    { icon: 'star-outline' as const, title: 'Avaliações', desc: 'Confira reviews de outros usuários e escolha com confiança.' },
-  ];
 
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="light-content" backgroundColor={DARK_BG} />
-
-      {/* ─── NAVBAR ─── */}
-      <View style={styles.navbar}>
-        {/* Logo */}
-        <View style={styles.logoWrap}>
-          <View style={styles.logoBadge}>
-            <Text style={styles.logoBadgeText}>LocaDJ</Text>
-          </View>
-        </View>
-
-        {/* Botão Login */}
-        <TouchableOpacity
-          style={styles.navLoginBtn}
-          onPress={() => router.push('/login')}
-          activeOpacity={0.85}
-        >
-          <Text style={styles.navLoginText}>Login</Text>
-        </TouchableOpacity>
+      
+      <View style={StyleSheet.absoluteFillObject}>
+        <AnimatedLight color="#8b5cf6" size={300} top={-50} left={-50} delay={0} moveX={150} moveY={100} duration={8000} />
+        <AnimatedLight color="#c026d3" size={400} top={200} right={-100} delay={500} moveX={-200} moveY={150} duration={10000} />
+        <AnimatedLight color="#3b82f6" size={350} bottom={100} left={-50} delay={1000} moveX={180} moveY={-120} duration={9000} />
+        <AnimatedLight color="#8b5cf6" size={250} bottom={-50} right={100} delay={1500} moveX={-150} moveY={-150} duration={7000} />
+        
+        {/* Mais luzes adicionadas para um fundo mais rico */}
+        <AnimatedLight color="#ec4899" size={350} top={350} left={100} delay={800} moveX={200} moveY={-150} duration={11000} />
+        <AnimatedLight color="#06b6d4" size={450} top={500} right={50} delay={1200} moveX={-150} moveY={200} duration={12000} />
+        <AnimatedLight color="#6366f1" size={400} bottom={300} left={200} delay={2000} moveX={250} moveY={150} duration={13000} />
       </View>
 
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.logoText}>LocaDJ</Text>
+          <TouchableOpacity style={styles.loginBtn} onPress={() => router.push('/login')}>
+            <Text style={styles.loginBtnText}>Login</Text>
+          </TouchableOpacity>
+        </View>
 
-        {/* ─── HERO ─── */}
-        <View style={styles.hero}>
-          <View style={styles.heroBadge}>
-            <Ionicons name="flash" size={13} color={PRIMARY} />
-            <Text style={styles.heroBadgeText}>O app de aluguel para DJs</Text>
+        {/* Hero Section */}
+        <View style={styles.heroSection}>
+          <View style={styles.heroIconWrapper}>
+            <Image source={require('../../assets/images/Logo.png')} style={styles.logo} resizeMode="contain" />
           </View>
-
+          
           <Text style={styles.heroTitle}>
-            Alugue equipamentos{'\n'}
-            <Text style={styles.heroTitleAccent}>para o seu set</Text>
+            Alugue equipamentos{'\n'}para o seu set
+          </Text>
+          <Text style={styles.heroSubtitle}>
+            Tudo o que você precisa para o próximo evento, na palma da mão.
           </Text>
 
-          <Text style={styles.heroSub}>
-            Tudo que você precisa para o próximo evento, na palma da mão. Equipamentos de qualidade, entrega rápida.
-          </Text>
+          <TouchableOpacity style={styles.primaryBtn} onPress={() => router.push('/register')} activeOpacity={0.8}>
+            <Text style={styles.primaryBtnText}>Começar agora</Text>
+            <Ionicons name="arrow-forward" size={18} color="#fff" style={{ marginLeft: 8 }} />
+          </TouchableOpacity>
 
-          <View style={styles.heroActions}>
-            <TouchableOpacity
-              style={styles.heroBtnPrimary}
-              onPress={() => router.push('/register')}
-              activeOpacity={0.85}
-            >
-              <Text style={styles.heroBtnPrimaryText}>Começar agora</Text>
-              <Ionicons name="arrow-forward" size={18} color={WHITE} style={{ marginLeft: 8 }} />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.heroBtnSecondary}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="search-outline" size={16} color={DARK_BG} style={{ marginRight: 6 }} />
-              <Text style={styles.heroBtnSecondaryText}>Ver equipamentos</Text>
-            </TouchableOpacity>
+          <View style={styles.searchBar}>
+            <Ionicons name="search-outline" size={20} color={GRAY_400} style={{ marginRight: 10 }} />
+            <TextInput
+              style={[styles.searchInput, Platform.OS === 'web' && { outlineStyle: 'none' } as any]}
+              placeholder="Ver equipamentos"
+              placeholderTextColor={GRAY_400}
+            />
           </View>
         </View>
 
-        {/* ─── STATS ─── */}
-        <View style={styles.statsRow}>
-          {[
-            { value: '+500', label: 'Equipamentos' },
-            { value: '+1k', label: 'Clientes' },
-            { value: '4.9', label: 'Avaliação' },
-          ].map((s, i) => (
-            <View key={i} style={[styles.statItem, i < 2 && styles.statBorder]}>
-              <Text style={styles.statValue}>{s.value}</Text>
-              <Text style={styles.statLabel}>{s.label}</Text>
+        {/* Stats Section */}
+        <View style={styles.statsContainer}>
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>+500</Text>
+            <Text style={styles.statLabel}>Equipamentos</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>+1k</Text>
+            <Text style={styles.statLabel}>Clientes</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>4.9</Text>
+            <Text style={styles.statLabel}>Avaliação</Text>
+          </View>
+        </View>
+
+        {/* Features Section */}
+        <View style={styles.featuresSection}>
+          <Text style={styles.sectionTitle}>Por que escolher o LocaDJ?</Text>
+          <View style={styles.featuresRow}>
+            <View style={styles.featureItem}>
+              <Ionicons name="musical-notes-outline" size={32} color={PRIMARY} style={styles.featureIcon} />
+              <Text style={styles.featureTitle}>EquipaDJ</Text>
+              <Text style={styles.featureText}>Alugue equipamentos de alta qualidade para suas festas e eventos.</Text>
             </View>
-          ))}
-        </View>
-
-        {/* ─── FEATURES ─── */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Por que escolher o LocaD?</Text>
-          <View style={styles.featuresList}>
-            {features.map((f, i) => (
-              <View key={i} style={styles.featureCard}>
-                <View style={styles.featureIconWrap}>
-                  <Ionicons name={f.icon} size={22} color={PRIMARY} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.featureTitle}>{f.title}</Text>
-                  <Text style={styles.featureDesc}>{f.desc}</Text>
-                </View>
-              </View>
-            ))}
+            <View style={styles.featureItem}>
+              <Ionicons name="calendar-outline" size={32} color={PRIMARY} style={styles.featureIcon} />
+              <Text style={styles.featureTitle}>Agende Online</Text>
+              <Text style={styles.featureText}>Reserve com facilidade pelo app, sem burocracia.</Text>
+            </View>
+            <View style={styles.featureItem}>
+              <Ionicons name="star-outline" size={32} color={PRIMARY} style={styles.featureIcon} />
+              <Text style={styles.featureTitle}>Avaliações</Text>
+              <Text style={styles.featureText}>Confira reviews de outros usuários e escolha com confiança.</Text>
+            </View>
           </View>
         </View>
 
-        {/* ─── CTA FINAL ─── */}
-        <View style={styles.ctaCard}>
-          <Ionicons name="rocket-outline" size={28} color={PRIMARY} style={{ marginBottom: 12 }} />
+        {/* CTA Section */}
+        <View style={styles.ctaSection}>
+          <Ionicons name="rocket-outline" size={32} color={PRIMARY} style={styles.ctaIcon} />
           <Text style={styles.ctaTitle}>Pronto para começar?</Text>
-          <Text style={styles.ctaSub}>Crie sua conta grátis e acesse todos os equipamentos</Text>
-          <TouchableOpacity
-            style={styles.ctaBtn}
-            onPress={() => router.push('/register')}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.ctaBtnText}>Criar conta gratuita</Text>
+          <Text style={styles.ctaSubtitle}>Crie sua conta grátis e acesse todos os equipamentos.</Text>
+          
+          <TouchableOpacity style={styles.primaryBtn} onPress={() => router.push('/register')} activeOpacity={0.8}>
+            <Text style={styles.primaryBtnText}>Criar conta gratuita</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.push('/login')} hitSlop={{ top: 8, bottom: 8 }}>
-            <Text style={styles.ctaLoginLink}>Já tenho conta → Entrar</Text>
+          
+          <TouchableOpacity style={styles.secondaryBtn} activeOpacity={0.8} onPress={() => router.push('/login')}>
+            <Text style={styles.secondaryBtnText}>Já tenho conta <Ionicons name="arrow-forward" size={14} color={PRIMARY} /> Entrar</Text>
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.footer}>© {new Date().getFullYear()} LocaDJ · Todos os direitos reservados</Text>
-
+        {/* Footer */}
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>© {new Date().getFullYear()} LocaDJ - Todos os direitos reservados</Text>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -189,88 +267,214 @@ export default function LandingScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: DARK_BG },
-  scroll: { flex: 1 },
-  scrollContent: { paddingBottom: 48 },
+  scrollContent: { flexGrow: 1, paddingBottom: 40 },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    width: '100%',
+    maxWidth: 1200,
+    alignSelf: 'center',
+  },
+  logoText: {
+    color: PRIMARY,
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  loginBtn: {
+    borderWidth: 1,
+    borderColor: 'rgba(139, 92, 246, 0.4)',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  loginBtnText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  heroSection: {
+    alignItems: 'center',
+    marginTop: 40,
+    paddingHorizontal: 20,
+  },
+  heroIconWrapper: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
 
-  /* Navbar */
-  navbar: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingVertical: 12, backgroundColor: PRIMARY,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 24,
   },
-  logoWrap: { flexDirection: 'row', alignItems: 'center' },
-  logoBadge: { paddingHorizontal: 10, paddingVertical: 5 },
-  logoBadgeText: { color: WHITE, fontSize: 18, fontWeight: '800', letterSpacing: 0.5 },
-  navLoginBtn: {
-    backgroundColor: WHITE, borderRadius: 8,
-    paddingHorizontal: 18, paddingVertical: 8,
+  logo: {
+    width: 90,
+    height: 90,
   },
-  navLoginText: { color: PRIMARY, fontSize: 14, fontWeight: '700' },
-
-  /* Hero */
-  hero: { paddingHorizontal: 24, paddingTop: 40, paddingBottom: 32 },
-  heroBadge: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: 'rgba(82,69,241,0.15)', borderRadius: 20,
-    paddingHorizontal: 12, paddingVertical: 6, alignSelf: 'flex-start', marginBottom: 20,
+  heroTitle: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: '#fff',
+    textAlign: 'center',
+    lineHeight: 44,
+    marginBottom: 16,
   },
-  heroBadgeText: { fontSize: 12, color: '#A5B4FC', fontWeight: '600' },
-
-  heroTitle: { fontSize: 32, fontWeight: '800', color: WHITE, lineHeight: 40, marginBottom: 16 },
-  heroTitleAccent: { color: '#A5B4FC' },
-
-  heroSub: { fontSize: 15, color: '#9CA3AF', lineHeight: 23, marginBottom: 32 },
-
-  heroActions: { gap: 12 },
-  heroBtnPrimary: {
-    backgroundColor: PRIMARY, borderRadius: 16, height: 54,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    shadowColor: PRIMARY, shadowOpacity: 0.4, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, elevation: 8,
+  heroSubtitle: {
+    fontSize: 16,
+    color: GRAY_400,
+    textAlign: 'center',
+    marginBottom: 32,
+    maxWidth: 500,
   },
-  heroBtnPrimaryText: { color: WHITE, fontSize: 16, fontWeight: '700' },
-  heroBtnSecondary: {
-    backgroundColor: WHITE, borderRadius: 16, height: 54,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+  primaryBtn: {
+    backgroundColor: PRIMARY,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+    borderRadius: 12,
+    marginBottom: 32,
   },
-  heroBtnSecondaryText: { color: DARK_BG, fontSize: 16, fontWeight: '600' },
-
-  /* Stats */
-  statsRow: {
-    flexDirection: 'row', marginHorizontal: 24, marginBottom: 32,
-    backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 16, padding: 20,
+  primaryBtnText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
-  statItem: { flex: 1, alignItems: 'center' },
-  statBorder: { borderRightWidth: 1, borderRightColor: 'rgba(255,255,255,0.1)' },
-  statValue: { fontSize: 22, fontWeight: '800', color: WHITE },
-  statLabel: { fontSize: 12, color: '#9CA3AF', marginTop: 2 },
-
-  /* Features */
-  section: { paddingHorizontal: 24, marginBottom: 28 },
-  sectionTitle: { fontSize: 20, fontWeight: '700', color: WHITE, marginBottom: 16 },
-  featuresList: { gap: 12 },
-  featureCard: {
-    flexDirection: 'row', alignItems: 'center', gap: 14,
-    backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 14, padding: 16,
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    height: 50,
+    width: '100%',
+    maxWidth: 600,
   },
-  featureIconWrap: {
-    width: 44, height: 44, borderRadius: 12,
-    backgroundColor: 'rgba(82,69,241,0.2)', alignItems: 'center', justifyContent: 'center',
+  searchInput: {
+    flex: 1,
+    color: '#fff',
+    fontSize: 16,
   },
-  featureTitle: { fontSize: 15, fontWeight: '700', color: WHITE, marginBottom: 3 },
-  featureDesc: { fontSize: 13, color: '#9CA3AF', lineHeight: 18 },
-
-  /* CTA */
-  ctaCard: {
-    marginHorizontal: 24, backgroundColor: WHITE, borderRadius: 20,
-    padding: 28, alignItems: 'center', marginBottom: 24,
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 60,
+    paddingHorizontal: 20,
+    flexWrap: 'wrap',
   },
-  ctaTitle: { fontSize: 20, fontWeight: '800', color: DARK_BG, marginBottom: 8 },
-  ctaSub: { fontSize: 14, color: GRAY_500, textAlign: 'center', lineHeight: 20, marginBottom: 20 },
-  ctaBtn: {
-    backgroundColor: PRIMARY, borderRadius: 14, height: 50, width: '100%',
-    alignItems: 'center', justifyContent: 'center', marginBottom: 14,
+  statItem: {
+    alignItems: 'center',
+    paddingHorizontal: 30,
+    marginBottom: 20,
   },
-  ctaBtnText: { color: WHITE, fontSize: 15, fontWeight: '700' },
-  ctaLoginLink: { fontSize: 14, color: PRIMARY, fontWeight: '600' },
-
-  footer: { fontSize: 12, color: '#4B5563', textAlign: 'center', paddingHorizontal: 24 },
+  statNumber: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 14,
+    color: GRAY_400,
+  },
+  statDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    marginHorizontal: 10,
+  },
+  featuresSection: {
+    marginTop: 60,
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    width: '100%',
+    maxWidth: 1000,
+    alignSelf: 'center',
+  },
+  sectionTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 40,
+    textAlign: 'center',
+  },
+  featuresRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    width: '100%',
+  },
+  featureItem: {
+    alignItems: 'center',
+    flex: 1,
+    minWidth: 250,
+    paddingHorizontal: 20,
+    marginBottom: 40,
+  },
+  featureIcon: {
+    marginBottom: 16,
+  },
+  featureTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  featureText: {
+    fontSize: 14,
+    color: GRAY_400,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  ctaSection: {
+    marginTop: 40,
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.05)',
+    paddingTop: 60,
+  },
+  ctaIcon: {
+    marginBottom: 16,
+  },
+  ctaTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  ctaSubtitle: {
+    fontSize: 16,
+    color: GRAY_400,
+    textAlign: 'center',
+    marginBottom: 32,
+  },
+  secondaryBtn: {
+    marginTop: 8,
+    padding: 10,
+  },
+  secondaryBtnText: {
+    color: PRIMARY,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  footer: {
+    marginTop: 60,
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.05)',
+    paddingVertical: 24,
+  },
+  footerText: {
+    color: GRAY_400,
+    fontSize: 12,
+  },
 });
