@@ -15,6 +15,7 @@ export default function RootLayout() {
       <Stack.Screen name="reservation-success" options={{ headerShown: false }} />
       <Stack.Screen name="sobre-o-app" options={{ headerShown: false }} />
       <Stack.Screen name="suporte" options={{ headerShown: false }} />
+      <Stack.Screen name="faq/[slug]" options={{ headerShown: false }} />
 
       {/* Auth screens — travadas em retrato */}
       <Stack.Screen name="index" options={{ headerShown: false, orientation: 'portrait' }} />
