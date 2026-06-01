@@ -113,6 +113,13 @@ export default function AdminTabsLayout() {
           headerShown: false,
         }}
       />
+      <Tabs.Screen
+        name="user-report/[id]"
+        options={{
+          href: null,
+          headerShown: false,
+        }}
+      />
     </Tabs>
   );
 }

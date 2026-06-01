@@ -124,6 +124,13 @@ export default function ReservationsScreen() {
         </View>
       );
     }
+    if (s === 'CANCELADA') {
+      return (
+        <View style={[styles.badge, { backgroundColor: '#FEE2E2' }]}>
+          <Text style={[styles.badgeText, { color: '#DC2626' }]}>Cancelada</Text>
+        </View>
+      );
+    }
     return (
       <View style={[styles.badge, { backgroundColor: '#DBEAFE' }]}>
         <Text style={[styles.badgeText, { color: '#1D4ED8' }]}>{s.replace('_', ' ')}</Text>

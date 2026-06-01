@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   ScrollView,
   Image,
+  Alert,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons, Feather } from '@expo/vector-icons';
@@ -32,6 +33,7 @@ export default function ReservationDetailScreen() {
   const [reservation, setReservation] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [canceling, setCanceling] = useState(false);
 
   useEffect(() => {
     fetchReservationDetails();
@@ -66,6 +68,51 @@ export default function ReservationDetailScreen() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCancelReservation = async () => {
+    Alert.alert(
+      'Cancelar Reserva',
+      'Tem certeza que deseja cancelar esta reserva? Esta ação não pode ser desfeita.',
+      [
+        { text: 'Não, manter', style: 'cancel' },
+        {
+          text: 'Sim, cancelar',
+          style: 'destructive',
+          onPress: async () => {
+            setCanceling(true);
+            try {
+               const currentUser = auth.currentUser;
+               if (!currentUser) throw new Error("Usuário não autenticado.");
+               
+               const idToken = await currentUser.getIdToken();
+               const headers = { 
+                 'Content-Type': 'application/json',
+                 'Authorization': `Bearer ${idToken}`
+               };
+
+               const BASE_URL = `https://locadj.onrender.com/api/reservations/${id}/cancel`;
+               const resp = await fetch(BASE_URL, {
+                 method: 'PATCH',
+                 headers
+               });
+
+               if (!resp.ok) {
+                 throw new Error('Falha ao cancelar a reserva.');
+               }
+
+               Alert.alert('Sucesso', 'Sua reserva foi cancelada com sucesso.');
+               fetchReservationDetails();
+            } catch (err: any) {
+               console.error(err);
+               Alert.alert('Erro', err.message || 'Não foi possível cancelar a reserva no momento.');
+            } finally {
+               setCanceling(false);
+            }
+          }
+        }
+      ]
+    );
   };
 
   if (loading) {
@@ -144,47 +191,72 @@ export default function ReservationDetailScreen() {
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         
-        {/* Status Tracker */}
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Status do Aluguel</Text>
-          <View style={styles.stepperContainer}>
-            {STATUS_STEPS.map((step, index) => {
-              const isLast = index === STATUS_STEPS.length - 1;
-              const isCompleted = index < activeStep;
-              const isActive = index === activeStep;
-              const color = getStepColor(index);
-              
-              const statusLog = (reservation.statusLogs || []).find((log: any) => log.status === step.key);
-              const statusDate = statusLog ? formatVisibleDateWithTime(statusLog.date).replace(' - ', ' às ') : null;
-
-              return (
-                <View key={step.key} style={styles.stepItem}>
-                  <View style={styles.stepIndicatorCol}>
-                    <View style={[styles.stepCircle, { borderColor: color, backgroundColor: isCompleted || isActive ? color : '#FFF' }]}>
-                      {isCompleted ? (
-                        <Feather name="check" size={12} color="#FFF" />
-                      ) : isActive ? (
-                        <View style={styles.activeDot} />
-                      ) : null}
-                    </View>
-                    {!isLast && <View style={[styles.stepLine, { backgroundColor: isCompleted ? '#10B981' : '#E5E7EB' }]} />}
-                  </View>
-                  <View style={styles.stepTextCol}>
-                    <Text style={[styles.stepLabel, { color: isActive ? '#5B42F3' : (isCompleted ? '#111827' : '#9CA3AF') }]}>
-                      {step.label}
-                    </Text>
-                    {statusDate && (
-                      <Text style={styles.stepDateLabel}>{statusDate}</Text>
-                    )}
-                    {isActive && index === 3 && (
-                      <Text style={styles.stepSubLabel}>Equipamento em uso pelo cliente</Text>
-                    )}
-                  </View>
-                </View>
-              );
-            })}
+        {/* Status Tracker or Cancellation Card */}
+        {currentStatus === 'CANCELADA' ? (
+          <View style={[styles.sectionCard, styles.cancelCard]}>
+            <View style={styles.cancelHeaderRow}>
+              <View style={styles.cancelIconContainer}>
+                <Ionicons name="close-circle" size={28} color="#EF4444" />
+              </View>
+              <View style={styles.cancelTextCol}>
+                <Text style={styles.cancelTitle}>Reserva Cancelada</Text>
+                {(() => {
+                  const cancellationLog = (reservation.statusLogs || []).find((log: any) => log.status === 'CANCELADA');
+                  const cancellationDate = cancellationLog ? formatVisibleDateWithTime(cancellationLog.date).replace(' - ', ' às ') : null;
+                  return cancellationDate ? (
+                    <Text style={styles.cancelSubtitle}>Cancelada em {cancellationDate}</Text>
+                  ) : (
+                    <Text style={styles.cancelSubtitle}>Esta reserva foi cancelada.</Text>
+                  );
+                })()}
+              </View>
+            </View>
+            <Text style={styles.cancelInfoText}>
+              Esta reserva foi cancelada e o equipamento não sairá para entrega. Se você já realizou algum pagamento, entre em contato com o nosso suporte para tratar do estorno ou renegociação.
+            </Text>
           </View>
-        </View>
+        ) : (
+          <View style={styles.sectionCard}>
+            <Text style={styles.sectionTitle}>Status do Aluguel</Text>
+            <View style={styles.stepperContainer}>
+              {STATUS_STEPS.map((step, index) => {
+                const isLast = index === STATUS_STEPS.length - 1;
+                const isCompleted = index < activeStep;
+                const isActive = index === activeStep;
+                const color = getStepColor(index);
+                
+                const statusLog = (reservation.statusLogs || []).find((log: any) => log.status === step.key);
+                const statusDate = statusLog ? formatVisibleDateWithTime(statusLog.date).replace(' - ', ' às ') : null;
+
+                return (
+                  <View key={step.key} style={styles.stepItem}>
+                    <View style={styles.stepIndicatorCol}>
+                      <View style={[styles.stepCircle, { borderColor: color, backgroundColor: isCompleted || isActive ? color : '#FFF' }]}>
+                        {isCompleted ? (
+                          <Feather name="check" size={12} color="#FFF" />
+                        ) : isActive ? (
+                          <View style={styles.activeDot} />
+                        ) : null}
+                      </View>
+                      {!isLast && <View style={[styles.stepLine, { backgroundColor: isCompleted ? '#10B981' : '#E5E7EB' }]} />}
+                    </View>
+                    <View style={styles.stepTextCol}>
+                      <Text style={[styles.stepLabel, { color: isActive ? '#5B42F3' : (isCompleted ? '#111827' : '#9CA3AF') }]}>
+                        {step.label}
+                      </Text>
+                      {statusDate && (
+                        <Text style={styles.stepDateLabel}>{statusDate}</Text>
+                      )}
+                      {isActive && index === 3 && (
+                        <Text style={styles.stepSubLabel}>Equipamento em uso pelo cliente</Text>
+                      )}
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+        )}
 
         <Text style={styles.sectionSubHeading}>ITEM RESERVADO</Text>
 
@@ -238,6 +310,25 @@ export default function ReservationDetailScreen() {
             <Text style={styles.infoValue} numberOfLines={2}>{address}</Text>
           </View>
         </View>
+
+        {/* Cancel Reservation Button */}
+        {(currentStatus === 'PENDENTE' || currentStatus === 'CONFIRMADA') && (
+          <TouchableOpacity
+            style={[styles.cancelBtn, canceling && styles.cancelBtnDisabled]}
+            onPress={handleCancelReservation}
+            disabled={canceling}
+            activeOpacity={0.8}
+          >
+            {canceling ? (
+              <ActivityIndicator size="small" color="#FFF" />
+            ) : (
+              <>
+                <Ionicons name="close-circle-outline" size={20} color="#FFF" style={{ marginRight: 8 }} />
+                <Text style={styles.cancelBtnText}>Cancelar Reserva</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        )}
 
       </ScrollView>
     </View>
@@ -431,5 +522,65 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  cancelBtn: {
+    backgroundColor: '#EF4444',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: 12,
+    marginTop: 8,
+    marginBottom: 16,
+    shadowColor: '#EF4444',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  cancelBtnDisabled: {
+    backgroundColor: '#FCA5A5',
+    shadowOpacity: 0.1,
+  },
+  cancelBtnText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  cancelCard: {
+    borderColor: '#FEE2E2',
+    backgroundColor: '#FFFDFD',
+  },
+  cancelHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  cancelIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#FEE2E2',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+  },
+  cancelTextCol: {
+    flex: 1,
+  },
+  cancelTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#EF4444',
+  },
+  cancelSubtitle: {
+    fontSize: 12,
+    color: '#9CA3AF',
+    marginTop: 2,
+  },
+  cancelInfoText: {
+    fontSize: 13,
+    color: '#6B7280',
+    lineHeight: 18,
   },
 });
