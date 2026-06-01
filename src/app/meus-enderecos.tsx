@@ -17,6 +17,12 @@ import { Feather, Ionicons } from '@expo/vector-icons';
 import { addressService } from '../services/addressService';
 import { Address } from '../types/address';
 
+const BG = '#09090B';
+const CARD_BG = '#09090B';
+const BORDER = '#27272A';
+const TEXT_LIGHT = '#FFFFFF';
+const TEXT_MUTED = '#A1A1AA';
+const PRIMARY = '#8B5CF6';
 
 // --- Component ---
 
@@ -121,7 +127,7 @@ export default function MeusEnderecosScreen() {
       {/* Header */}
       <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 12 }]}>
         <TouchableOpacity style={styles.backButton} onPress={goBackOrRedirect} activeOpacity={0.7}>
-          <Feather name="arrow-left" size={24} color="#FFF" />
+          <Feather name="arrow-left" size={24} color={TEXT_LIGHT} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Meus Endereços</Text>
         <View style={{ width: 40 }} />
@@ -136,12 +142,12 @@ export default function MeusEnderecosScreen() {
       >
         {loading ? (
           <View style={styles.emptyState}>
-            <ActivityIndicator size="large" color="#5245F1" />
+            <ActivityIndicator size="large" color={PRIMARY} />
             <Text style={styles.emptyTitle}>Carregando endereços...</Text>
           </View>
         ) : addresses.length === 0 ? (
           <View style={styles.emptyState}>
-            <Ionicons name="location-outline" size={48} color="#D1D5DB" />
+            <Ionicons name="location-outline" size={48} color={BORDER} />
             <Text style={styles.emptyTitle}>Nenhum endereço cadastrado</Text>
             <Text style={styles.emptySubtitle}>
               Adicione um endereço para facilitar suas reservas.
@@ -161,9 +167,9 @@ export default function MeusEnderecosScreen() {
                 ]}
               >
                 {address.isPrimary ? (
-                  <Ionicons name="location-outline" size={22} color="#5245F1" />
+                  <Ionicons name="location-outline" size={22} color={PRIMARY} />
                 ) : (
-                  <Feather name="lock" size={20} color="#666666" />
+                  <Feather name="lock" size={20} color={TEXT_MUTED} />
                 )}
               </View>
 
@@ -188,7 +194,7 @@ export default function MeusEnderecosScreen() {
                 onPress={() => handleMenuPress(address)}
                 activeOpacity={0.7}
               >
-                <Feather name="more-vertical" size={20} color="#9CA3AF" />
+                <Feather name="more-vertical" size={20} color={TEXT_MUTED} />
               </TouchableOpacity>
             </View>
           ))
@@ -198,7 +204,7 @@ export default function MeusEnderecosScreen() {
       {/* Bottom CTA */}
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 20) }]}>
         <TouchableOpacity style={styles.addButton} activeOpacity={0.8} onPress={() => router.push('/novo-endereco')}>
-          <Feather name="plus" size={18} color="#5245F1" style={{ marginRight: 8 }} />
+          <Feather name="plus" size={18} color={PRIMARY} style={{ marginRight: 8 }} />
           <Text style={styles.addButtonText}>Adicionar Novo Endereço</Text>
         </TouchableOpacity>
       </View>
@@ -219,7 +225,7 @@ export default function MeusEnderecosScreen() {
                       setSelectedAddress(null);
                     }}
                   >
-                    <Feather name="map-pin" size={18} color="#5245F1" />
+                    <Feather name="map-pin" size={18} color={PRIMARY} />
                     <Text style={styles.modalOptionText}>Definir como principal</Text>
                   </TouchableOpacity>
 
@@ -244,8 +250,8 @@ export default function MeusEnderecosScreen() {
                       });
                     }}
                   >
-                    <Feather name="edit-2" size={18} color="#4B5563" />
-                    <Text style={[styles.modalOptionText, { color: '#4B5563' }]}>Editar</Text>
+                    <Feather name="edit-2" size={18} color={TEXT_MUTED} />
+                    <Text style={[styles.modalOptionText, { color: TEXT_MUTED }]}>Editar</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -282,15 +288,17 @@ export default function MeusEnderecosScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F4F4F9',
+    backgroundColor: BG,
   },
   header: {
-    backgroundColor: '#5245F1',
+    backgroundColor: CARD_BG,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: BORDER,
   },
   backButton: {
     padding: 8,
@@ -299,7 +307,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFF',
+    color: TEXT_LIGHT,
   },
 
   // Scroll
@@ -311,20 +319,16 @@ const styles = StyleSheet.create({
 
   // Cards
   card: {
-    backgroundColor: '#FFF',
+    backgroundColor: CARD_BG,
+    borderWidth: 1,
+    borderColor: BORDER,
     borderRadius: 16,
     padding: 20,
     flexDirection: 'row',
     alignItems: 'center',
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
   },
   cardPrimary: {
-    borderWidth: 2,
-    borderColor: '#5245F1',
+    borderColor: PRIMARY,
   },
   iconWrapper: {
     width: 48,
@@ -335,10 +339,10 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
   iconWrapperPrimary: {
-    backgroundColor: '#ECECFF',
+    backgroundColor: 'rgba(139, 92, 246, 0.1)',
   },
   iconWrapperSecondary: {
-    backgroundColor: '#F4F4F9',
+    backgroundColor: BORDER,
   },
   cardContent: {
     flex: 1,
@@ -352,27 +356,29 @@ const styles = StyleSheet.create({
   cardLabel: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#111827',
+    color: TEXT_LIGHT,
   },
   primaryBadge: {
-    backgroundColor: '#ECECFF',
+    backgroundColor: 'rgba(139, 92, 246, 0.1)',
     borderRadius: 100,
     paddingHorizontal: 8,
     paddingVertical: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(139, 92, 246, 0.3)',
   },
   primaryBadgeText: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#5245F1',
+    color: PRIMARY,
   },
   cardStreet: {
     fontSize: 13,
-    color: '#4B5563',
+    color: TEXT_LIGHT,
     marginBottom: 2,
   },
   cardComplement: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: TEXT_MUTED,
   },
   menuButton: {
     padding: 8,
@@ -388,11 +394,11 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#374151',
+    color: TEXT_LIGHT,
   },
   emptySubtitle: {
     fontSize: 14,
-    color: '#9CA3AF',
+    color: TEXT_MUTED,
     textAlign: 'center',
     paddingHorizontal: 24,
   },
@@ -405,46 +411,41 @@ const styles = StyleSheet.create({
     right: 0,
     paddingHorizontal: 20,
     paddingTop: 16,
-    backgroundColor: '#F4F4F9',
+    backgroundColor: BG,
   },
   addButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#ECECFF',
-    borderWidth: 1.5,
-    borderColor: '#5245F1',
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: PRIMARY,
     borderRadius: 100,
     height: 56,
   },
   addButtonText: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#5245F1',
+    color: PRIMARY,
   },
 
   // Modal Styles
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: 'rgba(0,0,0,0.7)',
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#FFF',
+    backgroundColor: '#18181B',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 24,
     paddingBottom: 40, // extra padding for bottom safe area
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
   },
   modalTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#111827',
+    color: TEXT_LIGHT,
     marginBottom: 16,
     textAlign: 'center',
   },
@@ -456,12 +457,12 @@ const styles = StyleSheet.create({
   modalOptionText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#5245F1',
+    color: PRIMARY,
     marginLeft: 12,
   },
   modalDivider: {
     height: 1,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: BORDER,
     marginVertical: 8,
   },
   modalCancelButton: {
@@ -471,6 +472,6 @@ const styles = StyleSheet.create({
   modalCancelText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#6B7280',
+    color: TEXT_MUTED,
   },
 });

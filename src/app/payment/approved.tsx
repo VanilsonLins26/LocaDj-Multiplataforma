@@ -12,11 +12,12 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const PRIMARY = '#5245F1';
-const WHITE = '#FFFFFF';
-const GRAY_100 = '#F3F4F6';
-const GRAY_400 = '#9CA3AF';
-const GRAY_800 = '#1F2937';
+const BG = '#09090B';
+const CARD_BG = '#09090B';
+const BORDER = '#27272A';
+const TEXT_LIGHT = '#FFFFFF';
+const TEXT_MUTED = '#A1A1AA';
+const PRIMARY = '#8B5CF6';
 const SUCCESS = '#10B981';
 
 import { auth } from '../../config/firebaseConfig';
@@ -160,7 +161,7 @@ export default function PaymentApprovedScreen() {
 
           <View style={styles.iconContainer}>
             <Animated.View style={[styles.iconCircle, { transform: [{ scale: scaleValue }] }]}>
-              <Ionicons name="checkmark" size={48} color={WHITE} />
+              <Ionicons name="checkmark" size={48} color={TEXT_LIGHT} />
             </Animated.View>
           </View>
 
@@ -185,8 +186,8 @@ export default function PaymentApprovedScreen() {
               <Text style={styles.summaryValue}>{paymentDate}</Text>
             </View>
             {paymentAmount && (
-              <View style={[styles.summaryRow, { marginTop: 8, borderTopWidth: 1, borderTopColor: GRAY_100, paddingTop: 16 }]}>
-                <Text style={[styles.summaryLabel, { color: GRAY_800, fontWeight: '700' }]}>Valor Total Pago</Text>
+              <View style={[styles.summaryRow, { marginTop: 8, borderTopWidth: 1, borderTopColor: BORDER, paddingTop: 16 }]}>
+                <Text style={[styles.summaryLabel, { color: TEXT_LIGHT, fontWeight: '700' }]}>Valor Total Pago</Text>
                 <Text style={[styles.summaryValue, { fontSize: 18, color: PRIMARY }]}>{paymentAmount}</Text>
               </View>
             )}
@@ -204,7 +205,7 @@ export default function PaymentApprovedScreen() {
             activeOpacity={0.8}
           >
             <Text style={styles.primaryBtnText}>Ir para Meus Pedidos</Text>
-            <Ionicons name="arrow-forward" size={20} color={WHITE} style={{ marginLeft: 8 }} />
+            <Ionicons name="arrow-forward" size={20} color={PRIMARY} style={{ marginLeft: 8 }} />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -224,16 +225,16 @@ export default function PaymentApprovedScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F4F5F7',
+    backgroundColor: BG,
   },
   headerBg: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
-    backgroundColor: PRIMARY,
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
+    backgroundColor: CARD_BG,
+    borderBottomWidth: 1,
+    borderBottomColor: BORDER,
     overflow: 'hidden',
   },
   headerBgPattern: {
@@ -241,7 +242,7 @@ const styles = StyleSheet.create({
     width: width * 1.5,
     height: width * 1.5,
     borderRadius: width,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: 'rgba(139, 92, 246, 0.05)',
     top: -width * 0.5,
     right: -width * 0.5,
   },
@@ -250,16 +251,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   card: {
-    backgroundColor: WHITE,
+    backgroundColor: CARD_BG,
     borderRadius: 24,
     padding: 24,
     paddingTop: 56,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.05,
-    shadowRadius: 20,
-    elevation: 8,
+    borderWidth: 1,
+    borderColor: BORDER,
     marginBottom: 32,
   },
   iconContainer: {
@@ -275,7 +273,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 6,
-    borderColor: '#F4F5F7',
+    borderColor: BG,
     shadowColor: SUCCESS,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
@@ -285,13 +283,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: '800',
-    color: GRAY_800,
+    color: TEXT_LIGHT,
     marginBottom: 8,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 15,
-    color: GRAY_400,
+    color: TEXT_MUTED,
     textAlign: 'center',
     lineHeight: 22,
     paddingHorizontal: 16,
@@ -299,7 +297,7 @@ const styles = StyleSheet.create({
   divider: {
     width: '100%',
     height: 1,
-    backgroundColor: GRAY_100,
+    backgroundColor: BORDER,
     marginVertical: 24,
   },
   summaryContainer: {
@@ -313,12 +311,12 @@ const styles = StyleSheet.create({
   },
   summaryLabel: {
     fontSize: 14,
-    color: GRAY_400,
+    color: TEXT_MUTED,
     fontWeight: '500',
   },
   summaryValue: {
     fontSize: 14,
-    color: GRAY_800,
+    color: TEXT_LIGHT,
     fontWeight: '700',
   },
   actionContainer: {
@@ -327,20 +325,17 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   primaryBtn: {
-    backgroundColor: PRIMARY,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: PRIMARY,
     borderRadius: 16,
     height: 56,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: PRIMARY,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 6,
   },
   primaryBtnText: {
-    color: WHITE,
+    color: PRIMARY,
     fontSize: 16,
     fontWeight: '700',
   },
@@ -350,7 +345,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   secondaryBtnText: {
-    color: GRAY_800,
+    color: TEXT_MUTED,
     fontSize: 15,
     fontWeight: '600',
   },

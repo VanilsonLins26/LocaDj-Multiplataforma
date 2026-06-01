@@ -12,13 +12,14 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const PRIMARY = '#5245F1';
-const WHITE = '#FFFFFF';
-const GRAY_100 = '#F3F4F6';
-const GRAY_400 = '#9CA3AF';
-const GRAY_800 = '#1F2937';
+const BG = '#09090B';
+const CARD_BG = '#09090B';
+const BORDER = '#27272A';
+const TEXT_LIGHT = '#FFFFFF';
+const TEXT_MUTED = '#A1A1AA';
+const PRIMARY = '#8B5CF6';
 const WARNING = '#F97316';
-const WARNING_LIGHT = '#FFF7ED';
+const WARNING_LIGHT = 'rgba(249, 115, 22, 0.1)';
 
 const { width, height } = Dimensions.get('window');
 
@@ -94,7 +95,7 @@ export default function PaymentPendingScreen() {
               styles.iconCircle,
               { transform: [{ scale: scaleValue }, { scale: pulseValue }] }
             ]}>
-              <Ionicons name="time" size={44} color={WHITE} />
+              <Ionicons name="time" size={44} color={TEXT_LIGHT} />
             </Animated.View>
           </View>
 
@@ -129,7 +130,7 @@ export default function PaymentPendingScreen() {
             activeOpacity={0.8}
           >
             <Text style={styles.primaryBtnText}>Ir para Meus Pedidos</Text>
-            <Ionicons name="list" size={20} color={WHITE} style={{ marginLeft: 8 }} />
+            <Ionicons name="list" size={20} color={WARNING} style={{ marginLeft: 8 }} />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -149,16 +150,16 @@ export default function PaymentPendingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F4F5F7',
+    backgroundColor: BG,
   },
   headerBg: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
-    backgroundColor: PRIMARY,
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
+    backgroundColor: CARD_BG,
+    borderBottomWidth: 1,
+    borderBottomColor: BORDER,
     overflow: 'hidden',
   },
   headerBgPattern: {
@@ -166,7 +167,7 @@ const styles = StyleSheet.create({
     width: width * 1.5,
     height: width * 1.5,
     borderRadius: width,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: 'rgba(249, 115, 22, 0.05)',
     top: -width * 0.5,
     right: -width * 0.5,
   },
@@ -175,16 +176,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   card: {
-    backgroundColor: WHITE,
+    backgroundColor: CARD_BG,
     borderRadius: 24,
     padding: 24,
     paddingTop: 56,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.05,
-    shadowRadius: 20,
-    elevation: 8,
+    borderWidth: 1,
+    borderColor: BORDER,
     marginBottom: 32,
   },
   iconContainer: {
@@ -200,7 +198,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 6,
-    borderColor: '#F4F5F7',
+    borderColor: BG,
     shadowColor: WARNING,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.4,
@@ -210,13 +208,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: '800',
-    color: GRAY_800,
+    color: TEXT_LIGHT,
     marginBottom: 8,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 15,
-    color: GRAY_400,
+    color: TEXT_MUTED,
     textAlign: 'center',
     lineHeight: 22,
     paddingHorizontal: 8,
@@ -224,7 +222,7 @@ const styles = StyleSheet.create({
   divider: {
     width: '100%',
     height: 1,
-    backgroundColor: GRAY_100,
+    backgroundColor: BORDER,
     marginVertical: 24,
   },
   infoContainer: {
@@ -233,6 +231,8 @@ const styles = StyleSheet.create({
     backgroundColor: WARNING_LIGHT,
     padding: 16,
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(249, 115, 22, 0.2)',
   },
   infoRow: {
     flexDirection: 'row',
@@ -252,20 +252,17 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   primaryBtn: {
-    backgroundColor: WARNING,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: WARNING,
     borderRadius: 16,
     height: 56,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: WARNING,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 6,
   },
   primaryBtnText: {
-    color: WHITE,
+    color: WARNING,
     fontSize: 16,
     fontWeight: '700',
   },
@@ -275,7 +272,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   secondaryBtnText: {
-    color: GRAY_800,
+    color: TEXT_MUTED,
     fontSize: 15,
     fontWeight: '600',
   },

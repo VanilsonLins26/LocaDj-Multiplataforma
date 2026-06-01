@@ -2,15 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import React, { useEffect, useState } from 'react';
-import { Image, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import Animated, {
-  Easing,
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withSequence,
-  withTiming,
-} from 'react-native-reanimated';
+import { Animated, Easing, Image, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { auth } from '../config/firebaseConfig';
@@ -20,54 +12,45 @@ const DARK_BG = '#04040a'; // very dark background
 const GRAY_400 = '#9ca3af';
 
 const AnimatedLight = ({ color, size, top, left, right, bottom, delay = 0, moveX = 100, moveY = 100, duration = 8000 }: any) => {
-  const opacity = useSharedValue(0.6);
-  const scale = useSharedValue(1);
-  const translateX = useSharedValue(0);
-  const translateY = useSharedValue(0);
-  const gradId = `grad-${color.replace('#', '')}-${size}`; // Unique-ish ID based on props
+  const opacity = React.useRef(new Animated.Value(0.6)).current;
+  const scale = React.useRef(new Animated.Value(1)).current;
+  const translateX = React.useRef(new Animated.Value(0)).current;
+  const translateY = React.useRef(new Animated.Value(0)).current;
+  const gradId = `grad-${color.replace('#', '')}-${size}-${delay}`; // Unique ID
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      opacity.value = withRepeat(
-        withSequence(
-          withTiming(1, { duration: 3000, easing: Easing.inOut(Easing.ease) }),
-          withTiming(0.5, { duration: 3000, easing: Easing.inOut(Easing.ease) })
-        ),
-        -1,
-        true
-      );
-      scale.value = withRepeat(
-        withSequence(
-          withTiming(1.3, { duration: 4000, easing: Easing.inOut(Easing.ease) }),
-          withTiming(1, { duration: 4000, easing: Easing.inOut(Easing.ease) })
-        ),
-        -1,
-        true
-      );
-      translateX.value = withRepeat(
-        withTiming(moveX, { duration: duration, easing: Easing.inOut(Easing.ease) }),
-        -1,
-        true
-      );
-      translateY.value = withRepeat(
-        withTiming(moveY, { duration: duration * 1.2, easing: Easing.inOut(Easing.ease) }),
-        -1,
-        true
-      );
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(opacity, { toValue: 1, duration: 3000, useNativeDriver: true }),
+          Animated.timing(opacity, { toValue: 0.5, duration: 3000, useNativeDriver: true })
+        ])
+      ).start();
+
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(scale, { toValue: 1.3, duration: 4000, useNativeDriver: true }),
+          Animated.timing(scale, { toValue: 1, duration: 4000, useNativeDriver: true })
+        ])
+      ).start();
+
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(translateX, { toValue: moveX, duration: duration, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+          Animated.timing(translateX, { toValue: 0, duration: duration, easing: Easing.inOut(Easing.ease), useNativeDriver: true })
+        ])
+      ).start();
+
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(translateY, { toValue: moveY, duration: duration * 1.2, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+          Animated.timing(translateY, { toValue: 0, duration: duration * 1.2, easing: Easing.inOut(Easing.ease), useNativeDriver: true })
+        ])
+      ).start();
     }, delay);
+
     return () => clearTimeout(timer);
   }, [delay, moveX, moveY, duration]);
-
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      opacity: opacity.value,
-      transform: [
-        { translateX: translateX.value },
-        { translateY: translateY.value },
-        { scale: scale.value }
-      ],
-    };
-  });
 
   return (
     <Animated.View
@@ -80,8 +63,13 @@ const AnimatedLight = ({ color, size, top, left, right, bottom, delay = 0, moveX
           left,
           right,
           bottom,
-        },
-        animatedStyle,
+          opacity: opacity,
+          transform: [
+            { translateX: translateX },
+            { translateY: translateY },
+            { scale: scale }
+          ],
+        }
       ]}
       pointerEvents="none"
     >
@@ -132,10 +120,15 @@ export default function HomeScreen() {
         <AnimatedLight color="#3b82f6" size={350} bottom={100} left={-50} delay={1000} moveX={180} moveY={-120} duration={9000} />
         <AnimatedLight color="#8b5cf6" size={250} bottom={-50} right={100} delay={1500} moveX={-150} moveY={-150} duration={7000} />
         
-        {/* Mais luzes adicionadas para um fundo mais rico */}
+        {/* Luzes adicionais para um fundo super rico */}
         <AnimatedLight color="#ec4899" size={350} top={350} left={100} delay={800} moveX={200} moveY={-150} duration={11000} />
         <AnimatedLight color="#06b6d4" size={450} top={500} right={50} delay={1200} moveX={-150} moveY={200} duration={12000} />
         <AnimatedLight color="#6366f1" size={400} bottom={300} left={200} delay={2000} moveX={250} moveY={150} duration={13000} />
+        
+        <AnimatedLight color="#10b981" size={300} top={-100} right={200} delay={300} moveX={-100} moveY={250} duration={9500} />
+        <AnimatedLight color="#f59e0b" size={250} top={400} left={-100} delay={1800} moveX={250} moveY={-100} duration={8500} />
+        <AnimatedLight color="#ef4444" size={350} bottom={-150} right={-50} delay={2200} moveX={-200} moveY={-200} duration={10500} />
+        <AnimatedLight color="#8b5cf6" size={500} top={600} left={-150} delay={2500} moveX={300} moveY={-250} duration={15000} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -278,15 +271,13 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    borderWidth: 1,
-    borderColor: 'rgba(139, 92, 246, 0.3)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
   },
   logo: {
-    width: 40,
-    height: 40,
+    width: 110,
+    height: 110,
   },
   heroTitle: {
     fontSize: 36,

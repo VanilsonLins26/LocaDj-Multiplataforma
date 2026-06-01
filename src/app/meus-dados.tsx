@@ -19,6 +19,13 @@ const AVATARS = [
   'https://api.dicebear.com/9.x/avataaars/png?seed=Mia&backgroundColor=b6e3f4'
 ];
 
+const BG = '#09090B';
+const CARD_BG = '#09090B';
+const BORDER = '#27272A';
+const TEXT_LIGHT = '#FFFFFF';
+const TEXT_MUTED = '#A1A1AA';
+const PRIMARY = '#8B5CF6';
+
 export default function MeusDadosScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -151,7 +158,7 @@ export default function MeusDadosScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 12 }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()} activeOpacity={0.7}>
-          <Ionicons name="arrow-back" size={24} color="#FFF" />
+          <Ionicons name="arrow-back" size={24} color={TEXT_LIGHT} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Meus Dados</Text>
         <View style={{ width: 40 }} />
@@ -192,7 +199,7 @@ export default function MeusDadosScreen() {
                   value={name}
                   onChangeText={setName}
                   placeholder="Seu nome completo"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={TEXT_MUTED}
                 />
               </View>
             </View>
@@ -202,11 +209,11 @@ export default function MeusDadosScreen() {
               <Text style={styles.label}>E-mail</Text>
               <View style={styles.inputContainer}>
                 <TextInput
-                  style={[styles.input, { color: '#9CA3AF' }]}
+                  style={[styles.input, { color: TEXT_MUTED }]}
                   value={email}
                   editable={false}
                   placeholder="Seu e-mail"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={TEXT_MUTED}
                   keyboardType="email-address"
                   autoCapitalize="none"
                 />
@@ -222,7 +229,7 @@ export default function MeusDadosScreen() {
                   value={phone}
                   onChangeText={setPhone}
                   placeholder="(00) 00000-0000"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={TEXT_MUTED}
                   keyboardType="phone-pad"
                 />
               </View>
@@ -233,11 +240,11 @@ export default function MeusDadosScreen() {
               <Text style={styles.label}>CPF</Text>
               <View style={[styles.inputContainer, styles.inputDisabled]}>
                 <TextInput
-                  style={[styles.input, { color: '#9CA3AF' }]}
+                  style={[styles.input, { color: TEXT_MUTED }]}
                   value={cpf}
                   editable={false}
                 />
-                <Feather name="lock" size={16} color="#9CA3AF" style={styles.inputIconRight} />
+                <Feather name="lock" size={16} color={TEXT_MUTED} style={styles.inputIconRight} />
               </View>
             </View>
 
@@ -266,14 +273,14 @@ export default function MeusDadosScreen() {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Escolha um Avatar</Text>
               <TouchableOpacity onPress={() => setAvatarModalVisible(false)}>
-                <Ionicons name="close" size={24} color="#6B7280" />
+                <Ionicons name="close" size={24} color={TEXT_MUTED} />
               </TouchableOpacity>
             </View>
             <View style={styles.avatarGrid}>
               {/* Option to Upload */}
               <TouchableOpacity style={styles.uploadOption} onPress={pickImage}>
                 <View style={styles.uploadIconCircle}>
-                  <Ionicons name="camera" size={30} color="#5B42F3" />
+                  <Ionicons name="camera" size={30} color={PRIMARY} />
                 </View>
                 <Text style={styles.uploadText}>Upload</Text>
               </TouchableOpacity>
@@ -302,15 +309,17 @@ export default function MeusDadosScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F7F7F9', // Cinza bem claro do fundo
+    backgroundColor: BG,
   },
   header: {
-    backgroundColor: '#5B42F3',
+    backgroundColor: CARD_BG,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: BORDER,
   },
   backButton: {
     padding: 8,
@@ -319,7 +328,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#FFF',
+    color: TEXT_LIGHT,
   },
   scrollContent: {
     flexGrow: 1,
@@ -334,7 +343,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#E0FCE8',
+    backgroundColor: 'rgba(139, 92, 246, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
@@ -342,12 +351,12 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#10B981',
+    color: PRIMARY,
   },
   changePhotoText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#5B42F3',
+    color: PRIMARY,
   },
   formContainer: {
     paddingHorizontal: 24,
@@ -358,26 +367,26 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 13,
     fontWeight: '500',
-    color: '#4B5563',
+    color: TEXT_LIGHT,
     marginBottom: 8,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF',
+    backgroundColor: CARD_BG,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: BORDER,
     borderRadius: 12,
     height: 52,
     paddingHorizontal: 16,
   },
   inputDisabled: {
-    backgroundColor: '#F9FAFB',
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
   },
   input: {
     flex: 1,
     fontSize: 15,
-    color: '#1F2937',
+    color: TEXT_LIGHT,
     height: '100%',
   },
   inputIconRight: {
@@ -386,10 +395,12 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: 24,
     paddingTop: 16,
-    backgroundColor: '#F7F7F9',
+    backgroundColor: BG,
   },
   saveButton: {
-    backgroundColor: '#5B42F3',
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: PRIMARY,
     borderRadius: 100,
     height: 56,
     alignItems: 'center',
@@ -398,7 +409,7 @@ const styles = StyleSheet.create({
   saveButtonText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#FFF',
+    color: PRIMARY,
   },
   avatarImage: {
     width: 80,
@@ -406,15 +417,15 @@ const styles = StyleSheet.create({
     borderRadius: 40,
     marginBottom: 12,
     borderWidth: 2,
-    borderColor: '#5B42F3',
+    borderColor: PRIMARY,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.7)',
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#FFF',
+    backgroundColor: '#18181B',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 24,
@@ -429,7 +440,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1F2937',
+    color: TEXT_LIGHT,
   },
   avatarGrid: {
     flexDirection: 'row',
@@ -447,7 +458,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   avatarOptionSelected: {
-    borderColor: '#5B42F3',
+    borderColor: PRIMARY,
   },
   avatarOptionImg: {
     width: '100%',
@@ -471,17 +482,17 @@ const styles = StyleSheet.create({
     width: 70,
     height: 70,
     borderRadius: 35,
-    backgroundColor: '#EEF2FF',
+    backgroundColor: BORDER,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: '#E5E7EB',
+    borderColor: BORDER,
     borderStyle: 'dashed',
     marginBottom: 4,
   },
   uploadText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#5B42F3',
+    color: PRIMARY,
   },
 });

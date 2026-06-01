@@ -17,11 +17,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { auth, db } from '../../../config/firebaseConfig';
 import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
 
-const PRIMARY = '#5B4EE4';
-const BG = '#F4F5F8';
-const WHITE = '#FFFFFF';
-const TEXT_DARK = '#111827';
-const TEXT_GRAY = '#6B7280';
+const BG = '#09090B';
+const CARD_BG = '#09090B';
+const BORDER = '#27272A';
+const TEXT_LIGHT = '#FFFFFF';
+const TEXT_MUTED = '#A1A1AA';
+const PRIMARY = '#8B5CF6';
 
 const STATUS_STEPS = [
   { key: 'PENDENTE', label: 'Reserva Pendente' },
@@ -195,7 +196,7 @@ export default function AdminReservationDetailScreen() {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', padding: 24 }]}>
         <Ionicons name="alert-circle-outline" size={48} color="#EF4444" />
-        <Text style={{ marginTop: 16, fontSize: 16, textAlign: 'center', color: '#4B5563' }}>
+        <Text style={{ marginTop: 16, fontSize: 16, textAlign: 'center', color: TEXT_MUTED }}>
           {error || 'Reserva não encontrada.'}
         </Text>
         <TouchableOpacity style={styles.errorBackBtn} onPress={() => router.navigate('/(admin)/reservations')}>
@@ -238,19 +239,19 @@ export default function AdminReservationDetailScreen() {
 
   const getStepColor = (index: number) => {
     if (index < activeStep) return '#10B981'; // Green (Completed)
-    if (index === activeStep) return '#5B42F3'; // Primary (Current)
-    return '#D1D5DB'; // Gray (Future)
+    if (index === activeStep) return PRIMARY; // Primary (Current)
+    return BORDER; // Gray (Future)
   };
 
   const getStatusDisplay = () => {
     switch(currentStatus) {
-      case 'PENDENTE': return { text: 'Reserva Pendente', bg: '#FEF3C7', color: '#D97706', icon: 'clock' };
-      case 'CONFIRMADA': return { text: 'Reserva Aprovada', bg: '#DCFCE7', color: '#16A34A', icon: 'check-circle' };
-      case 'SAIU_PARA_ENTREGA': return { text: 'Saiu para Entrega', bg: '#DBEAFE', color: '#2563EB', icon: 'truck' };
+      case 'PENDENTE': return { text: 'Reserva Pendente', bg: 'rgba(245, 158, 11, 0.15)', color: '#FBBF24', icon: 'clock' };
+      case 'CONFIRMADA': return { text: 'Reserva Aprovada', bg: 'rgba(16, 185, 129, 0.15)', color: '#10B981', icon: 'check-circle' };
+      case 'SAIU_PARA_ENTREGA': return { text: 'Saiu para Entrega', bg: 'rgba(59, 130, 246, 0.15)', color: '#3B82F6', icon: 'truck' };
       case 'EM_ADAMENTO': 
-      case 'IN_PROGRESS': return { text: 'Em Andamento', bg: '#F3E8FF', color: '#9333EA', icon: 'play-circle' };
-      case 'CONCLUIDA': return { text: 'Concluída', bg: '#F3F4F6', color: '#4B5563', icon: 'check-square' };
-      default: return { text: currentStatus, bg: '#F3F4F6', color: '#4B5563', icon: 'info' };
+      case 'IN_PROGRESS': return { text: 'Em Andamento', bg: 'rgba(168, 85, 247, 0.15)', color: '#A855F7', icon: 'play-circle' };
+      case 'CONCLUIDA': return { text: 'Concluída', bg: 'rgba(156, 163, 175, 0.15)', color: '#9CA3AF', icon: 'check-square' };
+      default: return { text: currentStatus, bg: 'rgba(156, 163, 175, 0.15)', color: '#9CA3AF', icon: 'info' };
     }
   };
 
@@ -258,9 +259,9 @@ export default function AdminReservationDetailScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) }]}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) }]}>
         <TouchableOpacity style={styles.headerBackBtn} onPress={() => router.navigate('/(admin)/reservations')}>
-          <Ionicons name="arrow-back" size={24} color="#FFF" />
+          <Ionicons name="arrow-back" size={24} color={TEXT_LIGHT} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Detalhes da Reserva</Text>
         <View style={{ width: 40 }} />
@@ -284,17 +285,17 @@ export default function AdminReservationDetailScreen() {
               return (
                 <View key={step.key} style={styles.stepItem}>
                   <View style={styles.stepIndicatorCol}>
-                    <View style={[styles.stepCircle, { borderColor: color, backgroundColor: isCompleted || isActive ? color : '#FFF' }]}>
+                    <View style={[styles.stepCircle, { borderColor: color, backgroundColor: isCompleted || isActive ? color : '#18181B' }]}>
                       {isCompleted ? (
                         <Feather name="check" size={12} color="#FFF" />
                       ) : isActive ? (
                         <View style={styles.activeDot} />
                       ) : null}
                     </View>
-                    {!isLast && <View style={[styles.stepLine, { backgroundColor: isCompleted ? '#10B981' : '#E5E7EB' }]} />}
+                    {!isLast && <View style={[styles.stepLine, { backgroundColor: isCompleted ? '#10B981' : BORDER }]} />}
                   </View>
                   <View style={styles.stepTextCol}>
-                    <Text style={[styles.stepLabel, { color: isActive ? '#5B42F3' : (isCompleted ? '#111827' : '#9CA3AF') }]}>
+                    <Text style={[styles.stepLabel, { color: isActive ? PRIMARY : (isCompleted ? TEXT_LIGHT : TEXT_MUTED) }]}>
                       {step.label}
                     </Text>
                     {statusDate && (
@@ -331,8 +332,8 @@ export default function AdminReservationDetailScreen() {
         <View style={styles.card}>
           <View style={styles.dateRow}>
             <View style={styles.dateIconWrapper}>
-              <View style={[styles.dateIconCircle, { backgroundColor: '#EEF2FF' }]}>
-                <Feather name="clock" size={14} color="#5B4EE4" />
+              <View style={[styles.dateIconCircle, { backgroundColor: 'rgba(139, 92, 246, 0.15)' }]}>
+                <Feather name="clock" size={14} color={PRIMARY} />
               </View>
               <View style={styles.dateDottedLine} />
             </View>
@@ -344,7 +345,7 @@ export default function AdminReservationDetailScreen() {
 
           <View style={[styles.dateRow, { marginTop: 0 }]}>
             <View style={styles.dateIconWrapper}>
-              <View style={[styles.dateIconCircle, { backgroundColor: '#FEE2E2' }]}>
+              <View style={[styles.dateIconCircle, { backgroundColor: 'rgba(239, 68, 68, 0.15)' }]}>
                 <Feather name="x" size={14} color="#EF4444" />
               </View>
             </View>
@@ -395,8 +396,8 @@ export default function AdminReservationDetailScreen() {
                   onPress={() => updateStatus('left-for-delivery', 'Status atualizado para: Saiu para Entrega')}
                   disabled={updating}
                 >
-                  <Feather name="truck" size={18} color="#FFF" style={styles.actionIcon} />
-                  <Text style={styles.actionBtnText}>Marcar como Saiu p/ Entrega</Text>
+                  <Feather name="truck" size={18} color="#3B82F6" style={styles.actionIcon} />
+                  <Text style={[styles.actionBtnText, { color: '#3B82F6' }]}>Marcar como Saiu p/ Entrega</Text>
                 </TouchableOpacity>
               )}
 
@@ -406,8 +407,8 @@ export default function AdminReservationDetailScreen() {
                   onPress={() => updateStatus('in-progress', 'Status atualizado para: Em Andamento')}
                   disabled={updating}
                 >
-                  <Feather name="play-circle" size={18} color="#FFF" style={styles.actionIcon} />
-                  <Text style={styles.actionBtnText}>Marcar como Em Andamento</Text>
+                  <Feather name="play-circle" size={18} color={PRIMARY} style={styles.actionIcon} />
+                  <Text style={[styles.actionBtnText, { color: PRIMARY }]}>Marcar como Em Andamento</Text>
                 </TouchableOpacity>
               )}
 
@@ -417,8 +418,8 @@ export default function AdminReservationDetailScreen() {
                   onPress={() => updateStatus('completed', 'Reserva finalizada com sucesso')}
                   disabled={updating}
                 >
-                  <Feather name="check-square" size={18} color="#FFF" style={styles.actionIcon} />
-                  <Text style={styles.actionBtnText}>Concluir Reserva (Devolvido)</Text>
+                  <Feather name="check-square" size={18} color="#10B981" style={styles.actionIcon} />
+                  <Text style={[styles.actionBtnText, { color: '#10B981' }]}>Concluir Reserva (Devolvido)</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -442,7 +443,7 @@ export default function AdminReservationDetailScreen() {
                 setRatingModalVisible(false);
                 router.navigate('/(admin)/reservations'); // Ao fechar sem avaliar, volta pra lista
               }}>
-                <Ionicons name="close" size={24} color="#6B7280" />
+                <Ionicons name="close" size={24} color={TEXT_MUTED} />
               </TouchableOpacity>
             </View>
 
@@ -454,7 +455,7 @@ export default function AdminReservationDetailScreen() {
             <TextInput
               style={styles.scoreInput}
               placeholder="Ex: 10"
-              placeholderTextColor="#D1D5DB"
+              placeholderTextColor={TEXT_MUTED}
               keyboardType="numeric"
               value={ratingScore}
               onChangeText={setRatingScore}
@@ -465,7 +466,7 @@ export default function AdminReservationDetailScreen() {
             <TextInput
               style={styles.feedbackInput}
               placeholder="Ex: Entregou no prazo, equipamento bem cuidado."
-              placeholderTextColor="#D1D5DB"
+              placeholderTextColor={TEXT_MUTED}
               multiline
               textAlignVertical="top"
               value={ratingFeedback}
@@ -478,9 +479,9 @@ export default function AdminReservationDetailScreen() {
               disabled={!ratingScore || savingRating}
             >
               {savingRating ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color={PRIMARY} />
               ) : (
-                <Text style={styles.saveRatingBtnText}>Salvar Avaliação</Text>
+                <Text style={[styles.saveRatingBtnText, (!ratingScore || savingRating) && { color: TEXT_MUTED }]}>Salvar Avaliação</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -494,78 +495,80 @@ export default function AdminReservationDetailScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: BG },
   header: {
-    backgroundColor: PRIMARY,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingBottom: 16,
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: BORDER,
   },
-  headerBackBtn: { padding: 8, marginLeft: -8 },
-  headerTitle: { flex: 1, textAlign: 'center', fontSize: 16, fontWeight: '700', color: WHITE },
+  headerBackBtn: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center', backgroundColor: 'transparent', borderWidth: 1, borderColor: BORDER },
+  headerTitle: { flex: 1, textAlign: 'center', fontSize: 17, fontWeight: '700', color: TEXT_LIGHT },
   scrollContent: { padding: 20, paddingBottom: 40 },
   
   stepperContainer: { paddingLeft: 4, marginTop: 12 },
   stepItem: { flexDirection: 'row', minHeight: 50 },
   stepIndicatorCol: { alignItems: 'center', width: 24, marginRight: 12 },
-  stepCircle: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF', zIndex: 2 },
+  stepCircle: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, justifyContent: 'center', alignItems: 'center', backgroundColor: '#18181B', zIndex: 2 },
   activeDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#FFF' },
-  stepLine: { width: 2, flex: 1, backgroundColor: '#E5E7EB', marginTop: -4, marginBottom: -4, zIndex: 1 },
+  stepLine: { width: 2, flex: 1, backgroundColor: BORDER, marginTop: -4, marginBottom: -4, zIndex: 1 },
   stepTextCol: { flex: 1, paddingBottom: 24 },
   stepLabel: { fontSize: 14, fontWeight: '600', marginTop: -2 },
-  stepDateLabel: { fontSize: 12, color: '#9CA3AF', marginTop: 2 },
-  stepSubLabel: { fontSize: 12, color: '#5B42F3', marginTop: 4 },
+  stepDateLabel: { fontSize: 12, color: TEXT_MUTED, marginTop: 2 },
+  stepSubLabel: { fontSize: 12, color: PRIMARY, marginTop: 4 },
   
-  sectionTitle: { fontSize: 11, fontWeight: '700', color: TEXT_GRAY, letterSpacing: 0.5, marginBottom: 8, marginLeft: 4 },
-  card: { backgroundColor: WHITE, borderRadius: 16, padding: 16, marginBottom: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.03, shadowRadius: 8, elevation: 2 },
+  sectionTitle: { fontSize: 11, fontWeight: '700', color: TEXT_MUTED, letterSpacing: 0.5, marginBottom: 8, marginLeft: 4 },
+  card: { backgroundColor: CARD_BG, borderRadius: 16, padding: 16, marginBottom: 24, borderWidth: 1, borderColor: BORDER },
   
   kitRow: { flexDirection: 'row', alignItems: 'center' },
   kitImage: { width: 48, height: 48, borderRadius: 10, marginRight: 12 },
-  kitImagePlaceholder: { width: 48, height: 48, borderRadius: 10, backgroundColor: '#F3F4F6', marginRight: 12 },
+  kitImagePlaceholder: { width: 48, height: 48, borderRadius: 10, backgroundColor: '#18181B', marginRight: 12 },
   kitInfo: { flex: 1 },
-  kitName: { fontSize: 15, fontWeight: '700', color: TEXT_DARK, marginBottom: 4 },
-  kitDetails: { fontSize: 13, color: TEXT_GRAY },
+  kitName: { fontSize: 15, fontWeight: '700', color: TEXT_LIGHT, marginBottom: 4 },
+  kitDetails: { fontSize: 13, color: TEXT_MUTED },
   
   dateRow: { flexDirection: 'row', marginBottom: 16 },
   dateIconWrapper: { width: 24, alignItems: 'center', marginRight: 12 },
   dateIconCircle: { width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center', zIndex: 2 },
-  dateDottedLine: { width: 1, height: 30, borderWidth: 1, borderColor: '#E5E7EB', borderStyle: 'dotted', position: 'absolute', top: 24, zIndex: 1 },
+  dateDottedLine: { width: 1, height: 30, borderWidth: 1, borderColor: BORDER, borderStyle: 'dotted', position: 'absolute', top: 24, zIndex: 1 },
   dateTextWrapper: { flex: 1, paddingBottom: 8 },
-  dateLabel: { fontSize: 12, color: TEXT_GRAY, marginBottom: 2 },
-  dateValue: { fontSize: 14, fontWeight: '700', color: TEXT_DARK },
+  dateLabel: { fontSize: 12, color: TEXT_MUTED, marginBottom: 2 },
+  dateValue: { fontSize: 14, fontWeight: '700', color: TEXT_LIGHT },
   
-  divider: { height: 1, backgroundColor: '#F3F4F6', marginVertical: 12 },
-  addressLabel: { fontSize: 11, fontWeight: '600', color: TEXT_GRAY, marginBottom: 4 },
+  divider: { height: 1, backgroundColor: BORDER, marginVertical: 12 },
+  addressLabel: { fontSize: 11, fontWeight: '600', color: TEXT_MUTED, marginBottom: 4 },
   addressValue: { fontSize: 14, fontWeight: '600', color: PRIMARY },
   
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
-  summaryLabel: { fontSize: 13, color: TEXT_GRAY },
-  summaryValue: { fontSize: 13, fontWeight: '500', color: TEXT_DARK },
-  dashedDivider: { height: 1, borderWidth: 1, borderColor: '#E5E7EB', borderStyle: 'dashed', marginVertical: 12 },
+  summaryLabel: { fontSize: 13, color: TEXT_MUTED },
+  summaryValue: { fontSize: 13, fontWeight: '500', color: TEXT_LIGHT },
+  dashedDivider: { height: 1, borderWidth: 1, borderColor: BORDER, borderStyle: 'dashed', marginVertical: 12 },
   totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  totalLabel: { fontSize: 14, fontWeight: '700', color: TEXT_DARK },
+  totalLabel: { fontSize: 14, fontWeight: '700', color: TEXT_LIGHT },
   totalValue: { fontSize: 18, fontWeight: '800', color: PRIMARY },
   
   actionsContainer: { gap: 12 },
-  actionBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 14, borderRadius: 12 },
-  btnBlue: { backgroundColor: '#3B82F6' },
-  btnPurple: { backgroundColor: '#8B5CF6' },
-  btnGreen: { backgroundColor: '#10B981' },
+  actionBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 14, borderRadius: 12, borderWidth: 1 },
+  btnBlue: { backgroundColor: 'transparent', borderColor: '#3B82F6' },
+  btnPurple: { backgroundColor: 'transparent', borderColor: PRIMARY },
+  btnGreen: { backgroundColor: 'transparent', borderColor: '#10B981' },
   actionIcon: { marginRight: 8 },
-  actionBtnText: { color: WHITE, fontSize: 14, fontWeight: '700' },
+  actionBtnText: { color: TEXT_LIGHT, fontSize: 14, fontWeight: '700' },
 
-  errorBackBtn: { marginTop: 24, backgroundColor: PRIMARY, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8 },
-  errorBackBtnText: { color: '#FFF', fontSize: 16, fontWeight: '600' },
+  errorBackBtn: { marginTop: 24, backgroundColor: 'transparent', borderWidth: 1, borderColor: PRIMARY, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8 },
+  errorBackBtnText: { color: PRIMARY, fontSize: 16, fontWeight: '600' },
 
   // Rating Modal Styles
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
-  modalContent: { width: '90%', backgroundColor: WHITE, borderRadius: 16, padding: 24 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'center', alignItems: 'center' },
+  modalContent: { width: '90%', backgroundColor: '#18181B', borderRadius: 16, padding: 24, borderWidth: 1, borderColor: BORDER },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  modalTitle: { fontSize: 18, fontWeight: '700', color: TEXT_DARK },
-  modalSubtitle: { fontSize: 14, color: TEXT_GRAY, marginBottom: 20 },
-  inputLabel: { fontSize: 13, fontWeight: '600', color: TEXT_DARK, marginBottom: 8 },
-  scoreInput: { borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 8, paddingHorizontal: 12, height: 48, fontSize: 16, color: TEXT_DARK, marginBottom: 16, backgroundColor: WHITE },
-  feedbackInput: { borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 8, paddingHorizontal: 12, paddingTop: 12, height: 100, fontSize: 16, color: TEXT_DARK, marginBottom: 24, backgroundColor: WHITE },
-  saveRatingBtn: { backgroundColor: PRIMARY, paddingVertical: 14, borderRadius: 12, alignItems: 'center' },
-  saveRatingBtnDisabled: { backgroundColor: '#A78BFA' },
-  saveRatingBtnText: { color: WHITE, fontSize: 15, fontWeight: '700' }
+  modalTitle: { fontSize: 18, fontWeight: '700', color: TEXT_LIGHT },
+  modalSubtitle: { fontSize: 14, color: TEXT_MUTED, marginBottom: 20 },
+  inputLabel: { fontSize: 13, fontWeight: '600', color: TEXT_LIGHT, marginBottom: 8 },
+  scoreInput: { borderWidth: 1, borderColor: BORDER, borderRadius: 8, paddingHorizontal: 12, height: 48, fontSize: 16, color: TEXT_LIGHT, marginBottom: 16, backgroundColor: '#09090B' },
+  feedbackInput: { borderWidth: 1, borderColor: BORDER, borderRadius: 8, paddingHorizontal: 12, paddingTop: 12, height: 100, fontSize: 16, color: TEXT_LIGHT, marginBottom: 24, backgroundColor: '#09090B' },
+  saveRatingBtn: { backgroundColor: 'transparent', borderWidth: 1, borderColor: PRIMARY, paddingVertical: 14, borderRadius: 12, alignItems: 'center' },
+  saveRatingBtnDisabled: { borderColor: '#3F3F46' },
+  saveRatingBtnText: { color: PRIMARY, fontSize: 15, fontWeight: '700' }
 });

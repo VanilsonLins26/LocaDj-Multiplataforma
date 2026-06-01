@@ -553,9 +553,9 @@ export default function AdminUserDetailsScreen() {
               disabled={!ratingScore || savingRating}
             >
               {savingRating ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color={PRIMARY} />
               ) : (
-                <Text style={styles.saveRatingBtnText}>Salvar Avaliação</Text>
+                <Text style={[styles.saveRatingBtnText, (!ratingScore || savingRating) && { color: '#A1A1AA' }]}>Salvar Avaliação</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -585,11 +585,13 @@ const styles = StyleSheet.create({
   backButtonCenter: {
     paddingHorizontal: 20,
     paddingVertical: 10,
-    backgroundColor: PRIMARY,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: PRIMARY,
     borderRadius: 8,
   },
   backButtonTextCenter: {
-    color: '#fff',
+    color: PRIMARY,
     fontWeight: 'bold',
   },
   header: {
@@ -599,7 +601,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#18181B',
+    borderBottomColor: BORDER,
   },
   backButton: {
     width: 40,
@@ -668,17 +670,21 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   roleUser: {
-    backgroundColor: '#2E1065',
+    backgroundColor: 'rgba(139, 92, 246, 0.15)',
+    borderWidth: 1,
+    borderColor: PRIMARY,
   },
   roleAdmin: {
-    backgroundColor: '#78350F',
+    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+    borderWidth: 1,
+    borderColor: '#FBBF24',
   },
   roleText: {
     fontSize: 11,
     fontWeight: 'bold',
   },
   roleTextUser: {
-    color: '#C084FC',
+    color: PRIMARY,
   },
   roleTextAdmin: {
     color: '#FBBF24',
@@ -700,12 +706,12 @@ const styles = StyleSheet.create({
   reputationBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFBEB',
+    backgroundColor: 'rgba(245, 158, 11, 0.1)',
     padding: 12,
     borderRadius: 8,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#FEF3C7',
+    borderColor: 'rgba(245, 158, 11, 0.3)',
   },
   reputationTexts: {
     marginLeft: 12,
@@ -714,11 +720,11 @@ const styles = StyleSheet.create({
   reputationTitle: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#92400E',
+    color: '#FBBF24',
   },
   reputationSubtitle: {
     fontSize: 12,
-    color: '#B45309',
+    color: '#FDE68A',
     marginTop: 2,
   },
   emptyContainer: {
@@ -925,18 +931,19 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   saveRatingBtn: {
-    backgroundColor: PRIMARY,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: PRIMARY,
     height: 48,
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
   },
   saveRatingBtnDisabled: {
-    backgroundColor: '#4C1D95',
-    opacity: 0.5,
+    borderColor: '#3F3F46',
   },
   saveRatingBtnText: {
-    color: '#fff',
+    color: PRIMARY,
     fontSize: 15,
     fontWeight: 'bold',
   },
@@ -964,17 +971,17 @@ const styles = StyleSheet.create({
   feedbackScoreBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEF3C7',
+    backgroundColor: 'rgba(245, 158, 11, 0.1)',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#FDE68A',
+    borderColor: 'rgba(245, 158, 11, 0.3)',
   },
   feedbackScoreText: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#D97706',
+    color: '#FBBF24',
     marginLeft: 4,
   },
   feedbackDate: {

@@ -16,12 +16,12 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { doc, getDoc, collection, query, where, getDocs, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from '../../../config/firebaseConfig';
 
-const PRIMARY = '#5B4EE4';
-const GRAY_100 = '#F3F4F6';
-const GRAY_300 = '#D1D5DB';
-const GRAY_500 = '#6B7280';
-const GRAY_700 = '#374151';
-const GRAY_900 = '#111827';
+const BG = '#09090B';
+const CARD_BG = '#09090B';
+const BORDER = '#27272A';
+const TEXT_LIGHT = '#FFFFFF';
+const TEXT_MUTED = '#A1A1AA';
+const PRIMARY = '#8B5CF6';
 
 interface User {
   id: string;
@@ -223,7 +223,7 @@ export default function UserReportScreen() {
         {existingRating ? (
           <View style={styles.ratingSection}>
             <View style={styles.ratingHeader}>
-              <Ionicons name="star" size={16} color="#D97706" />
+              <Ionicons name="star" size={16} color="#FBBF24" />
               <Text style={styles.ratingScore}>Nota: {existingRating.rating.toFixed(1)}/10</Text>
             </View>
             <Text style={styles.feedbackText}>"{existingRating.feedback}"</Text>
@@ -234,7 +234,7 @@ export default function UserReportScreen() {
             onPress={() => openRatingModal(item.id)}
             activeOpacity={0.8}
           >
-            <Ionicons name="star-outline" size={18} color="#FFF" />
+            <Ionicons name="star-outline" size={18} color={PRIMARY} />
             <Text style={styles.rateButtonText}>Avaliar Devolução</Text>
           </TouchableOpacity>
         )}
@@ -254,7 +254,7 @@ export default function UserReportScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color={GRAY_900} />
+          <Ionicons name="arrow-back" size={24} color={TEXT_LIGHT} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Relatório do Usuário</Text>
         <View style={{ width: 40 }} />
@@ -270,7 +270,7 @@ export default function UserReportScreen() {
             <Text style={styles.userEmail}>{user.email}</Text>
             {user.generalRating !== undefined && (
               <View style={styles.generalRatingBadge}>
-                <Ionicons name="star" size={14} color="#D97706" />
+                <Ionicons name="star" size={14} color="#FBBF24" />
                 <Text style={styles.generalRatingText}>
                   Nota Geral: {user.generalRating.toFixed(1)} ({user.ratingCount} avaliações)
                 </Text>
@@ -292,7 +292,7 @@ export default function UserReportScreen() {
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Ionicons name="cube-outline" size={48} color={GRAY_300} />
+            <Ionicons name="cube-outline" size={48} color={TEXT_MUTED} />
             <Text style={styles.emptyText}>Este usuário ainda não fez nenhum pedido.</Text>
           </View>
         }
@@ -310,7 +310,7 @@ export default function UserReportScreen() {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Avaliar Reserva</Text>
               <TouchableOpacity onPress={() => setModalVisible(false)}>
-                <Ionicons name="close" size={24} color={GRAY_500} />
+                <Ionicons name="close" size={24} color={TEXT_MUTED} />
               </TouchableOpacity>
             </View>
 
@@ -318,6 +318,7 @@ export default function UserReportScreen() {
             <TextInput
               style={styles.textInput}
               placeholder="Ex: 9.5"
+              placeholderTextColor={TEXT_MUTED}
               keyboardType="numeric"
               value={ratingInput}
               onChangeText={setRatingInput}
@@ -327,6 +328,7 @@ export default function UserReportScreen() {
             <TextInput
               style={[styles.textInput, styles.textArea]}
               placeholder="Descreva as condições da devolução..."
+              placeholderTextColor={TEXT_MUTED}
               multiline
               numberOfLines={4}
               textAlignVertical="top"
@@ -340,7 +342,7 @@ export default function UserReportScreen() {
               disabled={submitting}
             >
               {submitting ? (
-                <ActivityIndicator color="#FFF" />
+                <ActivityIndicator color={PRIMARY} />
               ) : (
                 <Text style={styles.saveButtonText}>Salvar Avaliação</Text>
               )}
@@ -355,7 +357,7 @@ export default function UserReportScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F4F5F8',
+    backgroundColor: BG,
   },
   header: {
     flexDirection: 'row',
@@ -363,39 +365,39 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 16,
-    backgroundColor: '#FFF',
     borderBottomWidth: 1,
-    borderBottomColor: GRAY_100,
+    borderBottomColor: BORDER,
   },
   backButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: GRAY_100,
     alignItems: 'center',
     justifyContent: 'center',
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: GRAY_900,
+    color: TEXT_LIGHT,
   },
   userInfoContainer: {
-    backgroundColor: '#FFF',
     padding: 20,
     flexDirection: 'row',
     alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: GRAY_100,
+    borderBottomColor: BORDER,
+    backgroundColor: CARD_BG,
   },
   avatar: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#EEF2FF',
+    backgroundColor: '#18181B',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
+    borderWidth: 2,
+    borderColor: PRIMARY,
   },
   avatarText: {
     fontSize: 24,
@@ -408,27 +410,29 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: GRAY_900,
+    color: TEXT_LIGHT,
     marginBottom: 4,
   },
   userEmail: {
     fontSize: 14,
-    color: GRAY_500,
+    color: TEXT_MUTED,
     marginBottom: 8,
   },
   generalRatingBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEF3C7',
+    backgroundColor: 'rgba(245, 158, 11, 0.1)',
     alignSelf: 'flex-start',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.3)',
   },
   generalRatingText: {
     fontSize: 13,
     fontWeight: 'bold',
-    color: '#D97706',
+    color: '#FBBF24',
     marginLeft: 6,
   },
   sectionHeader: {
@@ -442,11 +446,11 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: GRAY_700,
+    color: TEXT_LIGHT,
   },
   sectionCount: {
     fontSize: 14,
-    color: GRAY_500,
+    color: TEXT_MUTED,
   },
   listContent: {
     padding: 20,
@@ -454,15 +458,12 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   card: {
-    backgroundColor: '#FFF',
-    borderRadius: 16,
+    backgroundColor: CARD_BG,
+    borderRadius: 12,
     padding: 16,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: BORDER,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -473,15 +474,17 @@ const styles = StyleSheet.create({
   kitName: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: GRAY_900,
+    color: TEXT_LIGHT,
     flex: 1,
     marginRight: 12,
   },
   statusBadge: {
-    backgroundColor: '#EEF2FF',
+    backgroundColor: 'rgba(139, 92, 246, 0.15)',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: PRIMARY,
   },
   statusText: {
     fontSize: 12,
@@ -495,31 +498,35 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 13,
-    color: GRAY_500,
+    color: TEXT_MUTED,
   },
   divider: {
     height: 1,
-    backgroundColor: GRAY_100,
+    backgroundColor: BORDER,
     marginBottom: 16,
   },
   rateButton: {
-    backgroundColor: PRIMARY,
+    backgroundColor: 'transparent',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 12,
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: PRIMARY,
   },
   rateButtonText: {
-    color: '#FFF',
+    color: PRIMARY,
     fontWeight: 'bold',
     fontSize: 14,
     marginLeft: 8,
   },
   ratingSection: {
-    backgroundColor: '#FEF3C7',
+    backgroundColor: 'rgba(245, 158, 11, 0.1)',
     padding: 12,
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.3)',
   },
   ratingHeader: {
     flexDirection: 'row',
@@ -529,12 +536,12 @@ const styles = StyleSheet.create({
   ratingScore: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#D97706',
+    color: '#FBBF24',
     marginLeft: 6,
   },
   feedbackText: {
     fontSize: 13,
-    color: '#92400E',
+    color: '#FDE68A',
     fontStyle: 'italic',
   },
   emptyContainer: {
@@ -544,20 +551,22 @@ const styles = StyleSheet.create({
   emptyText: {
     marginTop: 16,
     fontSize: 15,
-    color: GRAY_500,
+    color: TEXT_MUTED,
   },
   // Modal Styles
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#FFF',
+    backgroundColor: '#18181B',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 24,
     paddingBottom: 40,
+    borderWidth: 1,
+    borderColor: BORDER,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -568,35 +577,39 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: GRAY_900,
+    color: TEXT_LIGHT,
   },
   inputLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: GRAY_700,
+    color: TEXT_LIGHT,
     marginBottom: 8,
   },
   textInput: {
-    backgroundColor: GRAY_100,
-    borderRadius: 12,
+    backgroundColor: '#09090B',
+    borderRadius: 8,
     padding: 16,
     fontSize: 16,
-    color: GRAY_900,
+    color: TEXT_LIGHT,
     marginBottom: 20,
+    borderWidth: 1,
+    borderColor: BORDER,
   },
   textArea: {
     height: 120,
   },
   saveButton: {
-    backgroundColor: PRIMARY,
+    backgroundColor: 'transparent',
     height: 56,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 8,
+    borderWidth: 1,
+    borderColor: PRIMARY,
   },
   saveButtonText: {
-    color: '#FFF',
+    color: PRIMARY,
     fontSize: 16,
     fontWeight: 'bold',
   },

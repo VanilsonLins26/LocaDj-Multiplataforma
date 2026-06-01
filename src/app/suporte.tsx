@@ -12,6 +12,13 @@ import { Stack, useRouter } from 'expo-router';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { useIsLandscape } from '../hooks/useIsLandscape';
 
+const BG = '#09090B';
+const CARD_BG = '#09090B';
+const BORDER = '#27272A';
+const TEXT_LIGHT = '#FFFFFF';
+const TEXT_MUTED = '#A1A1AA';
+const PRIMARY = '#8B5CF6';
+
 // --- Data ---
 
 const FAQ_SECTIONS = [
@@ -91,7 +98,7 @@ export default function SuporteScreen() {
           paddingBottom: isLandscape ? 12 : 20 
       }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()} activeOpacity={0.7}>
-          <Feather name="arrow-left" size={24} color="#FFF" />
+          <Feather name="arrow-left" size={24} color={TEXT_LIGHT} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, isLandscape && { fontSize: 18 }]}>Dúvidas de Suporte</Text>
         <View style={{ width: 40 }} />
@@ -120,7 +127,7 @@ export default function SuporteScreen() {
                     onPress={() => handleFAQPress(item)}
                   >
                     <Text style={styles.faqItemText}>{item.question}</Text>
-                    <Feather name="chevron-right" size={18} color="#9CA3AF" />
+                    <Feather name="chevron-right" size={18} color={TEXT_MUTED} />
                   </TouchableOpacity>
                   {/* Divider between items (not after last item in section unless portrait) */}
                   {(!isLandscape || itemIndex < section.items.length - 1) && (
@@ -155,7 +162,7 @@ export default function SuporteScreen() {
             onPress={() => Linking.openURL('mailto:suporte@locadje.com')}
           >
             <View style={styles.contactIconWrapperPurple}>
-              <Feather name="mail" size={26} color="#5245F1" />
+              <Feather name="mail" size={26} color={PRIMARY} />
             </View>
             <Text style={styles.contactCardTitle}>E-mail</Text>
             <Text style={styles.contactCardSubtitle}>suporte@locadje.com</Text>
@@ -171,14 +178,16 @@ export default function SuporteScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F4F4F9',
+    backgroundColor: BG,
   },
   header: {
-    backgroundColor: '#5245F1',
+    backgroundColor: CARD_BG,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: BORDER,
   },
   backButton: {
     padding: 8,
@@ -187,7 +196,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFF',
+    color: TEXT_LIGHT,
   },
   scrollContent: {
     paddingHorizontal: 20,
@@ -195,20 +204,17 @@ const styles = StyleSheet.create({
 
   // FAQ Card
   card: {
-    backgroundColor: '#FFF',
+    backgroundColor: CARD_BG,
     borderRadius: 16,
     overflow: 'hidden',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
+    borderWidth: 1,
+    borderColor: BORDER,
     marginBottom: 32,
   },
   sectionTitle: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#9CA3AF',
+    color: TEXT_MUTED,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
     paddingHorizontal: 20,
@@ -225,11 +231,11 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     fontWeight: '500',
-    color: '#111827',
+    color: TEXT_LIGHT,
   },
   divider: {
     height: 1,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: BORDER,
     marginHorizontal: 20,
   },
 
@@ -237,7 +243,7 @@ const styles = StyleSheet.create({
   contactTitle: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#6B7280',
+    color: TEXT_MUTED,
     marginBottom: 12,
     marginLeft: 4,
   },
@@ -250,23 +256,21 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
     alignItems: 'center',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
+    borderWidth: 1,
   },
   contactCardGreen: {
-    backgroundColor: '#DCFCE7',
+    backgroundColor: 'rgba(22, 163, 74, 0.05)',
+    borderColor: 'rgba(22, 163, 74, 0.2)',
   },
   contactCardPurple: {
-    backgroundColor: '#EDE9FE',
+    backgroundColor: 'rgba(139, 92, 246, 0.05)',
+    borderColor: 'rgba(139, 92, 246, 0.2)',
   },
   contactIconWrapper: {
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: '#BBF7D0',
+    backgroundColor: 'rgba(22, 163, 74, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
@@ -275,7 +279,7 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: '#DDD6FE',
+    backgroundColor: 'rgba(139, 92, 246, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
@@ -283,12 +287,12 @@ const styles = StyleSheet.create({
   contactCardTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#111827',
+    color: TEXT_LIGHT,
     marginBottom: 4,
   },
   contactCardSubtitle: {
     fontSize: 12,
-    color: '#6B7280',
+    color: TEXT_MUTED,
     textAlign: 'center',
   },
 });

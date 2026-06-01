@@ -19,12 +19,12 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { auth } from '../../config/firebaseConfig';
 
-const PRIMARY = '#5245F1';
-const BG = '#F4F4F9';
-const WHITE = '#FFFFFF';
-const TEXT_DARK = '#040417';
-const TEXT_LIGHT = '#6B7280';
-const BORDER = '#E5E7EB';
+const BG = '#09090B';
+const CARD_BG = '#09090B';
+const BORDER = '#27272A';
+const TEXT_LIGHT = '#FFFFFF';
+const TEXT_MUTED = '#A1A1AA';
+const PRIMARY = '#8B5CF6';
 const BORDER_FOCUS = PRIMARY;
 const ERROR = '#EF4444';
 
@@ -192,7 +192,7 @@ export default function AdminKitFormScreen() {
   if (loading) {
     return (
       <View style={styles.loadingScreen}>
-        <StatusBar barStyle="light-content" backgroundColor={PRIMARY} />
+        <StatusBar barStyle="light-content" backgroundColor={BG} />
         <ActivityIndicator size="large" color={PRIMARY} />
         <Text style={styles.loadingText}>Carregando dados do kit...</Text>
       </View>
@@ -208,16 +208,16 @@ export default function AdminKitFormScreen() {
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <StatusBar barStyle="light-content" backgroundColor={PRIMARY} />
+      <StatusBar barStyle="light-content" backgroundColor={BG} />
 
       {/* Header */}
-      <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) }]}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) }]}>
         <TouchableOpacity
           style={styles.backBtn}
           onPress={() => router.replace('/(admin)/kits')}
           activeOpacity={0.8}
         >
-          <Ionicons name="chevron-back" size={24} color={WHITE} />
+          <Ionicons name="chevron-back" size={24} color={TEXT_LIGHT} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>
           {isEditing ? 'Editar Kit' : 'Novo Kit'}
@@ -248,7 +248,7 @@ export default function AdminKitFormScreen() {
               />
             ) : (
               <View style={styles.imagePlaceholder}>
-                <Feather name="image" size={36} color="#C4BFFA" />
+                <Feather name="image" size={36} color={TEXT_MUTED} />
                 <Text style={styles.imagePlaceholderText}>
                   {form.imageUrl.trim()
                     ? 'URL inválida ou sem imagem'
@@ -349,15 +349,15 @@ export default function AdminKitFormScreen() {
                   styles.toggleIconWrap,
                   {
                     backgroundColor: form.availability
-                      ? '#DCFCE7'
-                      : '#FEF3C7',
+                      ? 'rgba(16, 185, 129, 0.1)'
+                      : 'rgba(245, 158, 11, 0.1)',
                   },
                 ]}
               >
                 <Feather
                   name={form.availability ? 'check-circle' : 'tool'}
                   size={20}
-                  color={form.availability ? '#16A34A' : '#D97706'}
+                  color={form.availability ? '#10B981' : '#F59E0B'}
                 />
               </View>
               <View>
@@ -374,8 +374,8 @@ export default function AdminKitFormScreen() {
             <Switch
               value={form.availability}
               onValueChange={(v) => handleChange('availability', v)}
-              trackColor={{ false: '#E5E7EB', true: '#A5B4FC' }}
-              thumbColor={form.availability ? PRIMARY : '#9CA3AF'}
+              trackColor={{ false: '#3F3F46', true: 'rgba(139, 92, 246, 0.5)' }}
+              thumbColor={form.availability ? PRIMARY : '#A1A1AA'}
             />
           </View>
         </View>
@@ -388,13 +388,13 @@ export default function AdminKitFormScreen() {
           activeOpacity={0.85}
         >
           {submitting ? (
-            <ActivityIndicator size="small" color={WHITE} />
+            <ActivityIndicator size="small" color={TEXT_LIGHT} />
           ) : (
             <>
               <Feather
                 name={isEditing ? 'save' : 'plus-circle'}
                 size={18}
-                color={WHITE}
+                color={TEXT_LIGHT}
               />
               <Text style={styles.submitBtnText}>
                 {isEditing ? 'Salvar Alterações' : 'Adicionar Kit'}
@@ -463,7 +463,7 @@ const FormField = React.forwardRef<TextInput, FormFieldProps>(
             <Feather
               name={icon as any}
               size={16}
-              color={focused ? PRIMARY : '#9CA3AF'}
+              color={focused ? PRIMARY : TEXT_MUTED}
               style={fieldStyles.inputIcon}
             />
           )}
@@ -474,7 +474,7 @@ const FormField = React.forwardRef<TextInput, FormFieldProps>(
               multiline && fieldStyles.textArea,
             ]}
             placeholder={placeholder}
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={TEXT_MUTED}
             value={value}
             onChangeText={onChangeText}
             keyboardType={keyboardType ?? 'default'}
@@ -499,18 +499,18 @@ const fieldStyles = StyleSheet.create({
   label: {
     fontSize: 13,
     fontWeight: '600',
-    color: TEXT_DARK,
+    color: TEXT_MUTED,
     marginBottom: 6,
   },
   inputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: WHITE,
-    borderRadius: 12,
-    borderWidth: 1.5,
+    backgroundColor: '#18181B',
+    borderRadius: 8,
+    borderWidth: 1,
     borderColor: BORDER,
     paddingHorizontal: 12,
-    minHeight: 50,
+    minHeight: 48,
   },
   inputFocused: { borderColor: BORDER_FOCUS },
   inputError: { borderColor: ERROR },
@@ -519,8 +519,8 @@ const fieldStyles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 15,
-    color: TEXT_DARK,
-    height: 50,
+    color: TEXT_LIGHT,
+    height: 48,
   },
   textArea: {
     height: 100,
@@ -543,14 +543,14 @@ const styles = StyleSheet.create({
     backgroundColor: BG,
     gap: 12,
   },
-  loadingText: { fontSize: 14, color: TEXT_LIGHT },
+  loadingText: { fontSize: 14, color: TEXT_MUTED },
 
   header: {
-    backgroundColor: PRIMARY,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingBottom: 20,
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
   },
   backBtn: {
     width: 40,
@@ -558,37 +558,37 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: BORDER,
   },
   headerTitle: {
     flex: 1,
     textAlign: 'center',
     fontSize: 17,
     fontWeight: '700',
-    color: WHITE,
+    color: TEXT_LIGHT,
   },
 
   scroll: { flex: 1, backgroundColor: BG },
   scrollContent: { padding: 20 },
 
   section: {
-    backgroundColor: WHITE,
-    borderRadius: 16,
+    backgroundColor: CARD_BG,
+    borderRadius: 12,
     padding: 20,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: BORDER,
   },
   sectionTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: TEXT_DARK,
+    color: TEXT_LIGHT,
     marginBottom: 16,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: BORDER,
   },
 
   // Image preview
@@ -597,8 +597,10 @@ const styles = StyleSheet.create({
     height: 160,
     borderRadius: 12,
     overflow: 'hidden',
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#18181B',
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: BORDER,
   },
   imagePreview: { width: '100%', height: '100%' },
   imagePlaceholder: {
@@ -609,7 +611,7 @@ const styles = StyleSheet.create({
   },
   imagePlaceholderText: {
     fontSize: 13,
-    color: '#9CA3AF',
+    color: TEXT_MUTED,
     textAlign: 'center',
     paddingHorizontal: 16,
   },
@@ -622,8 +624,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#F9FAFB',
-    borderRadius: 12,
+    backgroundColor: '#18181B',
+    borderRadius: 8,
     padding: 14,
     borderWidth: 1,
     borderColor: BORDER,
@@ -636,27 +638,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  toggleLabel: { fontSize: 14, fontWeight: '600', color: TEXT_DARK },
-  toggleSub: { fontSize: 12, color: TEXT_LIGHT, marginTop: 2, maxWidth: 200 },
+  toggleLabel: { fontSize: 14, fontWeight: '600', color: TEXT_LIGHT },
+  toggleSub: { fontSize: 12, color: TEXT_MUTED, marginTop: 2, maxWidth: 200 },
 
   // Submit button
   submitBtn: {
-    backgroundColor: PRIMARY,
-    borderRadius: 16,
+    backgroundColor: 'transparent',
+    borderRadius: 12,
     height: 56,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
     marginTop: 8,
-    shadowColor: PRIMARY,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
+    borderWidth: 1,
+    borderColor: PRIMARY,
   },
   submitBtnText: {
-    color: WHITE,
+    color: PRIMARY,
     fontSize: 16,
     fontWeight: '700',
   },

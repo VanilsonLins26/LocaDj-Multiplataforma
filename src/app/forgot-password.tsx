@@ -13,13 +13,14 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { auth } from '../config/firebaseConfig';
 
-const PRIMARY = '#5B4EE4';
-const SUCCESS = '#14D88A';
+const BG = '#09090B';
+const CARD_BG = '#09090B';
+const BORDER = '#27272A';
+const TEXT_LIGHT = '#FFFFFF';
+const TEXT_MUTED = '#A1A1AA';
+const PRIMARY = '#8B5CF6';
+const SUCCESS = '#10B981';
 const ERROR = '#EF4444';
-const GRAY_100 = '#F3F4F6';
-const GRAY_300 = '#D1D5DB';
-const GRAY_500 = '#6B7280';
-const GRAY_900 = '#111827';
 
 type Phase = 'email' | 'done';
 
@@ -66,8 +67,8 @@ export default function ForgotPasswordScreen() {
   }
 
   const config = {
-    email: { icon: 'mail-outline' as const,             iconBg: '#EEF2FF', iconColor: PRIMARY,  title: 'Recuperar senha',  sub: 'Informe seu e-mail cadastrado para receber o link de recuperação' },
-    done:  { icon: 'checkmark-circle-outline' as const, iconBg: 'rgba(20,216,138,0.1)', iconColor: SUCCESS, title: 'E-mail enviado!', sub: `Enviamos as instruções de recuperação para o e-mail:\n${email}` },
+    email: { icon: 'mail-outline' as const,             iconBg: 'rgba(139, 92, 246, 0.15)', iconColor: PRIMARY,  title: 'Recuperar senha',  sub: 'Informe seu e-mail cadastrado para receber o link de recuperação' },
+    done:  { icon: 'checkmark-circle-outline' as const, iconBg: 'rgba(16, 185, 129, 0.15)', iconColor: SUCCESS, title: 'E-mail enviado!', sub: `Enviamos as instruções de recuperação para o e-mail:\n${email}` },
   };
   const cfg = config[phase];
 
@@ -78,7 +79,7 @@ export default function ForgotPasswordScreen() {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity style={styles.backBtn} onPress={handleBack} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Ionicons name="arrow-back" size={22} color={GRAY_900} />
+            <Ionicons name="arrow-back" size={22} color={TEXT_MUTED} />
           </TouchableOpacity>
         </View>
 
@@ -99,11 +100,11 @@ export default function ForgotPasswordScreen() {
             <>
               <Text style={styles.label}>E-MAIL CADASTRADO</Text>
               <View style={styles.inputWrap}>
-                <Ionicons name="mail-outline" size={18} color={GRAY_500} style={styles.inputIcon} />
+                <Ionicons name="mail-outline" size={18} color={TEXT_MUTED} style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   placeholder="seu@email.com"
-                  placeholderTextColor={GRAY_300}
+                  placeholderTextColor="#52525B"
                   keyboardType="email-address"
                   autoCapitalize="none"
                   value={email}
@@ -146,33 +147,33 @@ export default function ForgotPasswordScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#fff' },
+  safe: { flex: 1, backgroundColor: BG },
   header: { paddingHorizontal: 20, paddingVertical: 12 },
-  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: GRAY_100, alignItems: 'center', justifyContent: 'center' },
+  backBtn: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: BORDER, alignItems: 'center', justifyContent: 'center' },
 
-  scroll: { flexGrow: 1, paddingHorizontal: 28, paddingTop: 16, paddingBottom: 40 },
+  scroll: { flexGrow: 1, paddingHorizontal: 32, paddingTop: 16, paddingBottom: 40 },
 
   iconContainer: { alignItems: 'center', marginBottom: 24, position: 'relative' },
   iconCircle: { width: 88, height: 88, borderRadius: 44, alignItems: 'center', justifyContent: 'center' },
 
-  title: { fontSize: 24, fontWeight: '700', color: GRAY_900, textAlign: 'center', marginBottom: 8 },
-  subtitle: { fontSize: 14, color: GRAY_500, textAlign: 'center', marginBottom: 32, lineHeight: 21, paddingHorizontal: 8 },
+  title: { fontSize: 24, fontWeight: '700', color: TEXT_LIGHT, textAlign: 'center', marginBottom: 8 },
+  subtitle: { fontSize: 14, color: TEXT_MUTED, textAlign: 'center', marginBottom: 32, lineHeight: 21, paddingHorizontal: 8 },
 
-  label: { fontSize: 11, fontWeight: '700', color: GRAY_900, letterSpacing: 0.8, marginBottom: 8 },
-  inputWrap: { flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: GRAY_300, borderRadius: 14, backgroundColor: GRAY_100, paddingHorizontal: 14, marginBottom: 20, minHeight: 54 },
-  inputIcon: { marginRight: 10 },
-  input: { flex: 1, fontSize: 15, color: GRAY_900, paddingVertical: 14 },
+  label: { fontSize: 11, fontWeight: '700', color: TEXT_LIGHT, letterSpacing: 1, marginBottom: 12, marginTop: 12 },
+  inputWrap: { flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: BORDER, paddingBottom: 12, marginBottom: 24 },
+  inputIcon: { marginRight: 12 },
+  input: { flex: 1, fontSize: 16, color: TEXT_LIGHT, paddingVertical: 0 },
 
   errorRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: -12, marginBottom: 16 },
   errorText: { fontSize: 13, color: ERROR },
 
-  btnPrimary: { backgroundColor: PRIMARY, borderRadius: 16, height: 54, alignItems: 'center', justifyContent: 'center', shadowColor: PRIMARY, shadowOpacity: 0.3, shadowRadius: 10, shadowOffset: { width: 0, height: 5 }, elevation: 6 },
+  btnPrimary: { backgroundColor: PRIMARY, borderRadius: 12, height: 56, alignItems: 'center', justifyContent: 'center' },
   btnDisabled: { opacity: 0.6 },
-  btnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  btnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
 
   backLinkWrap: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 20 },
   backLink: { fontSize: 14, color: PRIMARY, fontWeight: '600' },
 
-  successCard: { backgroundColor: '#F0FDF9', borderWidth: 1, borderColor: 'rgba(20,216,138,0.2)', borderRadius: 16, padding: 24, alignItems: 'center', marginBottom: 28 },
-  successText: { fontSize: 14, fontWeight: '500', color: GRAY_900, textAlign: 'center', lineHeight: 21 },
+  successCard: { backgroundColor: 'rgba(16, 185, 129, 0.05)', borderWidth: 1, borderColor: 'rgba(16, 185, 129, 0.2)', borderRadius: 16, padding: 24, alignItems: 'center', marginBottom: 28 },
+  successText: { fontSize: 14, fontWeight: '500', color: TEXT_LIGHT, textAlign: 'center', lineHeight: 21 },
 });

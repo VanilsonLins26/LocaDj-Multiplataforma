@@ -9,6 +9,12 @@ import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../../config/firebaseConfig';
 import { useIsLandscape } from '../../hooks/useIsLandscape';
 
+const BG = '#09090B';
+const CARD_BG = '#09090B';
+const BORDER = '#27272A';
+const TEXT_LIGHT = '#FFFFFF';
+const TEXT_MUTED = '#A1A1AA';
+const PRIMARY = '#8B5CF6';
 
 export default function PerfilScreen() {
   const router = useRouter();
@@ -81,21 +87,21 @@ export default function PerfilScreen() {
               activeOpacity={0.7}
               onPress={() => router.push('/meus-dados')}
             >
-              <Feather name="user" size={20} color="#5B42F3" style={styles.itemIcon} />
+              <Feather name="user" size={20} color={PRIMARY} style={styles.itemIcon} />
               <Text style={styles.itemText}>Meus Dados</Text>
-              <Feather name="chevron-right" size={20} color="#9CA3AF" />
+              <Feather name="chevron-right" size={20} color={TEXT_MUTED} />
             </TouchableOpacity>
             <View style={styles.divider} />
             <TouchableOpacity style={styles.cardItem} activeOpacity={0.7} onPress={() => router.push('/alterar-senha')}>
-              <Feather name="lock" size={20} color="#5B42F3" style={styles.itemIcon} />
+              <Feather name="lock" size={20} color={PRIMARY} style={styles.itemIcon} />
               <Text style={styles.itemText}>Alterar Senha</Text>
-              <Feather name="chevron-right" size={20} color="#9CA3AF" />
+              <Feather name="chevron-right" size={20} color={TEXT_MUTED} />
             </TouchableOpacity>
             <View style={styles.divider} />
             <TouchableOpacity style={styles.cardItem} activeOpacity={0.7} onPress={() => router.push('/meus-enderecos')}>
-              <Feather name="sliders" size={20} color="#5B42F3" style={styles.itemIcon} />
+              <Feather name="sliders" size={20} color={PRIMARY} style={styles.itemIcon} />
               <Text style={styles.itemText}>Meus Endereços</Text>
-              <Feather name="chevron-right" size={20} color="#9CA3AF" />
+              <Feather name="chevron-right" size={20} color={TEXT_MUTED} />
             </TouchableOpacity>
           </View>
         </View>
@@ -105,15 +111,15 @@ export default function PerfilScreen() {
           <Text style={styles.sectionTitle}>Mais Opções</Text>
           <View style={styles.card}>
             <TouchableOpacity style={styles.cardItem} activeOpacity={0.7} onPress={() => router.push('/suporte')}>
-              <Feather name="help-circle" size={20} color="#5B42F3" style={styles.itemIcon} />
+              <Feather name="help-circle" size={20} color={PRIMARY} style={styles.itemIcon} />
               <Text style={styles.itemText}>Ajuda e Suporte</Text>
-              <Feather name="chevron-right" size={20} color="#9CA3AF" />
+              <Feather name="chevron-right" size={20} color={TEXT_MUTED} />
             </TouchableOpacity>
             <View style={styles.divider} />
             <TouchableOpacity style={styles.cardItem} activeOpacity={0.7} onPress={() => router.push('/sobre-o-app')}>
-              <Feather name="info" size={20} color="#5B42F3" style={styles.itemIcon} />
+              <Feather name="info" size={20} color={PRIMARY} style={styles.itemIcon} />
               <Text style={styles.itemText}>Sobre o Aplicativo</Text>
-              <Feather name="chevron-right" size={20} color="#9CA3AF" />
+              <Feather name="chevron-right" size={20} color={TEXT_MUTED} />
             </TouchableOpacity>
           </View>
         </View>
@@ -132,7 +138,7 @@ export default function PerfilScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F4F4F5', // Light grey background
+    backgroundColor: BG,
   },
   scrollContent: {
     flexGrow: 1,
@@ -142,9 +148,9 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#5B42F3',
-    borderBottomLeftRadius: 0,
-    borderBottomRightRadius: 0,
+    backgroundColor: CARD_BG,
+    borderBottomWidth: 1,
+    borderBottomColor: BORDER,
   },
   headerTop: {
     alignItems: 'center',
@@ -153,21 +159,18 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFF',
+    color: TEXT_LIGHT,
   },
   profileCard: {
-    backgroundColor: '#FFF',
+    backgroundColor: CARD_BG,
     marginHorizontal: 20,
     borderRadius: 24,
     padding: 24,
     alignItems: 'center',
     paddingTop: 56,
     marginBottom: 32,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
+    borderWidth: 1,
+    borderColor: BORDER,
   },
   avatarContainer: {
     position: 'absolute',
@@ -179,33 +182,33 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#E0FCE8',
+    backgroundColor: '#18181B',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 6,
-    borderColor: '#FFF',
+    borderColor: CARD_BG,
   },
   avatarImage: {
     width: 100,
     height: 100,
     borderRadius: 50,
     borderWidth: 6,
-    borderColor: '#FFF',
+    borderColor: CARD_BG,
   },
   avatarText: {
     fontSize: 36,
     fontWeight: 'bold',
-    color: '#10B981',
+    color: PRIMARY,
   },
   userName: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#1F2937',
+    color: TEXT_LIGHT,
     marginTop: 4,
   },
   userEmail: {
     fontSize: 14,
-    color: '#6B7280',
+    color: TEXT_MUTED,
     marginTop: 4,
   },
   section: {
@@ -215,25 +218,22 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#6B7280',
+    color: TEXT_MUTED,
     marginBottom: 12,
     marginLeft: 4,
   },
   card: {
-    backgroundColor: '#FFF',
+    backgroundColor: CARD_BG,
     borderRadius: 16,
     overflow: 'hidden',
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    borderWidth: 1,
+    borderColor: BORDER,
   },
   cardItem: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: '#FFF',
+    backgroundColor: CARD_BG,
   },
   itemIcon: {
     marginRight: 16,
@@ -242,27 +242,24 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     fontWeight: '500',
-    color: '#374151',
+    color: TEXT_LIGHT,
   },
   divider: {
     height: 1,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: BORDER,
     marginLeft: 52, // Align with text
   },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFF',
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#EF4444',
     marginHorizontal: 20,
     borderRadius: 16,
     padding: 16,
     marginBottom: 20,
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
   },
   logoutIcon: {
     marginRight: 8,

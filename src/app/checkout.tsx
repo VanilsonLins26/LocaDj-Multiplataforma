@@ -17,14 +17,12 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { auth } from '../config/firebaseConfig';
 
-const PRIMARY = '#5B4EE4';
-const GRAY_100 = '#F3F4F6';
-const GRAY_200 = '#E5E7EB';
-const GRAY_400 = '#9CA3AF';
-const GRAY_500 = '#6B7280';
-const GRAY_800 = '#1F2937';
-const GRAY_900 = '#111827';
-const WHITE = '#FFFFFF';
+const BG = '#09090B';
+const CARD_BG = '#09090B';
+const BORDER = '#27272A';
+const TEXT_LIGHT = '#FFFFFF';
+const TEXT_MUTED = '#A1A1AA';
+const PRIMARY = '#8B5CF6';
 
 const { width } = Dimensions.get('window');
 
@@ -201,8 +199,8 @@ export default function CheckoutScreen() {
   };
 
   return (
-    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: PRIMARY }}>
-      <StatusBar barStyle="light-content" backgroundColor={PRIMARY} translucent />
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: CARD_BG }}>
+      <StatusBar barStyle="light-content" backgroundColor={CARD_BG} translucent />
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
@@ -211,7 +209,7 @@ export default function CheckoutScreen() {
             style={styles.backBtnWrapper}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <Ionicons name="chevron-back" size={24} color={WHITE} />
+            <Ionicons name="chevron-back" size={24} color={TEXT_LIGHT} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Checkout</Text>
           <View style={styles.backBtnWrapper} />
@@ -227,7 +225,7 @@ export default function CheckoutScreen() {
                 <Image source={{ uri: kitImageUrl as string }} style={styles.kitImg} />
               ) : (
                 <View style={styles.kitImgPlaceholder}>
-                  <Ionicons name="cube-outline" size={24} color={GRAY_400} />
+                  <Ionicons name="cube-outline" size={24} color={TEXT_MUTED} />
                 </View>
               )}
               <View style={styles.kitTextCol}>
@@ -269,11 +267,11 @@ export default function CheckoutScreen() {
             disabled={submitting}
           >
             {submitting ? (
-              <ActivityIndicator size="small" color={WHITE} />
+              <ActivityIndicator size="small" color={PRIMARY} />
             ) : (
               <>
                 <Text style={styles.btnFinalizeText}>Finalizar com Mercado Pago</Text>
-                <Ionicons name="lock-closed" size={16} color={WHITE} style={{ marginLeft: 8 }} />
+                <Ionicons name="lock-closed" size={16} color={PRIMARY} style={{ marginLeft: 8 }} />
               </>
             )}
           </TouchableOpacity>
@@ -286,18 +284,18 @@ export default function CheckoutScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: GRAY_100,
+    backgroundColor: BG,
   },
   header: {
-    backgroundColor: PRIMARY,
+    backgroundColor: CARD_BG,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 24,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: BORDER,
   },
   backBtnWrapper: {
     width: 32,
@@ -306,7 +304,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: WHITE,
+    color: TEXT_LIGHT,
   },
   content: {
     flex: 1,
@@ -316,20 +314,17 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: GRAY_800,
+    color: TEXT_LIGHT,
     marginBottom: 16,
     marginLeft: 4,
   },
   card: {
-    backgroundColor: WHITE,
+    backgroundColor: CARD_BG,
     borderRadius: 20,
     padding: 20,
     marginBottom: 32,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 12,
-    elevation: 4,
+    borderWidth: 1,
+    borderColor: BORDER,
   },
   kitInfoRow: {
     flexDirection: 'row',
@@ -340,13 +335,13 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 16,
-    backgroundColor: GRAY_100,
+    backgroundColor: CARD_BG,
   },
   kitImgPlaceholder: {
     width: 64,
     height: 64,
     borderRadius: 16,
-    backgroundColor: GRAY_100,
+    backgroundColor: 'rgba(139, 92, 246, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -357,22 +352,22 @@ const styles = StyleSheet.create({
   kitName: {
     fontSize: 16,
     fontWeight: '700',
-    color: GRAY_900,
+    color: TEXT_LIGHT,
     marginBottom: 4,
   },
   kitPrice: {
     fontSize: 14,
-    color: GRAY_800,
+    color: TEXT_LIGHT,
     fontWeight: '600',
   },
   kitDays: {
     fontSize: 13,
-    color: GRAY_500,
+    color: TEXT_MUTED,
     marginTop: 2,
   },
   divider: {
     height: 1,
-    backgroundColor: GRAY_200,
+    backgroundColor: BORDER,
     marginBottom: 20,
   },
   totalRow: {
@@ -382,7 +377,7 @@ const styles = StyleSheet.create({
   },
   totalLabel: {
     fontSize: 16,
-    color: GRAY_500,
+    color: TEXT_MUTED,
     fontWeight: '600',
   },
   totalValue: {
@@ -391,13 +386,13 @@ const styles = StyleSheet.create({
     color: PRIMARY,
   },
   paymentMethodCard: {
-    backgroundColor: WHITE,
+    backgroundColor: CARD_BG,
     borderRadius: 20,
     padding: 20,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: PRIMARY,
   },
   paymentContent: {
@@ -409,7 +404,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#E5F3FF',
+    backgroundColor: 'rgba(0, 158, 227, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
@@ -417,22 +412,24 @@ const styles = StyleSheet.create({
   mpTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: GRAY_900,
+    color: TEXT_LIGHT,
     marginBottom: 4,
   },
   mpSubtitle: {
     fontSize: 13,
-    color: GRAY_500,
+    color: TEXT_MUTED,
   },
   footer: {
-    backgroundColor: WHITE,
+    backgroundColor: CARD_BG,
     borderTopWidth: 1,
-    borderTopColor: GRAY_200,
+    borderTopColor: BORDER,
     paddingTop: 16,
     paddingHorizontal: 20,
   },
   btnFinalize: {
-    backgroundColor: PRIMARY,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: PRIMARY,
     borderRadius: 16,
     flexDirection: 'row',
     alignItems: 'center',
@@ -440,7 +437,7 @@ const styles = StyleSheet.create({
     height: 56,
   },
   btnFinalizeText: {
-    color: WHITE,
+    color: PRIMARY,
     fontSize: 16,
     fontWeight: '700',
   },

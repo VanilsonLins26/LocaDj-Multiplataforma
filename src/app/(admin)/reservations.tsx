@@ -16,12 +16,12 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { auth } from '../../config/firebaseConfig';
 
-const PRIMARY = '#5B4EE4';
-const BG = '#F4F5F8';
-const WHITE = '#FFFFFF';
-const TEXT_DARK = '#111827';
-const TEXT_GRAY = '#6B7280';
-const BORDER = '#F3F4F6';
+const BG = '#09090B';
+const CARD_BG = '#09090B';
+const BORDER = '#27272A';
+const TEXT_LIGHT = '#FFFFFF';
+const TEXT_MUTED = '#A1A1AA';
+const PRIMARY = '#8B5CF6';
 
 const API_BASE = 'https://locadj.onrender.com/api';
 
@@ -185,34 +185,34 @@ export default function AdminReservationsScreen() {
     const currentStatus = item.status || 'PENDENTE';
     let statusText = currentStatus;
     let statusColor = '#9CA3AF';
-    let statusBg = '#F3F4F6';
+    let statusBg = 'transparent';
 
     switch (currentStatus) {
       case 'PENDENTE':
         statusText = 'Pendente';
-        statusColor = '#D97706'; // Laranja
-        statusBg = '#FEF3C7';
+        statusColor = '#F59E0B'; // Laranja
+        statusBg = 'rgba(245, 158, 11, 0.1)';
         break;
       case 'CONFIRMADA':
         statusText = 'Confirmada';
-        statusColor = '#0284C7'; // Azul
-        statusBg = '#E0F2FE';
+        statusColor = '#3B82F6'; // Azul
+        statusBg = 'rgba(59, 130, 246, 0.1)';
         break;
       case 'SAIU_PARA_ENTREGA':
         statusText = 'Saiu p/ Entrega';
-        statusColor = '#7C3AED'; // Roxo
-        statusBg = '#EDE9FE';
+        statusColor = '#8B5CF6'; // Roxo
+        statusBg = 'rgba(139, 92, 246, 0.1)';
         break;
       case 'EM_ADAMENTO':
       case 'IN_PROGRESS':
         statusText = 'Em Andamento';
-        statusColor = '#E11D48'; // Rosa
-        statusBg = '#FFE4E6';
+        statusColor = '#EF4444'; // Rosa/Vermelho
+        statusBg = 'rgba(239, 68, 68, 0.1)';
         break;
       case 'CONCLUIDA':
         statusText = 'Concluída';
-        statusColor = '#16A34A'; // Verde
-        statusBg = '#DCFCE7';
+        statusColor = '#10B981'; // Verde
+        statusBg = 'rgba(16, 185, 129, 0.1)';
         break;
     }
 
@@ -227,7 +227,7 @@ export default function AdminReservationsScreen() {
             <Text style={styles.userName}>{userName}</Text>
             <Text style={styles.userEmail}>{userEmail}</Text>
           </View>
-          <View style={[styles.statusBadge, { backgroundColor: statusBg }]}>
+          <View style={[styles.statusBadge, { backgroundColor: statusBg, borderColor: statusColor, borderWidth: 1 }]}>
             <Text style={[styles.statusBadgeText, { color: statusColor }]}>{statusText}</Text>
           </View>
         </View>
@@ -265,21 +265,21 @@ export default function AdminReservationsScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={PRIMARY} />
+      <StatusBar barStyle="light-content" backgroundColor={BG} />
 
       {/* Header */}
-      <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) }]}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) }]}>
         <Text style={styles.headerTitle}>Todas as Reservas</Text>
       </View>
 
       {/* Search Bar */}
       <View style={styles.searchWrapper}>
         <View style={styles.searchContainer}>
-          <Ionicons name="search" size={20} color="#9CA3AF" style={styles.searchIcon} />
+          <Ionicons name="search" size={20} color={TEXT_MUTED} style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
             placeholder="Buscar reservas..."
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={TEXT_MUTED}
             value={searchQuery}
             onChangeText={(text) => {
               setSearchQuery(text);
@@ -319,7 +319,7 @@ export default function AdminReservationsScreen() {
         </View>
       ) : error ? (
         <View style={styles.centered}>
-          <Ionicons name="alert-circle-outline" size={48} color="#D1D5DB" />
+          <Ionicons name="alert-circle-outline" size={48} color={TEXT_MUTED} />
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity style={styles.retryBtn} onPress={() => fetchReservations()}>
             <Text style={styles.retryBtnText}>Tentar Novamente</Text>
@@ -340,11 +340,11 @@ export default function AdminReservationsScreen() {
             ) : null
           }
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[PRIMARY]} />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[PRIMARY]} tintColor={PRIMARY} />
           }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Ionicons name="calendar-outline" size={60} color="#D1D5DB" />
+              <Ionicons name="calendar-outline" size={60} color={TEXT_MUTED} />
               <Text style={styles.emptyText}>Nenhuma reserva encontrada.</Text>
             </View>
           }
@@ -360,35 +360,31 @@ const styles = StyleSheet.create({
     backgroundColor: BG,
   },
   header: {
-    backgroundColor: PRIMARY,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingBottom: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: WHITE,
+    fontSize: 20,
+    fontWeight: '700',
+    color: TEXT_LIGHT,
   },
   searchWrapper: {
     paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingTop: 8,
     paddingBottom: 8,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: WHITE,
-    borderRadius: 12,
+    backgroundColor: '#18181B',
+    borderRadius: 8,
     paddingHorizontal: 16,
-    height: 50,
+    height: 48,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
+    borderColor: BORDER,
   },
   searchIcon: {
     marginRight: 10,
@@ -396,7 +392,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 15,
-    color: TEXT_DARK,
+    color: TEXT_LIGHT,
     height: '100%',
   },
   tabsWrapper: {
@@ -410,21 +406,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#FFF',
+    backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: BORDER,
   },
   tabBtnActive: {
-    backgroundColor: PRIMARY,
     borderColor: PRIMARY,
   },
   tabText: {
     fontSize: 13,
     fontWeight: '600',
-    color: TEXT_GRAY,
+    color: TEXT_MUTED,
   },
   tabTextActive: {
-    color: '#FFF',
+    color: PRIMARY,
   },
   listContent: {
     padding: 20,
@@ -432,17 +427,12 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   card: {
-    backgroundColor: WHITE,
-    borderRadius: 16,
+    backgroundColor: CARD_BG,
+    borderRadius: 12,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
     borderColor: BORDER,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 8,
-    elevation: 2,
   },
   userInfoRow: {
     flexDirection: 'row',
@@ -452,7 +442,9 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#EEF2FF',
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: PRIMARY,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -463,12 +455,12 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 15,
     fontWeight: 'bold',
-    color: TEXT_DARK,
+    color: TEXT_LIGHT,
     marginBottom: 2,
   },
   userEmail: {
     fontSize: 13,
-    color: TEXT_GRAY,
+    color: TEXT_MUTED,
   },
   statusBadge: {
     paddingHorizontal: 10,
@@ -496,7 +488,7 @@ const styles = StyleSheet.create({
   kitName: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: TEXT_DARK,
+    color: TEXT_LIGHT,
     marginBottom: 6,
   },
   priceRow: {
@@ -506,11 +498,11 @@ const styles = StyleSheet.create({
   priceValue: {
     fontSize: 13,
     fontWeight: 'bold',
-    color: '#16A34A',
+    color: '#10B981',
   },
   priceUnit: {
     fontSize: 12,
-    color: TEXT_GRAY,
+    color: TEXT_MUTED,
   },
   verticalDivider: {
     width: 1,
@@ -524,18 +516,20 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 12,
-    color: TEXT_GRAY,
+    color: TEXT_MUTED,
     marginBottom: 4,
   },
   detailsBtn: {
-    backgroundColor: PRIMARY,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: PRIMARY,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
     marginLeft: 8,
   },
   detailsBtnText: {
-    color: WHITE,
+    color: PRIMARY,
     fontSize: 12,
     fontWeight: 'bold',
   },
@@ -546,7 +540,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 15,
-    color: TEXT_GRAY,
+    color: TEXT_MUTED,
     marginTop: 12,
     marginBottom: 16,
   },
@@ -557,7 +551,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   retryBtnText: {
-    color: WHITE,
+    color: TEXT_LIGHT,
     fontWeight: 'bold',
   },
   emptyContainer: {
@@ -568,6 +562,6 @@ const styles = StyleSheet.create({
   emptyText: {
     marginTop: 16,
     fontSize: 15,
-    color: TEXT_GRAY,
+    color: TEXT_MUTED,
   },
 });
