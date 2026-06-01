@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { auth } from '../../config/firebaseConfig';
+import { useIsLandscape } from '../../hooks/useIsLandscape';
 
 const PRIMARY = '#5B4EE4';
 const GRAY_100 = '#F3F4F6';
@@ -46,6 +47,7 @@ export default function KitsListScreen() {
   const [activeFilter, setActiveFilter] = useState<FilterType>('Todos');
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { isLandscape } = useIsLandscape();
 
   const fetchKits = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
@@ -164,13 +166,13 @@ export default function KitsListScreen() {
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: PRIMARY }}>
       <View style={styles.container}>
         {/* Header */}
-        <View style={[styles.header, { paddingTop: 16 }]}>
+        <View style={[styles.header, { paddingTop: isLandscape ? 8 : 16, paddingBottom: isLandscape ? 12 : 20 }]}>
           <View style={styles.headerRow}>
-            <Text style={styles.headerTitle}>Catálogo de Kits</Text>
+            <Text style={[styles.headerTitle, isLandscape && { fontSize: 18 }]}>Catálogo de Kits</Text>
             <Text style={styles.headerCount}>{kits.length} kits</Text>
           </View>
           {/* Search */}
-          <View style={styles.searchBox}>
+          <View style={[styles.searchBox, isLandscape && { height: 38 }]}>
             <Ionicons name="search-outline" size={16} color="#9CA3AF" style={{ marginRight: 8 }} />
             <TextInput
               style={styles.searchInput}
@@ -190,7 +192,7 @@ export default function KitsListScreen() {
 
         <View style={styles.content}>
           {/* Filters */}
-          <View style={styles.filtersRow}>
+          <View style={[styles.filtersRow, isLandscape && { marginTop: 8, marginBottom: 4 }]}>
             {(['Todos', 'Disponíveis', 'Mais populares'] as FilterType[]).map(renderFilter)}
           </View>
 
@@ -209,9 +211,19 @@ export default function KitsListScreen() {
             </View>
           ) : (
             <FlatList
+              key={isLandscape ? 'landscape-2col' : 'portrait-1col'}
               data={filteredKits}
               keyExtractor={(item) => item.id.toString()}
-              renderItem={renderKit}
+              renderItem={({ item, index }) => (
+                <View style={isLandscape ? {
+                  flex: 1,
+                  marginLeft: index % 2 === 0 ? 0 : 8,
+                  marginRight: index % 2 === 0 ? 8 : 0,
+                } : undefined}>
+                  {renderKit({ item })}
+                </View>
+              )}
+              numColumns={isLandscape ? 2 : 1}
               contentContainerStyle={styles.listContent}
               showsVerticalScrollIndicator={false}
               refreshControl={

@@ -2,6 +2,7 @@ import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useIsLandscape } from '../../hooks/useIsLandscape';
 
 const BG = '#09090B';
 const BORDER = '#27272A';
@@ -10,6 +11,7 @@ const INACTIVE = '#A1A1AA';
 
 export default function AdminTabsLayout() {
   const insets = useSafeAreaInsets();
+  const { isLandscape } = useIsLandscape();
 
   return (
     <Tabs
@@ -21,14 +23,14 @@ export default function AdminTabsLayout() {
           backgroundColor: BG,
           borderTopWidth: 1,
           borderTopColor: BORDER,
-          height: 60 + insets.bottom,
-          paddingBottom: 8 + (insets.bottom > 0 ? insets.bottom - 4 : 0),
-          paddingTop: 6,
+          height: isLandscape ? 40 + insets.bottom : 60 + insets.bottom,
+          paddingBottom: isLandscape ? 2 + (insets.bottom > 0 ? insets.bottom - 4 : 0) : 8 + (insets.bottom > 0 ? insets.bottom - 4 : 0),
+          paddingTop: isLandscape ? 2 : 6,
         },
         tabBarLabelStyle: {
-          fontSize: 10,
+          fontSize: isLandscape ? 9 : 10,
           fontWeight: '500',
-          marginTop: 4,
+          marginTop: isLandscape ? 1 : 4,
         },
       }}>
       <Tabs.Screen
@@ -36,7 +38,7 @@ export default function AdminTabsLayout() {
         options={{
           title: 'Início',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home-outline" size={size} color={color} />
+            <Ionicons name="home-outline" size={isLandscape ? size - 4 : size} color={color} />
           ),
         }}
       />
@@ -45,7 +47,7 @@ export default function AdminTabsLayout() {
         options={{
           title: 'Usuários',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="people-outline" size={size} color={color} />
+            <Ionicons name="people-outline" size={isLandscape ? size - 4 : size} color={color} />
           ),
         }}
       />
@@ -54,7 +56,7 @@ export default function AdminTabsLayout() {
         options={{
           title: 'Kits',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="cube-outline" size={size} color={color} />
+            <Ionicons name="cube-outline" size={isLandscape ? size - 4 : size} color={color} />
           ),
         }}
       />
@@ -63,7 +65,7 @@ export default function AdminTabsLayout() {
         options={{
           title: 'Reservas',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="calendar-outline" size={size} color={color} />
+            <Ionicons name="calendar-outline" size={isLandscape ? size - 4 : size} color={color} />
           ),
         }}
       />
@@ -72,7 +74,7 @@ export default function AdminTabsLayout() {
         options={{
           title: 'Perfil',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" size={size} color={color} />
+            <Ionicons name="person-outline" size={isLandscape ? size - 4 : size} color={color} />
           ),
         }}
       />
