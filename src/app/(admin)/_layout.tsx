@@ -3,9 +3,10 @@ import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const HEADER = '#5145CD';
-const TEXT_LIGHT = '#6B7280';
-const WHITE = '#FFFFFF';
+const BG = '#09090B';
+const BORDER = '#27272A';
+const ACTIVE = '#8B5CF6';
+const INACTIVE = '#A1A1AA';
 
 export default function AdminTabsLayout() {
   const insets = useSafeAreaInsets();
@@ -14,12 +15,12 @@ export default function AdminTabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: HEADER,
-        tabBarInactiveTintColor: TEXT_LIGHT,
+        tabBarActiveTintColor: ACTIVE,
+        tabBarInactiveTintColor: INACTIVE,
         tabBarStyle: {
-          backgroundColor: WHITE,
+          backgroundColor: BG,
           borderTopWidth: 1,
-          borderTopColor: '#E5E7EB',
+          borderTopColor: BORDER,
           height: 60 + insets.bottom,
           paddingBottom: 8 + (insets.bottom > 0 ? insets.bottom - 4 : 0),
           paddingTop: 6,

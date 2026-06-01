@@ -8,8 +8,9 @@ import {
   StatusBar,
   StyleSheet,
   Text,
-  TouchableOpacity,
-  View
+  View,
+  Image,
+  Platform
 } from 'react-native';
 import { BarChart, PieChart } from 'react-native-gifted-charts';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -17,14 +18,19 @@ import { auth } from '../../config/firebaseConfig';
 
 const { width } = Dimensions.get('window');
 
-const BG = '#F4F5F8';
-const HEADER = '#5145CD';
-const WHITE = '#FFFFFF';
-const TEXT_DARK = '#1F2937';
-const TEXT_LIGHT = '#6B7280';
+// Cores do tema escuro
+const BG = '#09090B';
+const CARD_BG = '#09090B'; // Fundo do card igual ao fundo principal, só a borda destaca
+const TEXT_LIGHT = '#FFFFFF';
+const TEXT_MUTED = '#A1A1AA';
 
-// Gráficos Cores
-const PIE_COLORS = ['#5145CD', '#22C55E', '#3B82F6', '#F59E0B', '#EC4899', '#8B5CF6', '#14B8A6'];
+// Cores Neon
+const COLOR_USERS = '#8B5CF6'; // Roxo
+const COLOR_KITS = '#2DD4BF';  // Ciano
+const COLOR_RESERVATIONS = '#EC4899'; // Rosa
+
+// Gráficos Cores Neon
+const PIE_COLORS = ['#8B5CF6', '#2DD4BF', '#EC4899', '#A3E635', '#F59E0B', '#3B82F6'];
 
 interface DashboardData {
   userCount: number;
@@ -46,8 +52,6 @@ export default function AdminDashboardScreen() {
 
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<DashboardData | null>(null);
-  const [activeTab, setActiveTab] = useState('home');
-  const [selectedPieInfo, setSelectedPieInfo] = useState<{ name: string, value: number } | null>(null);
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
@@ -87,8 +91,8 @@ export default function AdminDashboardScreen() {
       'JULY': 'Jul', 'AUGUST': 'Ago', 'SEPTEMBER': 'Set', 'OCTOBER': 'Out', 'NOVEMBER': 'Nov', 'DECEMBER': 'Dez'
     };
 
-    const monthsInfo = data.reservationsData.months.slice(0, 6).reverse();
-    const valuesInfo = data.reservationsData.reservations.slice(0, 6).reverse();
+    const monthsInfo = data.reservationsData.months.slice(0, 5).reverse();
+    const valuesInfo = data.reservationsData.reservations.slice(0, 5).reverse();
 
     return monthsInfo.map((m, index) => {
       const parts = m.split(' ');
@@ -100,7 +104,10 @@ export default function AdminDashboardScreen() {
       return {
         value: valuesInfo[index] || 0,
         label: `${ptMonth}/${yearShort}`,
-        frontColor: '#5145CD',
+        frontColor: '#8B5CF6',
+        topLabelComponent: () => (
+          <Text style={{color: '#8B5CF6', fontSize: 10, marginBottom: 4}}></Text>
+        )
       };
     });
   };
@@ -110,7 +117,6 @@ export default function AdminDashboardScreen() {
 
     return data.topKitsData.kits.map((kitName, index) => {
       let cleanName = kitName;
-      // Tratamento mais seguro contra caracteres corrompidos
       if (cleanName.includes('ǭ') || cleanName.includes('sico')) cleanName = 'Kit Básico DJ';
       else if (cleanName.includes('Avan') || cleanName.includes('\ufffdados')) cleanName = 'Kit Avançado DJ';
       else if (cleanName.includes('Acess') || cleanName.includes('rios')) cleanName = 'Kit Acessórios';
@@ -126,28 +132,28 @@ export default function AdminDashboardScreen() {
     });
   };
 
-  const rawPieData = formatPieChartData();
-  const pieData = rawPieData.filter(item => item.value > 0).map(item => ({
-    ...item,
-    focused: selectedPieInfo?.name === item.text
-  }));
+  const pieData = formatPieChartData().filter(item => item.value > 0);
   const barData = formatBarChartData();
+
+  // Determinar se estamos em uma tela grande (web/desktop)
+  const isLargeScreen = width >= 768;
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={HEADER} />
+      <StatusBar barStyle="light-content" backgroundColor={BG} />
 
-      <View style={[styles.headerBg, { paddingTop: Math.max(insets.top, 20) }]}>
-        <Text style={styles.headerTitle}>Loca DJ</Text>
+      {/* Header Centralizado - Loca DJ */}
+      <View style={[styles.headerTop, { paddingTop: Math.max(insets.top, 20) }]}>
+        <Text style={styles.headerLogoText}>Loca DJ</Text>
       </View>
 
       <ScrollView
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: 40 }]}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: 60 }]}
         showsVerticalScrollIndicator={false}
       >
         {loading ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={HEADER} />
+            <ActivityIndicator size="large" color={COLOR_USERS} />
           </View>
         ) : (
           <>
@@ -156,106 +162,107 @@ export default function AdminDashboardScreen() {
               <Text style={styles.pageSubtitle}>Estatísticas Rápidas</Text>
             </View>
 
-            <View style={styles.card}>
-              <View style={styles.cardLeft}>
-                <Text style={styles.cardLabel}>Total de Usuários</Text>
-                <Text style={styles.cardValue}>{data?.userCount || 0}</Text>
-              </View>
-              <View style={[styles.iconCircle, { backgroundColor: '#E0E7FF' }]}>
-                <Ionicons name="person" size={20} color="#5145CD" />
-              </View>
-            </View>
-
-            <View style={styles.card}>
-              <View style={styles.cardLeft}>
-                <Text style={styles.cardLabel}>Kits Disponíveis</Text>
-                <Text style={styles.cardValue}>{data?.availableKitsCount || 0}</Text>
-              </View>
-              <View style={[styles.iconCircle, { backgroundColor: '#DCFCE7' }]}>
-                <Ionicons name="cube" size={20} color="#16A34A" />
-              </View>
-            </View>
-
-            <View style={styles.card}>
-              <View style={styles.cardLeft}>
-                <Text style={styles.cardLabel}>Reservas Ativas</Text>
-                <Text style={styles.cardValue}>{data?.activeReservationsCount || 0}</Text>
-              </View>
-              <View style={[styles.iconCircle, { backgroundColor: '#DBEAFE' }]}>
-                <Ionicons name="calendar" size={20} color="#2563EB" />
-              </View>
-            </View>
-
-            <View style={styles.chartCard}>
-              <Text style={styles.chartTitle}>Reservas por Mês</Text>
-              {barData.length > 0 ? (
-                <View style={{ marginTop: 20 }}>
-                  <BarChart
-                    data={barData}
-                    barWidth={26}
-                    spacing={30}
-                    roundedTop
-                    hideRules
-                    xAxisThickness={1}
-                    xAxisColor="#E5E7EB"
-                    yAxisThickness={0}
-                    yAxisTextStyle={{ color: TEXT_LIGHT, fontSize: 11 }}
-                    xAxisLabelTextStyle={{ color: TEXT_LIGHT, fontSize: 9.5, textAlign: 'center' }}
-                    noOfSections={4}
-                    isAnimated
-                    renderTooltip={(item: any) => {
-                      return (
-                        <View style={{ marginBottom: 5, backgroundColor: HEADER, paddingHorizontal: 6, paddingVertical: 4, borderRadius: 4 }}>
-                          <Text style={{ color: WHITE, fontWeight: 'bold', fontSize: 12 }}>{item.value}</Text>
-                        </View>
-                      );
-                    }}
-                  />
+            {/* Cards de Resumo */}
+            <View style={[styles.summaryCardsContainer, isLargeScreen && { flexDirection: 'row' }]}>
+              {/* Card Usuários */}
+              <View style={[styles.card, { borderColor: COLOR_USERS }, isLargeScreen && { flex: 1 }]}>
+                <View style={[styles.iconCircle, { borderColor: COLOR_USERS }]}>
+                  <Ionicons name="people-outline" size={24} color={COLOR_USERS} />
                 </View>
-              ) : (
-                <Text style={styles.noDataText}>Sem dados suficientes.</Text>
-              )}
+                <View style={styles.cardRight}>
+                  <Text style={styles.cardLabel}>Total de Usuários</Text>
+                  <Text style={styles.cardValue}>{data?.userCount || 0}</Text>
+                </View>
+              </View>
+
+              {/* Card Kits */}
+              <View style={[styles.card, { borderColor: COLOR_KITS }, isLargeScreen && { flex: 1 }]}>
+                <View style={[styles.iconCircle, { borderColor: COLOR_KITS }]}>
+                  <Ionicons name="cube-outline" size={24} color={COLOR_KITS} />
+                </View>
+                <View style={styles.cardRight}>
+                  <Text style={styles.cardLabel}>Kits Disponíveis</Text>
+                  <Text style={styles.cardValue}>{data?.availableKitsCount || 0}</Text>
+                </View>
+              </View>
+
+              {/* Card Reservas */}
+              <View style={[styles.card, { borderColor: COLOR_RESERVATIONS }, isLargeScreen && { flex: 1 }]}>
+                <View style={[styles.iconCircle, { borderColor: COLOR_RESERVATIONS }]}>
+                  <Ionicons name="calendar-outline" size={24} color={COLOR_RESERVATIONS} />
+                </View>
+                <View style={styles.cardRight}>
+                  <Text style={styles.cardLabel}>Reservas Ativas</Text>
+                  <Text style={styles.cardValue}>{data?.activeReservationsCount || 0}</Text>
+                </View>
+              </View>
             </View>
 
-            <View style={styles.chartCard}>
-              <Text style={styles.chartTitle}>Kits Mais Alugados</Text>
-              {pieData.length > 0 ? (
-                <View style={styles.pieContainer}>
-                  <View style={{ flex: 1, alignItems: 'center' }}>
-                    <PieChart
-                      data={pieData}
-                      donut={false}
-                      radius={85}
-                      innerRadius={0}
-                      toggleFocusOnPress={false}
-                      onPress={(item: any) => setSelectedPieInfo({ name: item.text, value: item.value })}
+            {/* Gráficos */}
+            <View style={[styles.chartsContainer, isLargeScreen && { flexDirection: 'row' }]}>
+              {/* Gráfico de Barras */}
+              <View style={[styles.chartCard, isLargeScreen && { flex: 1 }]}>
+                <Text style={styles.chartTitle}>Reservas por Mês</Text>
+                {barData.length > 0 ? (
+                  <View style={{ marginTop: 20, alignItems: 'center', marginLeft: -20 }}>
+                    <BarChart
+                      data={barData}
+                      barWidth={18}
+                      spacing={isLargeScreen ? 60 : 30}
+                      roundedTop
+                      hideRules
+                      xAxisThickness={1}
+                      xAxisColor="#27272A"
+                      yAxisThickness={0}
+                      yAxisTextStyle={{ color: TEXT_MUTED, fontSize: 11 }}
+                      xAxisLabelTextStyle={{ color: TEXT_MUTED, fontSize: 10, textAlign: 'center' }}
+                      noOfSections={4}
+                      isAnimated
+                      frontColor="#8B5CF6"
                     />
                   </View>
+                ) : (
+                  <Text style={styles.noDataText}>Sem dados suficientes.</Text>
+                )}
+              </View>
 
-                  <View style={styles.legendContainer}>
-                    {pieData.map((item, idx) => (
-                      <View key={idx} style={styles.legendItem}>
-                        <View style={[styles.legendColor, { backgroundColor: item.color }]} />
-                        <Text style={styles.legendText} numberOfLines={1}>
-                          {item.value} - {item.text}
-                        </Text>
-                      </View>
-                    ))}
+              {/* Gráfico de Pizza */}
+              <View style={[styles.chartCard, isLargeScreen && { flex: 1 }]}>
+                <Text style={styles.chartTitle}>Kits Mais Alugados</Text>
+                {pieData.length > 0 ? (
+                  <View style={[styles.pieContainer, isLargeScreen && { flexDirection: 'row' }]}>
+                    <View style={styles.pieChartWrapper}>
+                      <PieChart
+                        data={pieData}
+                        donut={true}
+                        radius={isLargeScreen ? 110 : 90}
+                        innerRadius={isLargeScreen ? 60 : 45}
+                        innerCircleColor={BG}
+                        centerLabelComponent={() => {
+                          return (
+                            <View style={styles.centerRecord}>
+                              <Image source={require('../../../assets/images/dados.gif')} style={styles.logo} resizeMode="contain" />
+                            </View>
+                          );
+                        }}
+                      />
+                    </View>
+
+                    <View style={[styles.legendContainer, isLargeScreen && { flex: 1, marginTop: 0, paddingLeft: 20 }]}>
+                      {pieData.map((item, idx) => (
+                        <View key={idx} style={styles.legendItem}>
+                          <View style={[styles.legendColor, { backgroundColor: item.color }]} />
+                          <Text style={styles.legendText} numberOfLines={1}>
+                            <Text style={{fontWeight: 'bold', color: TEXT_LIGHT}}>{item.value}</Text> - {item.text}
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
                   </View>
-                </View>
-              ) : (
-                <Text style={styles.noDataText}>Sem dados suficientes.</Text>
-              )}
-
-              {/* Info Tooltip customizada ao clicar na pizza */}
-              {selectedPieInfo && (
-                <View style={styles.tooltipContainer}>
-                  <Text style={styles.tooltipTitle}>{selectedPieInfo.name}</Text>
-                  <Text style={styles.tooltipValue}>
-                    <Text style={{ fontWeight: 'bold', color: HEADER }}>{selectedPieInfo.value}</Text> locações registradas
-                  </Text>
-                </View>
-              )}
+                ) : (
+                  <Text style={styles.noDataText}>Sem dados suficientes.</Text>
+                )}
+              </View>
             </View>
           </>
         )}
@@ -269,21 +276,22 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: BG,
   },
-  headerBg: {
-    backgroundColor: HEADER,
-    paddingHorizontal: 24,
-    paddingBottom: 20,
+  headerTop: {
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#18181B',
   },
-  headerTitle: {
-    color: WHITE,
-    fontSize: 18,
-    fontWeight: 'bold',
+  headerLogoText: {
+    color: TEXT_LIGHT,
+    fontSize: 16,
+    fontWeight: '700',
+    letterSpacing: 1,
   },
   scrollContent: {
     paddingHorizontal: 24,
-    paddingTop: 24,
+    paddingTop: 32,
   },
   loadingContainer: {
     flex: 1,
@@ -292,149 +300,115 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   titleSection: {
-    marginBottom: 20,
+    marginBottom: 32,
   },
   pageTitle: {
-    fontSize: 22,
+    fontSize: 26,
     fontWeight: 'bold',
-    color: TEXT_DARK,
-    marginBottom: 4,
+    color: TEXT_LIGHT,
+    marginBottom: 6,
   },
   pageSubtitle: {
     fontSize: 14,
-    color: TEXT_LIGHT,
+    color: TEXT_MUTED,
+  },
+  summaryCardsContainer: {
+    gap: 16,
+    marginBottom: 24,
   },
   card: {
     flexDirection: 'row',
-    backgroundColor: WHITE,
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
+    backgroundColor: CARD_BG,
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 24,
     alignItems: 'center',
-    justifyContent: 'space-between',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 3,
   },
-  cardLeft: {
+  iconCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 20,
+  },
+  cardRight: {
     flex: 1,
   },
   cardLabel: {
     fontSize: 13,
-    color: TEXT_LIGHT,
-    marginBottom: 4,
+    color: TEXT_MUTED,
+    marginBottom: 8,
   },
   cardValue: {
-    fontSize: 28,
+    fontSize: 36,
     fontWeight: 'bold',
-    color: TEXT_DARK,
+    color: TEXT_LIGHT,
   },
-  iconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
+  chartsContainer: {
+    gap: 16,
   },
   chartCard: {
-    backgroundColor: WHITE,
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 3,
-    overflow: 'hidden'
+    backgroundColor: CARD_BG,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#27272A',
+    padding: 24,
+    marginBottom: 16,
   },
   chartTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: TEXT_DARK,
-    marginBottom: 8,
+    fontWeight: '600',
+    color: TEXT_LIGHT,
+    marginBottom: 24,
   },
   noDataText: {
-    color: TEXT_LIGHT,
+    color: TEXT_MUTED,
     textAlign: 'center',
-    marginVertical: 20,
+    marginVertical: 40,
   },
   pieContainer: {
-    flexDirection: 'column',
     alignItems: 'center',
-    marginTop: 20,
-    width: '100%'
+    justifyContent: 'center',
+  },
+  pieChartWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  centerRecord: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 200,
+    height: 200,
+    borderRadius: 30,
+    
+    overflow: 'hidden',
+  },
+  logo: {
+    width: 110,
+    height: 110,
   },
   legendContainer: {
-    marginTop: 20,
+    marginTop: 32,
     width: '100%',
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    flexDirection: 'column',
+    justifyContent: 'center',
   },
   legendItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    width: '48%',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   legendColor: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 8,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginRight: 12,
   },
   legendText: {
-    fontSize: 12,
-    color: TEXT_LIGHT,
-    flex: 1,
-  },
-  tooltipContainer: {
-    marginTop: 20,
-    padding: 14,
-    backgroundColor: '#EFF6FF',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#BFDBFE',
-    alignItems: 'center'
-  },
-  tooltipTitle: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    color: TEXT_DARK,
-    marginBottom: 4
-  },
-  tooltipValue: {
     fontSize: 13,
-    color: TEXT_LIGHT
-  },
-  bottomNavContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: WHITE,
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
-  },
-  bottomNavInner: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'flex-start',
-    paddingTop: 12,
-    paddingHorizontal: 8,
-  },
-  navItem: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    color: TEXT_MUTED,
     flex: 1,
-  },
-  navText: {
-    fontSize: 10,
-    color: TEXT_LIGHT,
-    marginTop: 4,
-    fontWeight: '500',
-  },
+  }
 });
