@@ -7,13 +7,14 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
-const PRIMARY  = '#5B4EE4';
-const SUCCESS  = '#14D88A';
-const ERROR    = '#EF4444';
-const GRAY_100 = '#F3F4F6';
-const GRAY_300 = '#D1D5DB';
-const GRAY_500 = '#6B7280';
-const GRAY_900 = '#111827';
+const BG = '#09090B';
+const CARD_BG = '#09090B';
+const BORDER = '#27272A';
+const TEXT_LIGHT = '#FFFFFF';
+const TEXT_MUTED = '#A1A1AA';
+const PRIMARY = '#8B5CF6';
+const SUCCESS = '#10B981';
+const ERROR = '#EF4444';
 
 export default function ConfirmEmailScreen() {
   const router = useRouter();
@@ -66,7 +67,7 @@ export default function ConfirmEmailScreen() {
         <View style={styles.header}>
           {!done && (
             <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <Ionicons name="arrow-back" size={22} color={GRAY_900} />
+              <Ionicons name="arrow-back" size={22} color={TEXT_MUTED} />
             </TouchableOpacity>
           )}
         </View>
@@ -159,29 +160,29 @@ export default function ConfirmEmailScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe:          { flex: 1, backgroundColor: '#fff' },
+  safe:          { flex: 1, backgroundColor: BG },
   header:        { paddingHorizontal: 20, paddingVertical: 12, minHeight: 64 },
-  backBtn:       { width: 40, height: 40, borderRadius: 20, backgroundColor: GRAY_100, alignItems: 'center', justifyContent: 'center' },
-  scroll:        { flexGrow: 1, paddingHorizontal: 28, paddingTop: 8, paddingBottom: 40 },
+  backBtn:       { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: BORDER, alignItems: 'center', justifyContent: 'center' },
+  scroll:        { flexGrow: 1, paddingHorizontal: 32, paddingTop: 8, paddingBottom: 40 },
   iconContainer: { alignItems: 'center', marginBottom: 28, position: 'relative' },
-  iconCircle:    { width: 96, height: 96, borderRadius: 48, backgroundColor: '#EEF2FF', alignItems: 'center', justifyContent: 'center' },
-  iconCircleDone:{ backgroundColor: 'rgba(20,216,138,0.1)' },
-  iconBadge:     { position: 'absolute', bottom: 2, right: '28%', width: 26, height: 26, borderRadius: 13, backgroundColor: SUCCESS, borderWidth: 2.5, borderColor: '#fff', alignItems: 'center', justifyContent: 'center' },
-  title:         { fontSize: 24, fontWeight: '700', color: GRAY_900, textAlign: 'center', marginBottom: 10 },
-  subtitle:      { fontSize: 14, color: GRAY_500, textAlign: 'center', marginBottom: 36, lineHeight: 21, paddingHorizontal: 8 },
+  iconCircle:    { width: 96, height: 96, borderRadius: 48, backgroundColor: 'rgba(139, 92, 246, 0.15)', alignItems: 'center', justifyContent: 'center' },
+  iconCircleDone:{ backgroundColor: 'rgba(16, 185, 129, 0.15)' },
+  iconBadge:     { position: 'absolute', bottom: 2, right: '28%', width: 26, height: 26, borderRadius: 13, backgroundColor: SUCCESS, borderWidth: 2.5, borderColor: BG, alignItems: 'center', justifyContent: 'center' },
+  title:         { fontSize: 24, fontWeight: '700', color: TEXT_LIGHT, textAlign: 'center', marginBottom: 10 },
+  subtitle:      { fontSize: 14, color: TEXT_MUTED, textAlign: 'center', marginBottom: 36, lineHeight: 21, paddingHorizontal: 8 },
   codeRow:       { flexDirection: 'row', justifyContent: 'center', gap: 10, marginBottom: 20 },
-  codeInput:     { width: 50, height: 62, borderWidth: 2, borderColor: GRAY_300, borderRadius: 14, fontSize: 24, fontWeight: '700', color: GRAY_900, backgroundColor: GRAY_100, textAlign: 'center' },
-  codeInputFilled:{ borderColor: PRIMARY, backgroundColor: '#F5F3FF' },
+  codeInput:     { width: 50, height: 62, borderWidth: 2, borderColor: BORDER, borderRadius: 14, fontSize: 24, fontWeight: '700', color: TEXT_LIGHT, backgroundColor: CARD_BG, textAlign: 'center' },
+  codeInputFilled:{ borderColor: PRIMARY, backgroundColor: 'rgba(139, 92, 246, 0.05)' },
   errorRow:      { flexDirection: 'row', alignItems: 'center', gap: 5, justifyContent: 'center', marginBottom: 16 },
   errorText:     { fontSize: 13, color: ERROR },
-  resendText:    { fontSize: 14, color: GRAY_500, textAlign: 'center', marginBottom: 28 },
+  resendText:    { fontSize: 14, color: TEXT_MUTED, textAlign: 'center', marginBottom: 28 },
   resendLink:    { color: PRIMARY, fontWeight: '700' },
-  btnPrimary:    { backgroundColor: PRIMARY, borderRadius: 16, height: 54, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', shadowColor: PRIMARY, shadowOpacity: 0.3, shadowRadius: 10, shadowOffset: { width: 0, height: 5 }, elevation: 6, marginBottom: 12 },
+  btnPrimary:    { backgroundColor: PRIMARY, borderRadius: 12, height: 56, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
   btnDisabled:   { opacity: 0.6 },
-  btnText:       { color: '#fff', fontSize: 16, fontWeight: '700' },
-  infoCard:      { flexDirection: 'row', gap: 10, backgroundColor: '#EEF2FF', borderRadius: 12, padding: 14 },
-  infoText:      { flex: 1, fontSize: 13, color: GRAY_900, lineHeight: 19 },
-  successCard:   { backgroundColor: '#F0FDF9', borderWidth: 1, borderColor: 'rgba(20,216,138,0.2)', borderRadius: 16, padding: 28, alignItems: 'center', marginBottom: 28 },
-  successTitle:  { fontSize: 16, fontWeight: '700', color: GRAY_900, marginBottom: 6 },
-  successSub:    { fontSize: 13, color: GRAY_500, textAlign: 'center', lineHeight: 19 },
+  btnText:       { color: '#fff', fontSize: 16, fontWeight: '600' },
+  infoCard:      { flexDirection: 'row', gap: 10, backgroundColor: 'rgba(139, 92, 246, 0.05)', borderRadius: 12, padding: 14, borderWidth: 1, borderColor: BORDER },
+  infoText:      { flex: 1, fontSize: 13, color: TEXT_LIGHT, lineHeight: 19 },
+  successCard:   { backgroundColor: 'rgba(16, 185, 129, 0.05)', borderWidth: 1, borderColor: 'rgba(16, 185, 129, 0.2)', borderRadius: 16, padding: 28, alignItems: 'center', marginBottom: 28 },
+  successTitle:  { fontSize: 16, fontWeight: '700', color: TEXT_LIGHT, marginBottom: 6 },
+  successSub:    { fontSize: 13, color: TEXT_MUTED, textAlign: 'center', lineHeight: 19 },
 });

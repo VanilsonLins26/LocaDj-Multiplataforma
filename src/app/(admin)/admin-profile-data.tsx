@@ -18,12 +18,12 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { auth } from '../../config/firebaseConfig';
 
-const PRIMARY = '#5245F1';
-const BG = '#F4F4F9';
-const WHITE = '#FFFFFF';
-const TEXT_DARK = '#040417';
-const TEXT_LIGHT = '#6B7280';
-const BORDER = '#E5E7EB';
+const BG = '#09090B';
+const CARD_BG = '#09090B';
+const BORDER = '#27272A';
+const TEXT_LIGHT = '#FFFFFF';
+const TEXT_MUTED = '#A1A1AA';
+const PRIMARY = '#8B5CF6';
 const ERROR = '#EF4444';
 
 const API_BASE = 'https://locadj.onrender.com/api';
@@ -115,16 +115,16 @@ export default function AdminProfileDataScreen() {
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <StatusBar barStyle="light-content" backgroundColor={PRIMARY} />
+      <StatusBar barStyle="light-content" backgroundColor={BG} />
 
       {/* Header */}
-      <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) }]}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) }]}>
         <TouchableOpacity
           style={styles.backBtn}
           onPress={() => router.back()}
           activeOpacity={0.8}
         >
-          <Ionicons name="chevron-back" size={24} color={WHITE} />
+          <Ionicons name="chevron-back" size={24} color={TEXT_LIGHT} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Meus dados</Text>
         <View style={{ width: 40 }} />
@@ -169,7 +169,7 @@ export default function AdminProfileDataScreen() {
               <Feather
                 name="user"
                 size={16}
-                color={nameFocused ? PRIMARY : '#9CA3AF'}
+                color={nameFocused ? PRIMARY : TEXT_MUTED}
                 style={styles.inputIcon}
               />
               <TextInput
@@ -177,7 +177,7 @@ export default function AdminProfileDataScreen() {
                 value={name}
                 onChangeText={setName}
                 placeholder="Seu nome completo"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={TEXT_MUTED}
                 autoCapitalize="words"
                 returnKeyType="done"
                 onFocus={() => setNameFocused(true)}
@@ -201,11 +201,11 @@ export default function AdminProfileDataScreen() {
           <View style={styles.fieldGroup}>
             <Text style={styles.fieldLabel}>E-mail</Text>
             <View style={[styles.inputWrap, styles.inputReadOnly]}>
-              <Feather name="mail" size={16} color="#9CA3AF" style={styles.inputIcon} />
+              <Feather name="mail" size={16} color={TEXT_MUTED} style={styles.inputIcon} />
               <Text style={styles.readOnlyText} numberOfLines={1}>
                 {email || '—'}
               </Text>
-              <Feather name="lock" size={14} color="#D1D5DB" />
+              <Feather name="lock" size={14} color="#3F3F46" />
             </View>
             <Text style={styles.fieldHint}>
               O e-mail não pode ser alterado por aqui.
@@ -216,8 +216,8 @@ export default function AdminProfileDataScreen() {
           <View style={styles.verificationRow}>
             {emailVerified ? (
               <>
-                <View style={[styles.verifiedDot, { backgroundColor: '#16A34A' }]} />
-                <Text style={[styles.verificationText, { color: '#16A34A' }]}>
+                <View style={[styles.verifiedDot, { backgroundColor: '#10B981' }]} />
+                <Text style={[styles.verificationText, { color: '#10B981' }]}>
                   E-mail verificado
                 </Text>
               </>
@@ -250,11 +250,11 @@ export default function AdminProfileDataScreen() {
           activeOpacity={0.85}
         >
           {saving ? (
-            <ActivityIndicator size="small" color={WHITE} />
+            <ActivityIndicator size="small" color={TEXT_LIGHT} />
           ) : (
             <>
-              <Feather name="save" size={18} color={WHITE} />
-              <Text style={styles.saveBtnText}>Salvar Alterações</Text>
+              <Feather name="save" size={18} color={(!hasChanges || saving) ? TEXT_MUTED : PRIMARY} />
+              <Text style={[styles.saveBtnText, (!hasChanges || saving) && { color: TEXT_MUTED }]}>Salvar Alterações</Text>
             </>
           )}
         </TouchableOpacity>
@@ -265,11 +265,11 @@ export default function AdminProfileDataScreen() {
 
 const styles = StyleSheet.create({
   header: {
-    backgroundColor: PRIMARY,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingBottom: 20,
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
   },
   backBtn: {
     width: 40,
@@ -277,13 +277,16 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: BORDER,
   },
   headerTitle: {
     flex: 1,
     textAlign: 'center',
     fontSize: 17,
     fontWeight: '700',
-    color: WHITE,
+    color: TEXT_LIGHT,
   },
 
   scroll: { flex: 1, backgroundColor: BG },
@@ -298,17 +301,12 @@ const styles = StyleSheet.create({
     width: 88,
     height: 88,
     borderRadius: 44,
-    backgroundColor: '#EDEDFF',
-    borderWidth: 4,
-    borderColor: WHITE,
+    backgroundColor: '#18181B',
+    borderWidth: 2,
+    borderColor: PRIMARY,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
-    shadowColor: PRIMARY,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
   },
   avatarLetter: {
     fontSize: 36,
@@ -319,12 +317,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: '#EDEDFF',
+    backgroundColor: 'transparent',
     borderRadius: 100,
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderWidth: 1,
-    borderColor: '#C7C4FC',
+    borderColor: PRIMARY,
   },
   adminBadgeText: {
     fontSize: 12,
@@ -334,24 +332,21 @@ const styles = StyleSheet.create({
 
   // Card
   card: {
-    backgroundColor: WHITE,
-    borderRadius: 16,
+    backgroundColor: CARD_BG,
+    borderRadius: 12,
     padding: 20,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: BORDER,
   },
   cardTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: TEXT_DARK,
+    color: TEXT_LIGHT,
     marginBottom: 16,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: BORDER,
   },
 
   // Fields
@@ -359,36 +354,36 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: TEXT_DARK,
+    color: TEXT_MUTED,
     marginBottom: 6,
   },
   inputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: WHITE,
-    borderRadius: 12,
-    borderWidth: 1.5,
+    backgroundColor: '#18181B',
+    borderRadius: 8,
+    borderWidth: 1,
     borderColor: BORDER,
     paddingHorizontal: 12,
-    height: 50,
+    height: 48,
   },
   inputFocused: { borderColor: PRIMARY },
   inputError: { borderColor: ERROR },
   inputReadOnly: {
-    backgroundColor: '#F9FAFB',
-    borderColor: '#E5E7EB',
+    backgroundColor: CARD_BG,
+    borderColor: BORDER,
   },
   inputIcon: { marginRight: 8 },
   input: {
     flex: 1,
     fontSize: 15,
-    color: TEXT_DARK,
+    color: TEXT_LIGHT,
     height: '100%',
   },
   readOnlyText: {
     flex: 1,
     fontSize: 15,
-    color: '#9CA3AF',
+    color: TEXT_MUTED,
   },
   changedDot: {
     width: 8,
@@ -404,7 +399,7 @@ const styles = StyleSheet.create({
   },
   fieldHint: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: TEXT_MUTED,
     marginTop: 4,
     marginLeft: 4,
   },
@@ -431,31 +426,26 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: 20,
     paddingTop: 12,
-    backgroundColor: WHITE,
+    backgroundColor: BG,
     borderTopWidth: 1,
     borderTopColor: BORDER,
   },
   saveBtn: {
-    backgroundColor: PRIMARY,
-    borderRadius: 16,
+    backgroundColor: 'transparent',
+    borderRadius: 12,
     height: 52,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
-    shadowColor: PRIMARY,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
+    borderWidth: 1,
+    borderColor: PRIMARY,
   },
   saveBtnDisabled: {
-    backgroundColor: '#C4BFFA',
-    shadowOpacity: 0,
-    elevation: 0,
+    borderColor: '#3F3F46',
   },
   saveBtnText: {
-    color: WHITE,
+    color: PRIMARY,
     fontSize: 16,
     fontWeight: '700',
   },

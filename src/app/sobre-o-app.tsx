@@ -15,6 +15,13 @@ import { Feather } from '@expo/vector-icons';
 const APP_VERSION = '1.0.0';
 const BUILD_NUMBER = '2025.1';
 
+const BG = '#09090B';
+const CARD_BG = '#09090B';
+const BORDER = '#27272A';
+const TEXT_LIGHT = '#FFFFFF';
+const TEXT_MUTED = '#A1A1AA';
+const PRIMARY = '#8B5CF6';
+
 interface LinkRowProps {
   icon: keyof typeof Feather.glyphMap;
   label: string;
@@ -26,9 +33,9 @@ function LinkRow({ icon, label, onPress, showDivider = true }: LinkRowProps) {
   return (
     <>
       <TouchableOpacity style={styles.linkRow} onPress={onPress} activeOpacity={0.7}>
-        <Feather name={icon} size={20} color="#5245F1" style={styles.linkIcon} />
+        <Feather name={icon} size={20} color={PRIMARY} style={styles.linkIcon} />
         <Text style={styles.linkLabel}>{label}</Text>
-        <Feather name="chevron-right" size={20} color="#9CA3AF" />
+        <Feather name="chevron-right" size={20} color={TEXT_MUTED} />
       </TouchableOpacity>
       {showDivider && <View style={styles.divider} />}
     </>
@@ -50,7 +57,7 @@ export default function SobreOAppScreen() {
       {/* Header */}
       <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 12 }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()} activeOpacity={0.7}>
-          <Feather name="arrow-left" size={24} color="#FFF" />
+          <Feather name="arrow-left" size={24} color={TEXT_LIGHT} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Sobre o App</Text>
         <View style={{ width: 40 }} />
@@ -140,15 +147,17 @@ export default function SobreOAppScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F4F4F9',
+    backgroundColor: BG,
   },
   header: {
-    backgroundColor: '#5245F1',
+    backgroundColor: CARD_BG,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: BORDER,
   },
   backButton: {
     padding: 8,
@@ -157,7 +166,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFF',
+    color: TEXT_LIGHT,
   },
 
   scrollContent: {
@@ -174,15 +183,14 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 20,
-    backgroundColor: '#5245F1',
+    backgroundColor: PRIMARY,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
-    shadowColor: '#5245F1',
+    shadowColor: PRIMARY,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.35,
     shadowRadius: 12,
-    elevation: 8,
   },
   logoText: {
     fontSize: 28,
@@ -193,24 +201,26 @@ const styles = StyleSheet.create({
   appName: {
     fontSize: 24,
     fontWeight: '800',
-    color: '#040417',
+    color: TEXT_LIGHT,
     letterSpacing: 0.5,
   },
   appTagline: {
     fontSize: 13,
-    color: '#9CA3AF',
+    color: TEXT_MUTED,
     marginTop: 4,
     marginBottom: 10,
   },
   versionBadge: {
-    backgroundColor: '#EEF0FF',
+    backgroundColor: 'rgba(139, 92, 246, 0.1)',
     borderRadius: 100,
     paddingHorizontal: 14,
     paddingVertical: 5,
+    borderWidth: 1,
+    borderColor: 'rgba(139, 92, 246, 0.3)',
   },
   versionText: {
     fontSize: 12,
-    color: '#5245F1',
+    color: PRIMARY,
     fontWeight: '600',
   },
 
@@ -221,34 +231,31 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#9CA3AF',
+    color: TEXT_MUTED,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
     marginBottom: 8,
     marginLeft: 4,
   },
   card: {
-    backgroundColor: '#FFF',
+    backgroundColor: CARD_BG,
     borderRadius: 16,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: BORDER,
   },
 
   // Description
   descriptionText: {
     fontSize: 14,
-    color: '#374151',
+    color: TEXT_MUTED,
     lineHeight: 22,
     paddingHorizontal: 16,
     paddingVertical: 16,
   },
   bold: {
     fontWeight: '700',
-    color: '#040417',
+    color: TEXT_LIGHT,
   },
 
   // Link rows
@@ -265,11 +272,11 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     fontWeight: '500',
-    color: '#1F2937',
+    color: TEXT_LIGHT,
   },
   divider: {
     height: 1,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: BORDER,
     marginHorizontal: 16,
   },
 
@@ -277,7 +284,7 @@ const styles = StyleSheet.create({
   footerText: {
     textAlign: 'center',
     fontSize: 12,
-    color: '#C4C9D4',
+    color: TEXT_MUTED,
     marginTop: 8,
   },
 });

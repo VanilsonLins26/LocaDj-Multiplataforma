@@ -16,11 +16,12 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { auth } from '../../config/firebaseConfig';
 import { useIsLandscape } from '../../hooks/useIsLandscape';
 
-const PRIMARY = '#5B4EE4';
-const GRAY_100 = '#F3F4F6';
-const GRAY_200 = '#E5E7EB';
-const GRAY_500 = '#6B7280';
-const GRAY_900 = '#111827';
+const BG = '#09090B';
+const CARD_BG = '#09090B';
+const BORDER = '#27272A';
+const TEXT_LIGHT = '#FFFFFF';
+const TEXT_MUTED = '#A1A1AA';
+const PRIMARY = '#8B5CF6';
 const API_URL = 'https://locadj.onrender.com/api/kits';
 
 interface Kit {
@@ -129,10 +130,10 @@ export default function KitsListScreen() {
           <Image source={{ uri: item.imageUrl }} style={styles.image} resizeMode="cover" />
         ) : (
           <View style={styles.imagePlaceholder}>
-            <Ionicons name="image-outline" size={40} color={GRAY_200} />
+            <Ionicons name="image-outline" size={40} color={BORDER} />
           </View>
         )}
-        <View style={[styles.availBadge, { backgroundColor: item.quantity > 0 ? '#10B981' : '#EF4444' }]}>
+        <View style={[styles.availBadge, { backgroundColor: item.quantity > 0 ? 'rgba(16, 185, 129, 0.9)' : 'rgba(239, 68, 68, 0.9)' }]}>
           <Text style={styles.availText}>{item.quantity > 0 ? 'Disponível' : 'Indisponível'}</Text>
         </View>
       </View>
@@ -146,9 +147,9 @@ export default function KitsListScreen() {
 
       <View style={styles.cardFooter}>
         <View style={styles.statsRow}>
-          <Ionicons name="cube-outline" size={14} color={GRAY_500} />
+          <Ionicons name="cube-outline" size={14} color={TEXT_MUTED} />
           <Text style={styles.statText}>{item.quantity} un.</Text>
-          <Ionicons name="repeat-outline" size={14} color={GRAY_500} style={{ marginLeft: 12 }} />
+          <Ionicons name="repeat-outline" size={14} color={TEXT_MUTED} style={{ marginLeft: 12 }} />
           <Text style={styles.statText}>{item.rents} loc.</Text>
         </View>
         <TouchableOpacity
@@ -163,7 +164,7 @@ export default function KitsListScreen() {
   );
 
   return (
-    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: PRIMARY }}>
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: BG }}>
       <View style={styles.container}>
         {/* Header */}
         <View style={[styles.header, { paddingTop: isLandscape ? 8 : 16, paddingBottom: isLandscape ? 12 : 20 }]}>
@@ -173,18 +174,18 @@ export default function KitsListScreen() {
           </View>
           {/* Search */}
           <View style={[styles.searchBox, isLandscape && { height: 38 }]}>
-            <Ionicons name="search-outline" size={16} color="#9CA3AF" style={{ marginRight: 8 }} />
+            <Ionicons name="search-outline" size={16} color={TEXT_MUTED} style={{ marginRight: 8 }} />
             <TextInput
               style={styles.searchInput}
               placeholder="Buscar kit..."
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={TEXT_MUTED}
               value={search}
               onChangeText={setSearch}
               autoCorrect={false}
             />
             {search.length > 0 && (
               <TouchableOpacity onPress={() => setSearch('')}>
-                <Ionicons name="close-circle" size={16} color="#9CA3AF" />
+                <Ionicons name="close-circle" size={16} color={TEXT_MUTED} />
               </TouchableOpacity>
             )}
           </View>
@@ -203,7 +204,7 @@ export default function KitsListScreen() {
             </View>
           ) : error ? (
             <View style={styles.centerBox}>
-              <Ionicons name="wifi-outline" size={40} color={GRAY_500} style={{ marginBottom: 8 }} />
+              <Ionicons name="wifi-outline" size={40} color={TEXT_MUTED} style={{ marginBottom: 8 }} />
               <Text style={styles.errorText}>{error}</Text>
               <TouchableOpacity onPress={() => fetchKits()} style={styles.btnRetry}>
                 <Text style={styles.btnRetryText}>Tentar novamente</Text>
@@ -241,7 +242,7 @@ export default function KitsListScreen() {
               }
               ListEmptyComponent={
                 <View style={styles.centerBox}>
-                  <Ionicons name="cube-outline" size={40} color={GRAY_500} style={{ marginBottom: 8 }} />
+                  <Ionicons name="cube-outline" size={40} color={TEXT_MUTED} style={{ marginBottom: 8 }} />
                   <Text style={styles.errorText}>Nenhum kit encontrado</Text>
                 </View>
               }
@@ -254,11 +255,12 @@ export default function KitsListScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFFFFF' },
+  container: { flex: 1, backgroundColor: BG },
   header: {
-    backgroundColor: PRIMARY,
     paddingBottom: 20,
     paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: BORDER,
   },
   headerRow: {
     flexDirection: 'row',
@@ -266,17 +268,19 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 14,
   },
-  headerTitle: { fontSize: 22, fontWeight: '700', color: '#FFF' },
-  headerCount: { fontSize: 13, color: '#E0E7FF', fontWeight: '500' },
+  headerTitle: { fontSize: 22, fontWeight: '700', color: TEXT_LIGHT },
+  headerCount: { fontSize: 13, color: PRIMARY, fontWeight: '500' },
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF',
+    backgroundColor: CARD_BG,
+    borderWidth: 1,
+    borderColor: BORDER,
     borderRadius: 12,
     paddingHorizontal: 14,
     height: 44,
   },
-  searchInput: { flex: 1, fontSize: 14, color: GRAY_900 },
+  searchInput: { flex: 1, fontSize: 14, color: TEXT_LIGHT },
   content: { flex: 1 },
   filtersRow: {
     flexDirection: 'row',
@@ -290,31 +294,26 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: GRAY_200,
-    backgroundColor: '#FFF',
+    borderColor: BORDER,
+    backgroundColor: CARD_BG,
   },
-  filterChipActive: { borderColor: PRIMARY, backgroundColor: '#EEF2FF' },
-  filterText: { fontSize: 13, color: GRAY_500, fontWeight: '500' },
+  filterChipActive: { borderColor: PRIMARY, backgroundColor: 'rgba(139, 92, 246, 0.15)' },
+  filterText: { fontSize: 13, color: TEXT_MUTED, fontWeight: '500' },
   filterTextActive: { color: PRIMARY, fontWeight: '600' },
-  countText: { fontSize: 12, color: GRAY_500, marginBottom: 8, marginLeft: 20 },
+  countText: { fontSize: 12, color: TEXT_MUTED, marginBottom: 8, marginLeft: 20 },
   listContent: { paddingHorizontal: 20, paddingBottom: 40, paddingTop: 4 },
   card: {
-    backgroundColor: '#FFF',
+    backgroundColor: CARD_BG,
     borderWidth: 1,
-    borderColor: GRAY_100,
+    borderColor: BORDER,
     borderRadius: 20,
     padding: 16,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    elevation: 3,
   },
   imageContainer: {
     width: '100%',
     height: 160,
-    backgroundColor: GRAY_100,
+    backgroundColor: '#18181B',
     borderRadius: 12,
     marginBottom: 14,
     overflow: 'hidden',
@@ -336,27 +335,31 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: 6,
   },
-  kitName: { fontSize: 16, fontWeight: '700', color: GRAY_900, flex: 1, paddingRight: 8 },
+  kitName: { fontSize: 16, fontWeight: '700', color: TEXT_LIGHT, flex: 1, paddingRight: 8 },
   kitPrice: { fontSize: 15, fontWeight: '700', color: PRIMARY },
-  kitDesc: { fontSize: 13, color: GRAY_500, marginBottom: 14, lineHeight: 19 },
+  kitDesc: { fontSize: 13, color: TEXT_MUTED, marginBottom: 14, lineHeight: 19 },
   cardFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   statsRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  statText: { fontSize: 12, color: GRAY_500, marginRight: 4 },
+  statText: { fontSize: 12, color: TEXT_MUTED, marginRight: 4 },
   btnReservar: {
-    backgroundColor: PRIMARY,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: PRIMARY,
     paddingHorizontal: 16,
     paddingVertical: 9,
     borderRadius: 10,
   },
-  btnReservarText: { color: '#FFF', fontSize: 13, fontWeight: '600' },
+  btnReservarText: { color: PRIMARY, fontSize: 13, fontWeight: '600' },
   centerBox: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, marginTop: 40 },
-  loadingText: { fontSize: 14, color: GRAY_500, marginTop: 12 },
-  errorText: { fontSize: 14, color: GRAY_500, textAlign: 'center', marginBottom: 16 },
+  loadingText: { fontSize: 14, color: TEXT_MUTED, marginTop: 12 },
+  errorText: { fontSize: 14, color: TEXT_MUTED, textAlign: 'center', marginBottom: 16 },
   btnRetry: {
     paddingHorizontal: 20,
     paddingVertical: 10,
-    backgroundColor: PRIMARY,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: PRIMARY,
     borderRadius: 10,
   },
-  btnRetryText: { color: '#fff', fontWeight: '600' },
+  btnRetryText: { color: PRIMARY, fontWeight: '600' },
 });

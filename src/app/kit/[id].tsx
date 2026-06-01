@@ -6,11 +6,12 @@ import { ActivityIndicator, Image, Modal, Platform, StatusBar, StyleSheet, Text,
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { auth } from '../../config/firebaseConfig';
 
-const PRIMARY = '#5B4EE4';
-const GRAY_100 = '#F3F4F6';
-const GRAY_200 = '#E5E7EB';
-const GRAY_500 = '#6B7280';
-const GRAY_900 = '#111827';
+const BG = '#09090B';
+const CARD_BG = '#09090B';
+const BORDER = '#27272A';
+const TEXT_LIGHT = '#FFFFFF';
+const TEXT_MUTED = '#A1A1AA';
+const PRIMARY = '#8B5CF6';
 
 interface Kit {
   id: number;
@@ -163,12 +164,12 @@ export default function KitDetailsScreen() {
   }
 
   return (
-    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: PRIMARY }}>
-      <StatusBar barStyle="light-content" backgroundColor={PRIMARY} translucent />
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: CARD_BG }}>
+      <StatusBar barStyle="light-content" backgroundColor={CARD_BG} translucent />
       <View style={styles.container}>
         <View style={[styles.header, { paddingTop: 16 }]}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backBtnWrapper} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-            <Ionicons name="chevron-back" size={24} color="#FFF" />
+            <Ionicons name="chevron-back" size={24} color={TEXT_LIGHT} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Detalhes do Kit</Text>
           <View style={{ width: 24 }} />
@@ -180,7 +181,7 @@ export default function KitDetailsScreen() {
               <Image source={{ uri: kit.imageUrl }} style={styles.image} resizeMode="cover" />
             ) : (
               <View style={styles.imagePlaceholder}>
-                <Text style={{ color: GRAY_500, fontSize: 13 }}>Foto</Text>
+                <Text style={{ color: TEXT_MUTED, fontSize: 13 }}>Foto</Text>
               </View>
             )}
 
@@ -196,7 +197,7 @@ export default function KitDetailsScreen() {
           <View style={styles.datesRow}>
             <TouchableOpacity style={styles.dateBox} activeOpacity={0.8} onPress={() => setShowPicker('start')}>
               <View style={styles.dateBoxHeader}>
-                <Ionicons name="calendar-outline" size={16} color={GRAY_500} />
+                <Ionicons name="calendar-outline" size={16} color={TEXT_MUTED} />
                 <Text style={styles.dateType}>INÍCIO</Text>
               </View>
               <View style={styles.dateBoxValueRow}>
@@ -207,7 +208,7 @@ export default function KitDetailsScreen() {
 
             <TouchableOpacity style={styles.dateBox} activeOpacity={0.8} onPress={() => setShowPicker('end')}>
               <View style={styles.dateBoxHeader}>
-                <Ionicons name="calendar-outline" size={16} color={GRAY_500} />
+                <Ionicons name="calendar-outline" size={16} color={TEXT_MUTED} />
                 <Text style={styles.dateType}>TÉRMINO</Text>
               </View>
               <View style={styles.dateBoxValueRow}>
@@ -253,7 +254,7 @@ export default function KitDetailsScreen() {
                     display="spinner"
                     minimumDate={showPicker === 'end' ? startDate : new Date()}
                     onChange={onDateChange}
-                    textColor="#000"
+                    textColor={TEXT_LIGHT}
                   />
                 </View>
               </View>
@@ -274,36 +275,36 @@ export default function KitDetailsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFFFFF' },
-  centerBox: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF' },
-  header: { backgroundColor: PRIMARY, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingBottom: 16 },
+  container: { flex: 1, backgroundColor: BG },
+  centerBox: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: BG },
+  header: { backgroundColor: CARD_BG, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: BORDER },
   backBtnWrapper: { width: 24 },
-  headerTitle: { fontSize: 16, fontWeight: '700', color: '#FFF' },
-  errorText: { fontSize: 15, color: GRAY_500, marginBottom: 16 },
+  headerTitle: { fontSize: 16, fontWeight: '700', color: TEXT_LIGHT },
+  errorText: { fontSize: 15, color: TEXT_MUTED, marginBottom: 16 },
   btnRetryText: { color: PRIMARY, fontWeight: '600' },
   btnRetry: { padding: 10 },
-  content: { padding: 24, flex: 1, backgroundColor: '#FFF' },
-  imageSection: { width: '100%', height: 220, backgroundColor: '#F7F8FA', borderRadius: 20, overflow: 'hidden', marginBottom: 24 },
+  content: { padding: 24, flex: 1, backgroundColor: BG },
+  imageSection: { width: '100%', height: 220, backgroundColor: CARD_BG, borderRadius: 20, overflow: 'hidden', marginBottom: 24, borderWidth: 1, borderColor: BORDER },
   image: { width: '100%', height: '100%' },
   imagePlaceholder: { width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' },
-  priceBadge: { position: 'absolute', top: 16, left: 16, backgroundColor: PRIMARY, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 },
+  priceBadge: { position: 'absolute', top: 16, left: 16, backgroundColor: 'rgba(139, 92, 246, 0.9)', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
   priceBadgeText: { color: '#FFF', fontWeight: '700', fontSize: 12 },
-  kitTitle: { fontSize: 22, fontWeight: '800', color: GRAY_900, marginBottom: 36 },
-  dateLabel: { fontSize: 14, fontWeight: '700', color: GRAY_900, marginBottom: 12 },
+  kitTitle: { fontSize: 22, fontWeight: '800', color: TEXT_LIGHT, marginBottom: 36 },
+  dateLabel: { fontSize: 14, fontWeight: '700', color: TEXT_LIGHT, marginBottom: 12 },
   datesRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 16 },
-  dateBox: { flex: 1, borderWidth: 1, borderColor: GRAY_200, borderRadius: 16, padding: 14, backgroundColor: '#F9FAFB' },
+  dateBox: { flex: 1, borderWidth: 1, borderColor: BORDER, borderRadius: 16, padding: 14, backgroundColor: CARD_BG },
   dateBoxHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 8, gap: 6 },
   dateBoxValueRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  dateType: { fontSize: 11, fontWeight: '700', color: GRAY_500, letterSpacing: 0.5 },
-  dateValue: { fontSize: 15, fontWeight: '700', color: GRAY_900 },
-  footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, paddingTop: 16, borderTopWidth: 1, borderTopColor: GRAY_200, backgroundColor: '#FFFFFF' },
-  footerTotalLabel: { fontSize: 12, color: GRAY_500, marginBottom: 4 },
-  footerTotalValue: { fontSize: 24, fontWeight: '800', color: GRAY_900 },
-  btnConfirm: { backgroundColor: PRIMARY, paddingHorizontal: 32, paddingVertical: 16, borderRadius: 16 },
-  btnConfirmText: { color: '#FFF', fontSize: 15, fontWeight: '700' },
+  dateType: { fontSize: 11, fontWeight: '700', color: TEXT_MUTED, letterSpacing: 0.5 },
+  dateValue: { fontSize: 15, fontWeight: '700', color: TEXT_LIGHT },
+  footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, paddingTop: 16, borderTopWidth: 1, borderTopColor: BORDER, backgroundColor: CARD_BG },
+  footerTotalLabel: { fontSize: 12, color: TEXT_MUTED, marginBottom: 4 },
+  footerTotalValue: { fontSize: 24, fontWeight: '800', color: TEXT_LIGHT },
+  btnConfirm: { backgroundColor: 'transparent', borderWidth: 1, borderColor: PRIMARY, paddingHorizontal: 32, paddingVertical: 16, borderRadius: 16 },
+  btnConfirmText: { color: PRIMARY, fontSize: 15, fontWeight: '700' },
 
-  modalBg: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.4)' },
-  pickerContainer: { backgroundColor: '#fff', paddingBottom: 24 },
-  pickerHeader: { alignItems: 'flex-end', padding: 16, backgroundColor: '#f9f9f9', borderBottomWidth: 1, borderBottomColor: '#ddd' },
+  modalBg: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.7)' },
+  pickerContainer: { backgroundColor: '#18181B', paddingBottom: 24 },
+  pickerHeader: { alignItems: 'flex-end', padding: 16, backgroundColor: '#18181B', borderBottomWidth: 1, borderBottomColor: BORDER },
   pickerDoneText: { color: PRIMARY, fontWeight: 'bold', fontSize: 16 }
 });

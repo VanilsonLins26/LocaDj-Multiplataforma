@@ -15,8 +15,12 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useIsLandscape } from '../../hooks/useIsLandscape';
 
-const PRIMARY = '#5B42F3';
-const BG = '#F4F5F7';
+const BG = '#09090B';
+const CARD_BG = '#09090B';
+const BORDER = '#27272A';
+const TEXT_LIGHT = '#FFFFFF';
+const TEXT_MUTED = '#A1A1AA';
+const PRIMARY = '#8B5CF6';
 
 export default function ReservationsScreen() {
   const router = useRouter();
@@ -110,15 +114,15 @@ export default function ReservationsScreen() {
     const s = (status || '').toUpperCase();
     if (s === 'PENDENTE') {
       return (
-        <View style={[styles.badge, { backgroundColor: '#FEF3C7' }]}>
-          <Text style={[styles.badgeText, { color: '#B45309' }]}>Pendente</Text>
+        <View style={[styles.badge, { backgroundColor: 'rgba(245, 158, 11, 0.15)', borderColor: '#FBBF24' }]}>
+          <Text style={[styles.badgeText, { color: '#FBBF24' }]}>Pendente</Text>
         </View>
       );
     }
     if (s === 'CONFIRMADA' || s === 'CONCLUIDA') {
       return (
-        <View style={[styles.badge, { backgroundColor: '#D1FAE5' }]}>
-          <Text style={[styles.badgeText, { color: '#065F46' }]}>
+        <View style={[styles.badge, { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: '#10B981' }]}>
+          <Text style={[styles.badgeText, { color: '#10B981' }]}>
             {s === 'CONCLUIDA' ? 'Concluída' : 'Confirmada'}
           </Text>
         </View>
@@ -126,14 +130,14 @@ export default function ReservationsScreen() {
     }
     if (s === 'CANCELADA') {
       return (
-        <View style={[styles.badge, { backgroundColor: '#FEE2E2' }]}>
-          <Text style={[styles.badgeText, { color: '#DC2626' }]}>Cancelada</Text>
+        <View style={[styles.badge, { backgroundColor: 'rgba(239, 68, 68, 0.15)', borderColor: '#EF4444' }]}>
+          <Text style={[styles.badgeText, { color: '#EF4444' }]}>Cancelada</Text>
         </View>
       );
     }
     return (
-      <View style={[styles.badge, { backgroundColor: '#DBEAFE' }]}>
-        <Text style={[styles.badgeText, { color: '#1D4ED8' }]}>{s.replace('_', ' ')}</Text>
+      <View style={[styles.badge, { backgroundColor: 'rgba(59, 130, 246, 0.15)', borderColor: '#3B82F6' }]}>
+        <Text style={[styles.badgeText, { color: '#3B82F6' }]}>{s.replace('_', ' ')}</Text>
       </View>
     );
   };
@@ -176,7 +180,7 @@ export default function ReservationsScreen() {
             <Image source={{ uri: imageUrl }} style={styles.cardImage} resizeMode="cover" />
           ) : (
             <View style={styles.placeholderImage}>
-              <Ionicons name="image-outline" size={32} color="#9CA3AF" />
+              <Ionicons name="image-outline" size={32} color={BORDER} />
             </View>
           )}
         </View>
@@ -188,7 +192,7 @@ export default function ReservationsScreen() {
           </View>
           
           <View style={styles.userRow}>
-            <Ionicons name="person-outline" size={14} color="#9CA3AF" />
+            <Ionicons name="person-outline" size={14} color={TEXT_MUTED} />
             <Text style={styles.userName}>{userName.toUpperCase()}</Text>
           </View>
 
@@ -197,7 +201,7 @@ export default function ReservationsScreen() {
               <Text style={styles.dateLabel}>INÍCIO</Text>
               <Text style={styles.dateValue}>{startDate}</Text>
             </View>
-            <Feather name="arrow-right" size={16} color="#9CA3AF" />
+            <Feather name="arrow-right" size={16} color={TEXT_MUTED} />
             <View style={styles.dateCol}>
               <Text style={styles.dateLabel}>FIM</Text>
               <Text style={styles.dateValue}>{endDate}</Text>
@@ -206,7 +210,7 @@ export default function ReservationsScreen() {
 
           <View style={styles.cardFooter}>
             <View style={styles.durationBadge}>
-              <Feather name="clock" size={12} color="#5B42F3" />
+              <Feather name="clock" size={12} color={PRIMARY} />
               <Text style={styles.durationText}>{daily} {daily > 1 ? 'dias' : 'dia'}</Text>
             </View>
             <Text style={styles.priceText}>{price}</Text>
@@ -236,7 +240,7 @@ export default function ReservationsScreen() {
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Ionicons name="calendar-clear-outline" size={64} color="#D1D5DB" />
+              <Ionicons name="calendar-clear-outline" size={64} color={TEXT_MUTED} />
               <Text style={styles.emptyTitle}>Nenhuma reserva ainda</Text>
               <Text style={styles.emptySubtitle}>
                 Parece que você ainda não alugou nenhum equipamento com a gente.
@@ -262,19 +266,20 @@ const styles = StyleSheet.create({
     backgroundColor: BG,
   },
   header: {
-    backgroundColor: PRIMARY,
     paddingHorizontal: 24,
     paddingBottom: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: BORDER,
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#FFF',
+    color: TEXT_LIGHT,
     marginBottom: 4,
   },
   headerSubtitle: {
     fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: PRIMARY,
   },
   loadingContainer: {
     flex: 1,
@@ -296,42 +301,41 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1F2937',
+    color: TEXT_LIGHT,
     marginTop: 16,
     marginBottom: 8,
   },
   emptySubtitle: {
     fontSize: 14,
-    color: '#6B7280',
+    color: TEXT_MUTED,
     textAlign: 'center',
     marginBottom: 24,
     lineHeight: 20,
   },
   emptyBtn: {
-    backgroundColor: PRIMARY,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: PRIMARY,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
   },
   emptyBtnText: {
-    color: '#FFF',
+    color: PRIMARY,
     fontSize: 14,
     fontWeight: '600',
   },
   card: {
-    backgroundColor: '#FFF',
+    backgroundColor: CARD_BG,
     borderRadius: 16,
     marginBottom: 20,
     overflow: 'hidden',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    borderWidth: 1,
+    borderColor: BORDER,
   },
   imageContainer: {
     height: 140,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: '#18181B',
     width: '100%',
   },
   cardImage: {
@@ -343,7 +347,7 @@ const styles = StyleSheet.create({
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#18181B',
   },
   cardBody: {
     padding: 16,
@@ -357,7 +361,7 @@ const styles = StyleSheet.create({
   kitName: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#111827',
+    color: TEXT_LIGHT,
     flex: 1,
     marginRight: 8,
   },
@@ -365,6 +369,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
+    borderWidth: 1,
   },
   badgeText: {
     fontSize: 12,
@@ -377,7 +382,7 @@ const styles = StyleSheet.create({
   },
   userName: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: TEXT_MUTED,
     marginLeft: 6,
     letterSpacing: 0.5,
   },
@@ -385,10 +390,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: 'rgba(139, 92, 246, 0.05)',
     padding: 12,
     borderRadius: 12,
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: BORDER,
   },
   dateCol: {
     flex: 1,
@@ -396,14 +403,14 @@ const styles = StyleSheet.create({
   dateLabel: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#9CA3AF',
+    color: TEXT_MUTED,
     marginBottom: 4,
     letterSpacing: 0.5,
   },
   dateValue: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#374151',
+    color: TEXT_LIGHT,
   },
   cardFooter: {
     flexDirection: 'row',
@@ -413,21 +420,23 @@ const styles = StyleSheet.create({
   durationBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#EEECFC',
+    backgroundColor: 'rgba(139, 92, 246, 0.15)',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 16,
+    borderWidth: 1,
+    borderColor: PRIMARY,
   },
   durationText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#5B42F3',
+    color: PRIMARY,
     marginLeft: 6,
   },
   priceText: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#111827',
+    color: TEXT_LIGHT,
   },
 });
 

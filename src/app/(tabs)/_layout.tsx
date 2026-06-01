@@ -5,8 +5,10 @@ import React from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useIsLandscape } from '../../hooks/useIsLandscape';
 
-const PRIMARY = '#5B4EE4';
-const GRAY_400 = '#9CA3AF';
+const BG = '#09090B';
+const BORDER = '#27272A';
+const ACTIVE = '#8B5CF6';
+const INACTIVE = '#A1A1AA';
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
@@ -16,12 +18,12 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: PRIMARY,
-        tabBarInactiveTintColor: GRAY_400,
+        tabBarActiveTintColor: ACTIVE,
+        tabBarInactiveTintColor: INACTIVE,
         tabBarStyle: {
-          backgroundColor: '#FFFFFF',
+          backgroundColor: BG,
           borderTopWidth: 1,
-          borderTopColor: '#F3F4F6',
+          borderTopColor: BORDER,
           height: isLandscape ? 44 + insets.bottom : 60 + insets.bottom,
           paddingBottom: isLandscape ? 4 + (insets.bottom > 0 ? insets.bottom - 4 : 0) : 8 + (insets.bottom > 0 ? insets.bottom - 4 : 0),
           paddingTop: isLandscape ? 4 : 6,

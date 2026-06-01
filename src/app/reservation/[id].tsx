@@ -14,8 +14,12 @@ import { Ionicons, Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { auth } from '../../config/firebaseConfig';
 
-const PRIMARY = '#5B42F3';
-const BG = '#F4F5F7';
+const BG = '#09090B';
+const CARD_BG = '#09090B';
+const BORDER = '#27272A';
+const TEXT_LIGHT = '#FFFFFF';
+const TEXT_MUTED = '#A1A1AA';
+const PRIMARY = '#8B5CF6';
 
 const STATUS_STEPS = [
   { key: 'PENDENTE', label: 'Reserva Pendente' },
@@ -127,7 +131,7 @@ export default function ReservationDetailScreen() {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', padding: 24 }]}>
         <Ionicons name="alert-circle-outline" size={48} color="#EF4444" />
-        <Text style={{ marginTop: 16, fontSize: 16, textAlign: 'center', color: '#4B5563' }}>
+        <Text style={{ marginTop: 16, fontSize: 16, textAlign: 'center', color: TEXT_MUTED }}>
           {error || 'Reserva não encontrada.'}
         </Text>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
@@ -174,8 +178,8 @@ export default function ReservationDetailScreen() {
 
   const getStepColor = (index: number) => {
     if (index < activeStep) return '#10B981'; // Green (Completed)
-    if (index === activeStep) return '#5B42F3'; // Primary (Current)
-    return '#D1D5DB'; // Gray (Future)
+    if (index === activeStep) return PRIMARY; // Primary (Current)
+    return BORDER; // Gray (Future)
   };
 
   return (
@@ -231,17 +235,17 @@ export default function ReservationDetailScreen() {
                 return (
                   <View key={step.key} style={styles.stepItem}>
                     <View style={styles.stepIndicatorCol}>
-                      <View style={[styles.stepCircle, { borderColor: color, backgroundColor: isCompleted || isActive ? color : '#FFF' }]}>
+                      <View style={[styles.stepCircle, { borderColor: color, backgroundColor: isCompleted || isActive ? color : CARD_BG }]}>
                         {isCompleted ? (
                           <Feather name="check" size={12} color="#FFF" />
                         ) : isActive ? (
                           <View style={styles.activeDot} />
                         ) : null}
                       </View>
-                      {!isLast && <View style={[styles.stepLine, { backgroundColor: isCompleted ? '#10B981' : '#E5E7EB' }]} />}
+                      {!isLast && <View style={[styles.stepLine, { backgroundColor: isCompleted ? '#10B981' : BORDER }]} />}
                     </View>
                     <View style={styles.stepTextCol}>
-                      <Text style={[styles.stepLabel, { color: isActive ? '#5B42F3' : (isCompleted ? '#111827' : '#9CA3AF') }]}>
+                      <Text style={[styles.stepLabel, { color: isActive ? PRIMARY : (isCompleted ? TEXT_LIGHT : TEXT_MUTED) }]}>
                         {step.label}
                       </Text>
                       {statusDate && (
@@ -341,12 +345,14 @@ const styles = StyleSheet.create({
     backgroundColor: BG,
   },
   header: {
-    backgroundColor: PRIMARY,
+    backgroundColor: CARD_BG,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: BORDER,
   },
   headerBackBtn: {
     padding: 8,
@@ -355,30 +361,30 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#FFF',
+    color: TEXT_LIGHT,
   },
   scrollContent: {
     padding: 16,
     paddingBottom: 40,
   },
   sectionCard: {
-    backgroundColor: '#FFF',
+    backgroundColor: CARD_BG,
     borderRadius: 16,
     padding: 20,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: BORDER,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#111827',
+    color: TEXT_LIGHT,
     marginBottom: 20,
   },
   sectionSubHeading: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#6B7280',
+    color: TEXT_MUTED,
     marginBottom: 10,
     marginLeft: 4,
   },
@@ -401,19 +407,19 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFF',
+    backgroundColor: CARD_BG,
     zIndex: 2,
   },
   activeDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#FFF',
+    backgroundColor: TEXT_LIGHT,
   },
   stepLine: {
     width: 2,
     flex: 1,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: BORDER,
     marginTop: -4,
     marginBottom: -4,
     zIndex: 1,
@@ -429,12 +435,12 @@ const styles = StyleSheet.create({
   },
   stepDateLabel: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: TEXT_MUTED,
     marginTop: 2,
   },
   stepSubLabel: {
     fontSize: 12,
-    color: '#5B42F3',
+    color: PRIMARY,
     marginTop: 4,
   },
   kitRow: {
@@ -446,7 +452,7 @@ const styles = StyleSheet.create({
     height: 70,
     borderRadius: 12,
     overflow: 'hidden',
-    backgroundColor: '#E5E7EB',
+    backgroundColor: BORDER,
     marginRight: 16,
   },
   kitImage: {
@@ -456,7 +462,7 @@ const styles = StyleSheet.create({
   kitPlaceholder: {
     width: '100%',
     height: '100%',
-    backgroundColor: '#D1D5DB',
+    backgroundColor: BORDER,
   },
   kitInfoCol: {
     flex: 1,
@@ -465,18 +471,18 @@ const styles = StyleSheet.create({
   kitTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#111827',
+    color: TEXT_LIGHT,
     marginBottom: 4,
   },
   kitDaily: {
     fontSize: 14,
-    color: '#6B7280',
+    color: TEXT_MUTED,
     marginBottom: 8,
   },
   kitPrice: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#5B42F3',
+    color: PRIMARY,
     alignSelf: 'flex-end',
     marginTop: -24,
   },
@@ -490,18 +496,18 @@ const styles = StyleSheet.create({
   infoLabel: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#9CA3AF',
+    color: TEXT_MUTED,
     marginBottom: 6,
     letterSpacing: 0.5,
   },
   infoValue: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#1F2937',
+    color: TEXT_LIGHT,
   },
   divider: {
     height: 1,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: BORDER,
     marginVertical: 16,
   },
   infoBlock: {
@@ -513,18 +519,22 @@ const styles = StyleSheet.create({
   },
   backBtn: {
     marginTop: 24,
-    backgroundColor: PRIMARY,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: PRIMARY,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
   },
   backBtnText: {
-    color: '#FFF',
+    color: PRIMARY,
     fontSize: 16,
     fontWeight: '600',
   },
   cancelBtn: {
-    backgroundColor: '#EF4444',
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.3)',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -532,24 +542,18 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginTop: 8,
     marginBottom: 16,
-    shadowColor: '#EF4444',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    elevation: 3,
   },
   cancelBtnDisabled: {
-    backgroundColor: '#FCA5A5',
-    shadowOpacity: 0.1,
+    backgroundColor: 'rgba(239, 68, 68, 0.05)',
   },
   cancelBtnText: {
-    color: '#FFF',
+    color: '#EF4444',
     fontSize: 16,
     fontWeight: '700',
   },
   cancelCard: {
-    borderColor: '#FEE2E2',
-    backgroundColor: '#FFFDFD',
+    borderColor: 'rgba(239, 68, 68, 0.3)',
+    backgroundColor: 'rgba(239, 68, 68, 0.05)',
   },
   cancelHeaderRow: {
     flexDirection: 'row',
@@ -560,7 +564,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#FEE2E2',
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 14,
@@ -575,12 +579,12 @@ const styles = StyleSheet.create({
   },
   cancelSubtitle: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: TEXT_MUTED,
     marginTop: 2,
   },
   cancelInfoText: {
     fontSize: 13,
-    color: '#6B7280',
+    color: TEXT_MUTED,
     lineHeight: 18,
   },
 });

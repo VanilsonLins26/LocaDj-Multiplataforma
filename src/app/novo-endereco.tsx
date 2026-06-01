@@ -16,6 +16,13 @@ import { Feather } from '@expo/vector-icons';
 import { addressService } from '../services/addressService';
 import { ActivityIndicator, Alert } from 'react-native';
 
+const BG = '#09090B';
+const CARD_BG = '#09090B';
+const BORDER = '#27272A';
+const TEXT_LIGHT = '#FFFFFF';
+const TEXT_MUTED = '#A1A1AA';
+const PRIMARY = '#8B5CF6';
+
 export default function NovoEnderecoScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -119,7 +126,7 @@ export default function NovoEnderecoScreen() {
       {/* Header */}
       <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 12 }]}>
         <TouchableOpacity style={styles.backButton} onPress={goBackOrRedirect} activeOpacity={0.7}>
-          <Feather name="arrow-left" size={24} color="#FFF" />
+          <Feather name="arrow-left" size={24} color={TEXT_LIGHT} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{isEditMode ? 'Editar Endereço' : 'Novo Endereço'}</Text>
         <View style={{ width: 40 }} />
@@ -139,7 +146,7 @@ export default function NovoEnderecoScreen() {
             <TextInput
               style={styles.input}
               placeholder="00000-000"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={TEXT_MUTED}
               keyboardType="numeric"
               value={cep}
               onChangeText={(v) => {
@@ -158,7 +165,7 @@ export default function NovoEnderecoScreen() {
             <TextInput
               style={styles.input}
               placeholder="Ex: Rua das Flores"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={TEXT_MUTED}
               value={rua}
               onChangeText={setRua}
             />
@@ -172,7 +179,7 @@ export default function NovoEnderecoScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="Ex: 123"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={TEXT_MUTED}
                   keyboardType="numeric"
                   value={numero}
                   onChangeText={setNumero}
@@ -185,7 +192,7 @@ export default function NovoEnderecoScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="Apto, Bloco (Opcional)"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={TEXT_MUTED}
                   value={complemento}
                   onChangeText={setComplemento}
                 />
@@ -198,7 +205,7 @@ export default function NovoEnderecoScreen() {
             <TextInput
               style={styles.input}
               placeholder="Ex: Aldeota"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={TEXT_MUTED}
               value={bairro}
               onChangeText={setBairro}
             />
@@ -209,7 +216,7 @@ export default function NovoEnderecoScreen() {
             <TextInput
               style={styles.input}
               placeholder="Ex: Fortaleza - CE"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={TEXT_MUTED}
               value={cidadeEstado}
               onChangeText={setCidadeEstado}
             />
@@ -223,7 +230,7 @@ export default function NovoEnderecoScreen() {
             <TextInput
               style={styles.input}
               placeholder="Ex: Casa, Trabalho, Sítio"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={TEXT_MUTED}
               value={salvarComo}
               onChangeText={setSalvarComo}
             />
@@ -240,9 +247,9 @@ export default function NovoEnderecoScreen() {
             <Switch
               value={isPrimary}
               onValueChange={setIsPrimary}
-              trackColor={{ false: '#E5E7EB', true: '#C7C2FC' }}
-              thumbColor={isPrimary ? '#5245F1' : '#FFF'}
-              ios_backgroundColor="#E5E7EB"
+              trackColor={{ false: BORDER, true: PRIMARY }}
+              thumbColor={TEXT_LIGHT}
+              ios_backgroundColor={BORDER}
             />
           </View>
         </ScrollView>
@@ -256,7 +263,7 @@ export default function NovoEnderecoScreen() {
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator color="#FFF" />
+              <ActivityIndicator color={PRIMARY} />
             ) : (
               <Text style={styles.saveButtonText}>Salvar Endereço</Text>
             )}
@@ -283,15 +290,17 @@ function InputGroup({ label, children }: { label: string; children: React.ReactN
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F4F4F9',
+    backgroundColor: BG,
   },
   header: {
-    backgroundColor: '#5245F1',
+    backgroundColor: CARD_BG,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: BORDER,
   },
   backButton: {
     padding: 8,
@@ -300,7 +309,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFF',
+    color: TEXT_LIGHT,
   },
 
   // Form
@@ -321,13 +330,13 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#4B5563',
+    color: TEXT_LIGHT,
     marginBottom: 8,
   },
   inputContainer: {
-    backgroundColor: '#FFF',
+    backgroundColor: CARD_BG,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: BORDER,
     borderRadius: 12,
     height: 52,
     paddingHorizontal: 16,
@@ -335,26 +344,26 @@ const styles = StyleSheet.create({
   },
   input: {
     fontSize: 15,
-    color: '#1F2937',
+    color: TEXT_LIGHT,
     height: '100%',
   },
 
   // Divider
   sectionDivider: {
     height: 1,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: BORDER,
     marginBottom: 20,
   },
 
   // Toggle card
   toggleCard: {
-    backgroundColor: '#FFF',
+    backgroundColor: CARD_BG,
     borderRadius: 12,
     padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: BORDER,
     marginBottom: 8,
   },
   toggleInfo: {
@@ -364,22 +373,24 @@ const styles = StyleSheet.create({
   toggleTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#111827',
+    color: TEXT_LIGHT,
     marginBottom: 2,
   },
   toggleSubtitle: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: TEXT_MUTED,
   },
 
   // Footer
   footer: {
     paddingHorizontal: 24,
     paddingTop: 16,
-    backgroundColor: '#F4F4F9',
+    backgroundColor: BG,
   },
   saveButton: {
-    backgroundColor: '#5245F1',
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: PRIMARY,
     borderRadius: 100,
     height: 56,
     alignItems: 'center',
@@ -388,6 +399,6 @@ const styles = StyleSheet.create({
   saveButtonText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFF',
+    color: PRIMARY,
   },
 });

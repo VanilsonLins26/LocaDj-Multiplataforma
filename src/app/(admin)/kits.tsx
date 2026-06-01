@@ -17,12 +17,16 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { auth } from '../../config/firebaseConfig';
 
-const PRIMARY = '#5245F1';
-const BG = '#F4F4F9';
-const WHITE = '#FFFFFF';
-const TEXT_DARK = '#040417';
-const TEXT_LIGHT = '#6B7280';
-const BORDER = '#E5E7EB';
+const BG = '#09090B';
+const CARD_BG = '#09090B';
+const BORDER = '#27272A';
+const BORDER_LIGHT = '#3F3F46';
+const TEXT_LIGHT = '#FFFFFF';
+const TEXT_MUTED = '#A1A1AA';
+const PRIMARY = '#8B5CF6';
+const SUCCESS = '#10B981';
+const WARNING = '#F59E0B';
+const DANGER = '#EF4444';
 
 const API_BASE = 'https://locadj.onrender.com/api';
 
@@ -65,25 +69,25 @@ function KitCard({
           />
         ) : (
           <View style={styles.cardImagePlaceholder}>
-            <Feather name="package" size={28} color="#C4BFFA" />
+            <Feather name="package" size={28} color={BORDER_LIGHT} />
           </View>
         )}
         <View
           style={[
             styles.statusBadge,
-            { backgroundColor: isAvailable ? '#DCFCE7' : '#FEF3C7' },
+            { borderColor: isAvailable ? SUCCESS : WARNING },
           ]}
         >
           <View
             style={[
               styles.statusDot,
-              { backgroundColor: isAvailable ? '#16A34A' : '#D97706' },
+              { backgroundColor: isAvailable ? SUCCESS : WARNING },
             ]}
           />
           <Text
             style={[
               styles.statusText,
-              { color: isAvailable ? '#16A34A' : '#D97706' },
+              { color: isAvailable ? SUCCESS : WARNING },
             ]}
           >
             {isAvailable ? 'Disponível' : 'Em manutenção'}
@@ -101,20 +105,20 @@ function KitCard({
           </Text>
           <View style={styles.kitMeta}>
             <View style={styles.metaRow}>
-              <Feather name="dollar-sign" size={13} color={PRIMARY} />
+              <Feather name="dollar-sign" size={13} color={TEXT_MUTED} />
               <Text style={styles.metaText}>
                 {formatPrice(kit.pricePerDay)}/dia
               </Text>
             </View>
             <View style={styles.metaRow}>
-              <Feather name="box" size={13} color={TEXT_LIGHT} />
-              <Text style={[styles.metaText, { color: TEXT_LIGHT }]}>
+              <Feather name="box" size={13} color={TEXT_MUTED} />
+              <Text style={styles.metaText}>
                 {kit.quantity} un.
               </Text>
             </View>
             <View style={styles.metaRow}>
-              <Feather name="repeat" size={13} color={TEXT_LIGHT} />
-              <Text style={[styles.metaText, { color: TEXT_LIGHT }]}>
+              <Feather name="repeat" size={13} color={TEXT_MUTED} />
+              <Text style={styles.metaText}>
                 {kit.rents} loc.
               </Text>
             </View>
@@ -127,8 +131,8 @@ function KitCard({
             onPress={onEdit}
             activeOpacity={0.8}
           >
-            <View style={styles.actionIconWrap}>
-              <Feather name="edit-2" size={16} color="#0EA5E9" />
+            <View style={[styles.actionIconWrap, styles.editIconWrap]}>
+              <Feather name="edit-2" size={16} color={PRIMARY} />
             </View>
           </TouchableOpacity>
           <TouchableOpacity
@@ -137,7 +141,7 @@ function KitCard({
             activeOpacity={0.8}
           >
             <View style={[styles.actionIconWrap, styles.deleteIconWrap]}>
-              <Feather name="trash-2" size={16} color="#EF4444" />
+              <Feather name="trash-2" size={16} color={DANGER} />
             </View>
           </TouchableOpacity>
         </View>
@@ -256,28 +260,28 @@ export default function AdminKitsScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={PRIMARY} />
+      <StatusBar barStyle="light-content" backgroundColor={BG} />
 
       {/* Header */}
-      <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) }]}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) }]}>
         <Text style={styles.headerTitle}>Gerenciar Kits</Text>
       </View>
 
       {/* Search */}
       <View style={styles.searchWrapper}>
         <View style={styles.searchContainer}>
-          <Feather name="search" size={16} color="#9CA3AF" style={styles.searchIcon} />
+          <Feather name="search" size={16} color={TEXT_MUTED} style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
             placeholder="Buscar kit..."
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={TEXT_MUTED}
             value={search}
             onChangeText={setSearch}
             autoCorrect={false}
           />
           {search.length > 0 && (
             <TouchableOpacity onPress={() => setSearch('')} activeOpacity={0.7}>
-              <Feather name="x" size={16} color="#9CA3AF" />
+              <Feather name="x" size={16} color={TEXT_MUTED} />
             </TouchableOpacity>
           )}
         </View>
@@ -309,7 +313,7 @@ export default function AdminKitsScreen() {
         </View>
       ) : error ? (
         <View style={styles.center}>
-          <Feather name="wifi-off" size={48} color="#C4BFFA" />
+          <Feather name="wifi-off" size={48} color={BORDER_LIGHT} />
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity
             style={styles.retryBtn}
@@ -338,14 +342,13 @@ export default function AdminKitsScreen() {
           }
           ListEmptyComponent={
             <View style={styles.center}>
-              <Feather name="package" size={48} color="#C4BFFA" />
+              <Feather name="package" size={48} color={BORDER_LIGHT} />
               <Text style={styles.emptyText}>Nenhum kit encontrado</Text>
             </View>
           }
           ListHeaderComponent={
             <Text style={styles.countText}>
-              {filtered.length} kit{filtered.length !== 1 ? 's' : ''}{' '}
-              encontrado{filtered.length !== 1 ? 's' : ''}
+              {filtered.length} kit{filtered.length !== 1 ? 's' : ''} encontrados
             </Text>
           }
           renderItem={({ item }) => (
@@ -368,7 +371,7 @@ export default function AdminKitsScreen() {
           onPress={handleAdd}
           activeOpacity={0.85}
         >
-          <Ionicons name="add" size={28} color={WHITE} />
+          <Ionicons name="add" size={28} color={TEXT_LIGHT} />
         </TouchableOpacity>
       )}
     </View>
@@ -380,39 +383,32 @@ const styles = StyleSheet.create({
 
   // Header
   header: {
-    backgroundColor: PRIMARY,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingVertical: 16,
   },
   headerTitle: {
-    color: WHITE,
-    fontSize: 18,
+    color: TEXT_LIGHT,
+    fontSize: 20,
     fontWeight: '700',
   },
 
   // Search
-
-  searchWrapper: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 12 },
+  searchWrapper: { paddingHorizontal: 20, paddingBottom: 16 },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: WHITE,
-    borderRadius: 12,
+    backgroundColor: '#18181B',
+    borderRadius: 8,
     paddingHorizontal: 14,
     height: 48,
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: BORDER,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 2,
   },
   searchIcon: { marginRight: 8 },
-  searchInput: { flex: 1, fontSize: 15, color: TEXT_DARK, height: '100%' },
+  searchInput: { flex: 1, fontSize: 15, color: TEXT_LIGHT, height: '100%' },
 
   // Filter pills
   filtersRow: {
@@ -425,35 +421,34 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 100,
-    backgroundColor: WHITE,
-    borderWidth: 1.5,
-    borderColor: BORDER,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: BORDER_LIGHT,
   },
-  pillActive: { backgroundColor: PRIMARY, borderColor: PRIMARY },
-  pillText: { fontSize: 13, fontWeight: '600', color: TEXT_LIGHT },
-  pillTextActive: { color: WHITE },
+  pillActive: { borderColor: PRIMARY },
+  pillText: { fontSize: 13, fontWeight: '600', color: TEXT_MUTED },
+  pillTextActive: { color: PRIMARY },
 
   // List
   listContent: { paddingHorizontal: 20 },
-  countText: { fontSize: 12, color: '#9CA3AF', marginBottom: 12 },
+  countText: { fontSize: 13, color: TEXT_MUTED, marginBottom: 12 },
 
   // Card
   card: {
-    backgroundColor: WHITE,
-    borderRadius: 16,
+    backgroundColor: CARD_BG,
+    borderRadius: 12,
     marginBottom: 16,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: BORDER,
   },
   cardImageWrap: {
     width: '100%',
-    height: 140,
-    backgroundColor: '#F3F4F6',
+    height: 100,
+    backgroundColor: '#18181B',
     position: 'relative',
+    borderBottomWidth: 1,
+    borderBottomColor: BORDER,
   },
   cardImage: { width: '100%', height: '100%' },
   cardImagePlaceholder: {
@@ -467,9 +462,11 @@ const styles = StyleSheet.create({
     left: 12,
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
     borderRadius: 100,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderWidth: 1,
     gap: 5,
   },
   statusDot: {
@@ -488,25 +485,27 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   cardInfo: { flex: 1 },
-  kitName: { fontSize: 15, fontWeight: '700', color: TEXT_DARK, marginBottom: 3 },
-  kitDesc: { fontSize: 12, color: TEXT_LIGHT, lineHeight: 16, marginBottom: 8 },
-  kitMeta: { flexDirection: 'row', gap: 12, flexWrap: 'wrap' },
-  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  metaText: { fontSize: 12, fontWeight: '600', color: PRIMARY },
+  kitName: { fontSize: 15, fontWeight: '700', color: TEXT_LIGHT, marginBottom: 4 },
+  kitDesc: { fontSize: 13, color: TEXT_MUTED, lineHeight: 18, marginBottom: 12 },
+  kitMeta: { flexDirection: 'row', gap: 16, flexWrap: 'wrap' },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  metaText: { fontSize: 12, fontWeight: '500', color: TEXT_MUTED },
 
   // Actions
-  cardActions: { gap: 8 },
+  cardActions: { flexDirection: 'row', gap: 8 },
   editBtn: {},
   deleteBtn: {},
   actionIconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: '#E0F2FE',
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  deleteIconWrap: { backgroundColor: '#FEE2E2' },
+  editIconWrap: { borderColor: PRIMARY },
+  deleteIconWrap: { borderColor: DANGER },
 
   // States
   center: {
@@ -516,22 +515,22 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     gap: 12,
   },
-  loadingText: { fontSize: 14, color: '#9CA3AF', marginTop: 8 },
+  loadingText: { fontSize: 14, color: TEXT_MUTED, marginTop: 8 },
   errorText: {
     fontSize: 14,
-    color: TEXT_LIGHT,
+    color: TEXT_MUTED,
     textAlign: 'center',
     paddingHorizontal: 32,
   },
-  emptyText: { fontSize: 15, color: '#9CA3AF' },
+  emptyText: { fontSize: 15, color: TEXT_MUTED },
   retryBtn: {
     backgroundColor: PRIMARY,
-    borderRadius: 100,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
+    borderRadius: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
     marginTop: 8,
   },
-  retryBtnText: { color: WHITE, fontWeight: '700', fontSize: 14 },
+  retryBtnText: { color: TEXT_LIGHT, fontWeight: '600', fontSize: 14 },
 
   // FAB
   fab: {
@@ -543,10 +542,10 @@ const styles = StyleSheet.create({
     backgroundColor: PRIMARY,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: PRIMARY,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
     elevation: 8,
   },
 });

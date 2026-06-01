@@ -13,12 +13,13 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { auth } from '../../config/firebaseConfig';
 
-const PRIMARY = '#5245F1';
-const BG = '#F4F4F9';
-const WHITE = '#FFFFFF';
-const TEXT_DARK = '#040417';
-const TEXT_LIGHT = '#6B7280';
-const BORDER = '#E5E7EB';
+const BG = '#09090B';
+const CARD_BG = '#09090B';
+const BORDER = '#27272A';
+const TEXT_LIGHT = '#FFFFFF';
+const TEXT_MUTED = '#A1A1AA';
+const PRIMARY = '#8B5CF6';
+const DANGER = '#EF4444';
 
 export default function AdminProfileScreen() {
   const router = useRouter();
@@ -66,10 +67,10 @@ export default function AdminProfileScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={PRIMARY} />
+      <StatusBar barStyle="light-content" backgroundColor={BG} />
 
       {/* Header */}
-      <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) }]}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) }]}>
         <Text style={styles.headerTitle}>Perfil</Text>
       </View>
 
@@ -95,7 +96,7 @@ export default function AdminProfileScreen() {
           {/* Email verification badge */}
           {!emailVerified && (
             <View style={styles.unverifiedBadge}>
-              <Feather name="alert-circle" size={13} color="#EF4444" />
+              <Feather name="alert-circle" size={13} color={DANGER} />
               <Text style={styles.unverifiedText}>E-mail não verificado</Text>
             </View>
           )}
@@ -112,11 +113,11 @@ export default function AdminProfileScreen() {
             onPress={() => router.push('/(admin)/admin-profile-data' as never)}
             activeOpacity={0.7}
           >
-            <View style={[styles.menuIconWrap, { backgroundColor: '#EDEDFF' }]}>
+            <View style={[styles.menuIconWrap, { borderColor: PRIMARY }]}>
               <Feather name="user" size={18} color={PRIMARY} />
             </View>
             <Text style={styles.menuItemText}>Meus dados do administrador</Text>
-            <Feather name="chevron-right" size={18} color="#9CA3AF" />
+            <Feather name="chevron-right" size={18} color={TEXT_MUTED} />
           </TouchableOpacity>
 
           <View style={styles.menuDivider} />
@@ -126,11 +127,11 @@ export default function AdminProfileScreen() {
             onPress={() => router.push('/alterar-senha' as never)}
             activeOpacity={0.7}
           >
-            <View style={[styles.menuIconWrap, { backgroundColor: '#EFF6FF' }]}>
+            <View style={[styles.menuIconWrap, { borderColor: '#3B82F6' }]}>
               <Feather name="lock" size={18} color="#3B82F6" />
             </View>
             <Text style={styles.menuItemText}>Alterar senha</Text>
-            <Feather name="chevron-right" size={18} color="#9CA3AF" />
+            <Feather name="chevron-right" size={18} color={TEXT_MUTED} />
           </TouchableOpacity>
         </View>
 
@@ -144,8 +145,8 @@ export default function AdminProfileScreen() {
           onPress={handleLogout}
           activeOpacity={0.8}
         >
-          <View style={[styles.menuIconWrap, { backgroundColor: '#FEE2E2' }]}>
-            <Feather name="log-out" size={18} color="#EF4444" />
+          <View style={[styles.menuIconWrap, { borderColor: DANGER }]}>
+            <Feather name="log-out" size={18} color={DANGER} />
           </View>
           <Text style={styles.logoutText}>Sair da conta</Text>
         </TouchableOpacity>
@@ -158,15 +159,16 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: BG },
 
   header: {
-    backgroundColor: PRIMARY,
-    paddingHorizontal: 24,
-    paddingBottom: 24,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
   },
   headerTitle: {
-    fontSize: 18,
+    color: TEXT_LIGHT,
+    fontSize: 20,
     fontWeight: '700',
-    color: WHITE,
   },
 
   scrollContent: {
@@ -176,16 +178,13 @@ const styles = StyleSheet.create({
 
   // Profile Card
   profileCard: {
-    backgroundColor: WHITE,
-    borderRadius: 20,
+    backgroundColor: CARD_BG,
+    borderRadius: 12,
     padding: 24,
     alignItems: 'center',
     marginBottom: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: BORDER,
   },
   avatarWrap: {
     marginBottom: 16,
@@ -194,16 +193,11 @@ const styles = StyleSheet.create({
     width: 88,
     height: 88,
     borderRadius: 44,
-    backgroundColor: '#EDEDFF',
-    borderWidth: 4,
-    borderColor: WHITE,
+    backgroundColor: '#18181B',
+    borderWidth: 2,
+    borderColor: PRIMARY,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: PRIMARY,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
   },
   avatarLetter: {
     fontSize: 36,
@@ -213,29 +207,29 @@ const styles = StyleSheet.create({
   profileName: {
     fontSize: 20,
     fontWeight: '700',
-    color: TEXT_DARK,
+    color: TEXT_LIGHT,
     marginBottom: 4,
   },
   profileEmail: {
     fontSize: 14,
-    color: TEXT_LIGHT,
+    color: TEXT_MUTED,
     marginBottom: 12,
   },
   unverifiedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: '#FEF2F2',
+    backgroundColor: 'transparent',
     borderRadius: 100,
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderWidth: 1,
-    borderColor: '#FECACA',
+    borderColor: DANGER,
   },
   unverifiedText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#EF4444',
+    color: DANGER,
   },
 
   // Section Label
@@ -246,21 +240,18 @@ const styles = StyleSheet.create({
   sectionLabelText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#9CA3AF',
+    color: TEXT_MUTED,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
   },
 
   // Menu Card
   menuCard: {
-    backgroundColor: WHITE,
-    borderRadius: 16,
+    backgroundColor: CARD_BG,
+    borderRadius: 12,
     marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: BORDER,
     overflow: 'hidden',
   },
   menuItem: {
@@ -273,41 +264,40 @@ const styles = StyleSheet.create({
   menuIconWrap: {
     width: 40,
     height: 40,
-    borderRadius: 12,
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'transparent',
+    borderWidth: 1,
   },
   menuItemText: {
     flex: 1,
     fontSize: 15,
     fontWeight: '500',
-    color: TEXT_DARK,
+    color: TEXT_LIGHT,
   },
   menuDivider: {
     height: 1,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: BORDER,
     marginHorizontal: 16,
   },
 
   // Logout
   logoutCard: {
-    backgroundColor: WHITE,
-    borderRadius: 16,
+    backgroundColor: CARD_BG,
+    borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 16,
     gap: 14,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: BORDER,
   },
   logoutText: {
     flex: 1,
     fontSize: 15,
     fontWeight: '600',
-    color: '#EF4444',
+    color: DANGER,
   },
 });

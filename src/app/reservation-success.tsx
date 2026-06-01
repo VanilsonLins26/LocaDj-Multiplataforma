@@ -10,7 +10,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 
-const PRIMARY = '#5245F1';
+const BG = '#09090B';
+const CARD_BG = '#09090B';
+const BORDER = '#27272A';
+const TEXT_LIGHT = '#FFFFFF';
+const TEXT_MUTED = '#A1A1AA';
+const PRIMARY = '#8B5CF6';
 
 export default function ReservationSuccessScreen() {
   const router = useRouter();
@@ -130,7 +135,7 @@ export default function ReservationSuccessScreen() {
           activeOpacity={0.85}
           onPress={handleViewReservations}
         >
-          <Feather name="list" size={18} color="#FFF" style={{ marginRight: 8 }} />
+          <Feather name="list" size={18} color={PRIMARY} style={{ marginRight: 8 }} />
           <Text style={styles.btnPrimaryText}>Ver Minhas Reservas</Text>
         </TouchableOpacity>
 
@@ -147,15 +152,17 @@ export default function ReservationSuccessScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F4F4F9' },
+  container: { flex: 1, backgroundColor: BG },
 
   header: {
-    backgroundColor: PRIMARY,
+    backgroundColor: CARD_BG,
     paddingHorizontal: 20,
     paddingBottom: 20,
     alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: BORDER,
   },
-  headerTitle: { fontSize: 16, fontWeight: '700', color: '#FFF' },
+  headerTitle: { fontSize: 16, fontWeight: '700', color: TEXT_LIGHT },
 
   content: {
     flex: 1,
@@ -171,7 +178,7 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: '#EEF2FF',
+    backgroundColor: 'rgba(139, 92, 246, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -192,13 +199,13 @@ const styles = StyleSheet.create({
   successTitle: {
     fontSize: 24,
     fontWeight: '800',
-    color: '#1F2937',
+    color: TEXT_LIGHT,
     textAlign: 'center',
     marginBottom: 8,
   },
   successSub: {
     fontSize: 14,
-    color: '#6B7280',
+    color: TEXT_MUTED,
     textAlign: 'center',
     lineHeight: 20,
     marginBottom: 28,
@@ -206,24 +213,21 @@ const styles = StyleSheet.create({
   },
 
   card: {
-    backgroundColor: '#FFF',
+    backgroundColor: CARD_BG,
     borderRadius: 20,
     padding: 20,
     width: '100%',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 4,
+    borderWidth: 1,
+    borderColor: BORDER,
     marginBottom: 16,
   },
   cardTitle: {
     fontSize: 17,
     fontWeight: '700',
-    color: '#1F2937',
+    color: TEXT_LIGHT,
     marginBottom: 16,
   },
-  divider: { height: 1, backgroundColor: '#F3F4F6', marginBottom: 14 },
+  divider: { height: 1, backgroundColor: BORDER, marginBottom: 14 },
   detailRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -234,32 +238,32 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 8,
-    backgroundColor: '#EEF2FF',
+    backgroundColor: 'rgba(139, 92, 246, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  detailLabel: { fontSize: 11, color: '#9CA3AF', marginBottom: 2, fontWeight: '600' },
-  detailValue: { fontSize: 14, fontWeight: '600', color: '#374151' },
+  detailLabel: { fontSize: 11, color: TEXT_MUTED, marginBottom: 2, fontWeight: '600' },
+  detailValue: { fontSize: 14, fontWeight: '600', color: TEXT_LIGHT },
   totalRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  totalLabel: { fontSize: 14, color: '#6B7280' },
+  totalLabel: { fontSize: 14, color: TEXT_MUTED },
   totalValue: { fontSize: 22, fontWeight: '800', color: PRIMARY },
 
   securityBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#ECFDF5',
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 100,
     borderWidth: 1,
-    borderColor: '#BBF7D0',
+    borderColor: 'rgba(16, 185, 129, 0.2)',
   },
-  securityText: { fontSize: 12, fontWeight: '600', color: '#065F46' },
+  securityText: { fontSize: 12, fontWeight: '600', color: '#10B981' },
 
   footer: {
     paddingHorizontal: 24,
@@ -267,19 +271,21 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   btnPrimary: {
-    backgroundColor: PRIMARY,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: PRIMARY,
     borderRadius: 16,
     height: 52,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  btnPrimaryText: { color: '#FFF', fontSize: 15, fontWeight: '700' },
+  btnPrimaryText: { color: PRIMARY, fontSize: 15, fontWeight: '700' },
   btnSecondary: {
     borderRadius: 16,
     height: 48,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  btnSecondaryText: { color: '#6B7280', fontSize: 14, fontWeight: '600' },
+  btnSecondaryText: { color: TEXT_MUTED, fontSize: 14, fontWeight: '600' },
 });

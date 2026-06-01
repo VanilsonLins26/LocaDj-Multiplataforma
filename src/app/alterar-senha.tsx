@@ -13,6 +13,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 
+const BG = '#09090B';
+const CARD_BG = '#09090B';
+const BORDER = '#27272A';
+const TEXT_LIGHT = '#FFFFFF';
+const TEXT_MUTED = '#A1A1AA';
+const PRIMARY = '#8B5CF6';
+
 // --- Password Requirements ---
 
 interface Requirement {
@@ -48,13 +55,13 @@ function PasswordField({ label, value, onChange, placeholder, hasFocus }: Passwo
           value={value}
           onChangeText={onChange}
           placeholder={placeholder ?? '••••••••'}
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={TEXT_MUTED}
           secureTextEntry={!visible}
           autoCapitalize="none"
           autoCorrect={false}
         />
         <TouchableOpacity onPress={() => setVisible((v) => !v)} activeOpacity={0.7} style={styles.eyeButton}>
-          <Feather name={visible ? 'eye' : 'eye-off'} size={18} color="#9CA3AF" />
+          <Feather name={visible ? 'eye' : 'eye-off'} size={18} color={TEXT_MUTED} />
         </TouchableOpacity>
       </View>
     </View>
@@ -82,7 +89,7 @@ export default function AlterarSenhaScreen() {
       {/* Header */}
       <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 12 }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()} activeOpacity={0.7}>
-          <Feather name="arrow-left" size={24} color="#FFF" />
+          <Feather name="arrow-left" size={24} color={TEXT_LIGHT} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Alterar Senha</Text>
         <View style={{ width: 40 }} />
@@ -166,15 +173,17 @@ export default function AlterarSenhaScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F4F4F9',
+    backgroundColor: BG,
   },
   header: {
-    backgroundColor: '#5245F1',
+    backgroundColor: CARD_BG,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: BORDER,
   },
   backButton: {
     padding: 8,
@@ -183,7 +192,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFF',
+    color: TEXT_LIGHT,
   },
 
   // Form
@@ -197,13 +206,13 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#4B5563',
+    color: TEXT_LIGHT,
     marginBottom: 8,
   },
   inputContainer: {
-    backgroundColor: '#FFF',
+    backgroundColor: CARD_BG,
     borderWidth: 1.5,
-    borderColor: '#E5E7EB',
+    borderColor: BORDER,
     borderRadius: 12,
     height: 52,
     paddingHorizontal: 16,
@@ -211,12 +220,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   inputContainerFocused: {
-    borderColor: '#5245F1',
+    borderColor: PRIMARY,
   },
   input: {
     flex: 1,
     fontSize: 15,
-    color: '#1F2937',
+    color: TEXT_LIGHT,
     height: '100%',
   },
   eyeButton: {
@@ -242,41 +251,43 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   dotGreen: {
-    backgroundColor: '#14D88A',
+    backgroundColor: '#10B981',
   },
   dotGray: {
-    backgroundColor: '#E2E3E8',
+    backgroundColor: BORDER,
   },
   dotRed: {
     backgroundColor: '#EF4444',
   },
   requirementText: {
     fontSize: 13,
-    color: '#9CA3AF',
+    color: TEXT_MUTED,
   },
   requirementTextMet: {
-    color: '#374151',
+    color: TEXT_LIGHT,
   },
 
   // Footer
   footer: {
     paddingHorizontal: 24,
     paddingTop: 16,
-    backgroundColor: '#F4F4F9',
+    backgroundColor: BG,
   },
   saveButton: {
-    backgroundColor: '#5245F1',
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: PRIMARY,
     borderRadius: 100,
     height: 56,
     alignItems: 'center',
     justifyContent: 'center',
   },
   saveButtonDisabled: {
-    backgroundColor: '#C4BFFA',
+    borderColor: TEXT_MUTED,
   },
   saveButtonText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFF',
+    color: PRIMARY,
   },
 });
