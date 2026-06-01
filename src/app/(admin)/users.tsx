@@ -16,23 +16,13 @@ import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { db, auth } from '../../config/firebaseConfig';
 import { useRouter } from 'expo-router';
 
-const PRIMARY = '#5B4EE4';
-const GRAY_100 = '#F3F4F6';
-const GRAY_300 = '#D1D5DB';
-const GRAY_500 = '#6B7280';
-const GRAY_900 = '#111827';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  role: string;
-  avatar?: string;
-  createdAt: any;
-  ratings?: Record<string, { score: number; feedback: string }>;
-  rentalCount?: number;
-}
+const BG = '#09090B';
+const CARD_BG = '#09090B';
+const BORDER = '#27272A';
+const BORDER_LIGHT = '#3F3F46';
+const TEXT_LIGHT = '#FFFFFF';
+const TEXT_MUTED = '#A1A1AA';
+const PRIMARY = '#8B5CF6';
 
 export default function AdminUsersScreen() {
   const router = useRouter();
@@ -94,7 +84,6 @@ export default function AdminUsersScreen() {
         fetchedUsers.forEach(user => { user.rentalCount = 0; });
       }
 
-      // Adicionar usuário fixo de exemplo
       const mockUser: User = {
         id: 'mock-user-123',
         name: 'Usuário Exemplo',
@@ -108,7 +97,7 @@ export default function AdminUsersScreen() {
           'loc2': { score: 8, feedback: 'Entregou um pouco atrasado.' },
           'loc3': { score: 9, feedback: 'Ótimo estado.' }
         },
-        rentalCount: 4, // Exemplo com 4 locações, mas apenas 3 avaliadas
+        rentalCount: 4,
       };
       fetchedUsers.unshift(mockUser);
 
@@ -173,20 +162,20 @@ export default function AdminUsersScreen() {
       </View>
 
       <View style={styles.statsRow}>
-        <View style={[styles.ratingContainer, ratingCount === 0 && styles.ratingContainerEmpty]}>
-          <Ionicons name="star" size={16} color={ratingCount > 0 ? "#F59E0B" : "#9CA3AF"} />
-          <Text style={[styles.ratingText, ratingCount === 0 && styles.ratingTextEmpty]}>
+        <View style={[styles.statBox, ratingCount > 0 ? styles.ratingBoxActive : styles.statBoxEmpty]}>
+          <Ionicons name="star" size={14} color={ratingCount > 0 ? "#EAB308" : TEXT_MUTED} />
+          <Text style={[styles.statText, ratingCount > 0 ? styles.ratingTextActive : styles.statTextEmpty]}>
             Média: {ratingCount > 0 ? (Number.isInteger(avgScore) ? avgScore : avgScore.toFixed(1)) : '-'}
-            <Text style={[styles.ratingCount, ratingCount === 0 && styles.ratingCountEmpty]}>
+            <Text style={[styles.statCount, ratingCount > 0 ? styles.ratingCountActive : styles.statCountEmpty]}>
               {ratingCount > 0 ? `/10 (${ratingCount} ${ratingCount === 1 ? 'avaliação' : 'avaliações'})` : ' (sem avaliações)'}
             </Text>
           </Text>
         </View>
 
         {item.rentalCount !== undefined && (
-          <View style={[styles.rentalContainer, item.rentalCount === 0 && styles.rentalContainerEmpty]}>
-            <Ionicons name="calendar" size={16} color={item.rentalCount > 0 ? "#059669" : "#9CA3AF"} />
-            <Text style={[styles.rentalText, item.rentalCount === 0 && styles.rentalTextEmpty]}>
+          <View style={[styles.statBox, item.rentalCount > 0 ? styles.rentalBoxActive : styles.statBoxEmpty]}>
+            <Ionicons name="calendar-outline" size={14} color={item.rentalCount > 0 ? "#10B981" : TEXT_MUTED} />
+            <Text style={[styles.statText, item.rentalCount > 0 ? styles.rentalTextActive : styles.statTextEmpty]}>
               {item.rentalCount > 0 ? `Já alugou ${item.rentalCount} ${item.rentalCount === 1 ? 'vez' : 'vezes'}` : 'Nunca fez um aluguel'}
             </Text>
           </View>
@@ -210,24 +199,24 @@ export default function AdminUsersScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color={GRAY_900} />
+          <Ionicons name="arrow-back" size={24} color={TEXT_LIGHT} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Usuários</Text>
         <View style={{ width: 40 }} />
       </View>
 
       <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color={GRAY_500} style={styles.searchIcon} />
+        <Ionicons name="search" size={20} color={TEXT_MUTED} style={styles.searchIcon} />
         <TextInput
           style={styles.searchInput}
           placeholder="Buscar por nome ou e-mail"
-          placeholderTextColor={GRAY_300}
+          placeholderTextColor={TEXT_MUTED}
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
         {searchQuery.length > 0 && (
           <TouchableOpacity onPress={() => setSearchQuery('')}>
-            <Ionicons name="close-circle" size={20} color={GRAY_300} />
+            <Ionicons name="close-circle" size={20} color={TEXT_MUTED} />
           </TouchableOpacity>
         )}
       </View>
@@ -243,11 +232,11 @@ export default function AdminUsersScreen() {
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[PRIMARY]} />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={PRIMARY} colors={[PRIMARY]} />
           }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Ionicons name="people-outline" size={60} color={GRAY_300} />
+              <Ionicons name="people-outline" size={60} color={BORDER} />
               <Text style={styles.emptyText}>Nenhum usuário encontrado.</Text>
             </View>
           }
@@ -260,7 +249,7 @@ export default function AdminUsersScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: BG,
   },
   header: {
     flexDirection: 'row',
@@ -269,31 +258,32 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: GRAY_100,
+    borderBottomColor: '#18181B',
   },
   backButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: GRAY_100,
     alignItems: 'center',
     justifyContent: 'center',
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: GRAY_900,
+    color: TEXT_LIGHT,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: GRAY_100,
+    backgroundColor: '#18181B',
     marginHorizontal: 20,
     marginTop: 16,
     marginBottom: 8,
     paddingHorizontal: 12,
-    borderRadius: 12,
-    height: 44,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: BORDER,
+    height: 48,
   },
   searchIcon: {
     marginRight: 8,
@@ -301,7 +291,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 15,
-    color: GRAY_900,
+    color: TEXT_LIGHT,
   },
   centered: {
     flex: 1,
@@ -313,93 +303,18 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
   userCard: {
-    backgroundColor: '#fff',
+    backgroundColor: CARD_BG,
     borderWidth: 1,
-    borderColor: GRAY_100,
-    borderRadius: 16,
+    borderColor: BORDER,
+    borderRadius: 12,
     padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.03,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
+    marginBottom: 16,
   },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
     marginBottom: 12,
-  },
-  ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFBEB',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  ratingContainerEmpty: {
-    backgroundColor: '#F3F4F6',
-  },
-  ratingText: {
-    marginLeft: 6,
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#B45309',
-  },
-  ratingTextEmpty: {
-    color: '#6B7280',
-  },
-  ratingCount: {
-    fontSize: 11,
-    fontWeight: '400',
-    color: '#92400E',
-  },
-  ratingCountEmpty: {
-    color: '#9CA3AF',
-  },
-  rentalContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#D1FAE5',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  rentalContainerEmpty: {
-    backgroundColor: '#F3F4F6',
-  },
-  rentalText: {
-    marginLeft: 6,
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#065F46',
-  },
-  rentalTextEmpty: {
-    color: '#6B7280',
-  },
-  cardActions: {
-    borderTopWidth: 1,
-    borderTopColor: GRAY_100,
-    paddingTop: 12,
-  },
-  detailsButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-  },
-  detailsButtonText: {
-    color: PRIMARY,
-    fontSize: 14,
-    fontWeight: '600',
-    marginRight: 4,
   },
   userInfo: {
     flexDirection: 'row',
@@ -407,13 +322,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#EEF2FF',
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: '#18181B',
+    borderWidth: 1.5,
+    borderColor: PRIMARY,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    marginRight: 16,
     overflow: 'hidden',
   },
   avatarImg: {
@@ -421,7 +338,7 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   avatarText: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
     color: PRIMARY,
   },
@@ -431,39 +348,107 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: GRAY_900,
+    color: TEXT_LIGHT,
     marginBottom: 2,
   },
   userEmail: {
     fontSize: 13,
-    color: GRAY_500,
+    color: TEXT_MUTED,
     marginBottom: 2,
   },
   userPhone: {
     fontSize: 12,
-    color: GRAY_500,
+    color: TEXT_MUTED,
   },
   roleBadge: {
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: 6,
     marginLeft: 8,
   },
   roleUser: {
-    backgroundColor: '#E0F2FE',
+    backgroundColor: '#2E1065', // Dark purple
   },
   roleAdmin: {
-    backgroundColor: '#FEF3C7',
+    backgroundColor: '#78350F', // Dark amber/orange
   },
   roleText: {
     fontSize: 11,
     fontWeight: 'bold',
   },
   roleTextUser: {
-    color: '#0284C7',
+    color: '#C084FC', // Light purple
   },
   roleTextAdmin: {
-    color: '#D97706',
+    color: '#FBBF24', // Light amber
+  },
+  statsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginBottom: 16,
+    paddingLeft: 68, // Align with text instead of avatar
+  },
+  statBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+  },
+  statBoxEmpty: {
+    backgroundColor: 'transparent',
+    borderColor: BORDER_LIGHT,
+  },
+  ratingBoxActive: {
+    backgroundColor: 'transparent',
+    borderColor: 'transparent',
+    paddingHorizontal: 0, // No background or border for active rating
+  },
+  rentalBoxActive: {
+    backgroundColor: 'transparent', // Or very dark green if preferred
+    borderColor: '#059669', // Green border
+  },
+  statText: {
+    marginLeft: 6,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  statTextEmpty: {
+    color: TEXT_MUTED,
+  },
+  ratingTextActive: {
+    color: '#EAB308',
+  },
+  rentalTextActive: {
+    color: '#10B981',
+  },
+  statCount: {
+    fontSize: 11,
+    fontWeight: '400',
+  },
+  statCountEmpty: {
+    color: TEXT_MUTED,
+  },
+  ratingCountActive: {
+    color: TEXT_MUTED,
+  },
+  cardActions: {
+    borderTopWidth: 1,
+    borderTopColor: '#18181B',
+    paddingTop: 12,
+  },
+  detailsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  detailsButtonText: {
+    color: PRIMARY,
+    fontSize: 13,
+    fontWeight: '600',
+    marginRight: 4,
   },
   emptyContainer: {
     alignItems: 'center',
@@ -473,6 +458,6 @@ const styles = StyleSheet.create({
   emptyText: {
     marginTop: 16,
     fontSize: 15,
-    color: GRAY_500,
+    color: TEXT_MUTED,
   },
 });

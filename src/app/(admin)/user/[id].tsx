@@ -17,12 +17,12 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db, auth } from '../../../config/firebaseConfig';
 
-const PRIMARY = '#5B4EE4';
-const GRAY_100 = '#F3F4F6';
-const GRAY_300 = '#D1D5DB';
-const GRAY_500 = '#6B7280';
-const GRAY_900 = '#111827';
-const BG = '#F4F5F7';
+const BG = '#09090B';
+const CARD_BG = '#09090B';
+const BORDER = '#27272A';
+const TEXT_LIGHT = '#FFFFFF';
+const TEXT_MUTED = '#A1A1AA';
+const PRIMARY = '#8B5CF6';
 
 interface User {
   id: string;
@@ -71,7 +71,6 @@ export default function AdminUserDetailsScreen() {
       };
       
       if (user.id === 'mock-user-123') {
-        // Apenas simula a atualização local
         setUser({ ...user, ratings: newRatings });
       } else {
         const userRef = doc(db, 'users', user.id);
@@ -160,7 +159,6 @@ export default function AdminUserDetailsScreen() {
         return;
       }
 
-      // Fetch User Details from Firebase
       const userDocRef = doc(db, 'users', id as string);
       const userSnapshot = await getDoc(userDocRef);
       
@@ -173,7 +171,6 @@ export default function AdminUserDetailsScreen() {
         return;
       }
 
-      // Fetch Reservations
       const currentUser = auth.currentUser;
       if (currentUser && fetchedUser.email) {
         const idToken = await currentUser.getIdToken();
@@ -219,23 +216,23 @@ export default function AdminUserDetailsScreen() {
     const s = (status || '').toUpperCase();
     if (s === 'PENDENTE') {
       return (
-        <View style={[styles.badge, { backgroundColor: '#FEF3C7' }]}>
-          <Text style={[styles.badgeText, { color: '#B45309' }]}>Pendente</Text>
+        <View style={[styles.badge, { backgroundColor: '#78350F', borderColor: '#F59E0B' }]}>
+          <Text style={[styles.badgeText, { color: '#FBBF24' }]}>Pendente</Text>
         </View>
       );
     }
     if (s === 'CONFIRMADA' || s === 'CONCLUIDA') {
       return (
-        <View style={[styles.badge, { backgroundColor: '#D1FAE5' }]}>
-          <Text style={[styles.badgeText, { color: '#065F46' }]}>
+        <View style={[styles.badge, { backgroundColor: '#064E3B', borderColor: '#059669' }]}>
+          <Text style={[styles.badgeText, { color: '#34D399' }]}>
             {s === 'CONCLUIDA' ? 'Concluída' : 'Confirmada'}
           </Text>
         </View>
       );
     }
     return (
-      <View style={[styles.badge, { backgroundColor: '#DBEAFE' }]}>
-        <Text style={[styles.badgeText, { color: '#1D4ED8' }]}>{s.replace('_', ' ')}</Text>
+      <View style={[styles.badge, { backgroundColor: '#1E3A8A', borderColor: '#3B82F6' }]}>
+        <Text style={[styles.badgeText, { color: '#93C5FD' }]}>{s.replace('_', ' ')}</Text>
       </View>
     );
   };
@@ -281,7 +278,7 @@ export default function AdminUserDetailsScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color={GRAY_900} />
+          <Ionicons name="arrow-back" size={24} color={TEXT_LIGHT} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Detalhes do Usuário</Text>
         <View style={{ width: 40 }} />
@@ -302,29 +299,29 @@ export default function AdminUserDetailsScreen() {
               )}
             </View>
             <Text style={styles.userName}>{user.name}</Text>
-            <View style={[styles.roleBadge, user.role === 'admin' ? styles.roleAdmin : styles.roleUser, { alignSelf: 'center', marginBottom: 16 }]}>
+            <View style={[styles.roleBadge, user.role === 'admin' ? styles.roleAdmin : styles.roleUser, { alignSelf: 'center', marginBottom: 24 }]}>
               <Text style={[styles.roleText, user.role === 'admin' ? styles.roleTextAdmin : styles.roleTextUser]}>
                 {user.role === 'admin' ? 'Admin' : 'Usuário'}
               </Text>
             </View>
 
             <View style={styles.infoRow}>
-              <Ionicons name="mail-outline" size={20} color={GRAY_500} />
+              <Ionicons name="mail-outline" size={20} color={PRIMARY} />
               <Text style={styles.infoText}>{user.email}</Text>
             </View>
             <View style={styles.infoRow}>
-              <Ionicons name="call-outline" size={20} color={GRAY_500} />
+              <Ionicons name="call-outline" size={20} color={PRIMARY} />
               <Text style={styles.infoText}>{user.phone || 'Sem telefone cadastrado'}</Text>
             </View>
             {user.cpf && (
               <View style={styles.infoRow}>
-                <Ionicons name="card-outline" size={20} color={GRAY_500} />
+                <Ionicons name="card-outline" size={20} color={PRIMARY} />
                 <Text style={styles.infoText}>CPF: {user.cpf}</Text>
               </View>
             )}
             {user.createdAt && (
-              <View style={styles.infoRow}>
-                <Ionicons name="calendar-outline" size={20} color={GRAY_500} />
+              <View style={[styles.infoRow, { borderBottomWidth: 0, paddingBottom: 0, marginBottom: 0 }]}>
+                <Ionicons name="calendar-outline" size={20} color={PRIMARY} />
                 <Text style={styles.infoText}>Cadastrado em: {formatDateString(user.createdAt)}</Text>
               </View>
             )}
@@ -337,7 +334,7 @@ export default function AdminUserDetailsScreen() {
           
           {reservations.length === 0 ? (
              <View style={styles.emptyContainer}>
-               <Ionicons name="calendar-clear-outline" size={48} color={GRAY_300} />
+               <Ionicons name="calendar-clear-outline" size={48} color={BORDER} />
                <Text style={styles.emptyText}>Nenhuma locação encontrada.</Text>
              </View>
           ) : (
@@ -358,7 +355,7 @@ export default function AdminUserDetailsScreen() {
                       <Image source={{ uri: imageUrl }} style={styles.cardImage} resizeMode="cover" />
                     ) : (
                       <View style={styles.placeholderImage}>
-                        <Ionicons name="image-outline" size={24} color="#9CA3AF" />
+                        <Ionicons name="disc-outline" size={24} color={PRIMARY} />
                       </View>
                     )}
                   </View>
@@ -371,15 +368,14 @@ export default function AdminUserDetailsScreen() {
                       <View style={styles.dateCol}>
                         <Text style={styles.dateLabel}>INÍCIO</Text>
                         <Text style={styles.dateValue}>{startDate}</Text>
+                        <Text style={styles.durationText}>{daily} {daily > 1 ? 'dias' : 'dia'}</Text>
                       </View>
-                      <Feather name="arrow-right" size={14} color="#9CA3AF" />
-                      <View style={styles.dateCol}>
+                      <View style={[styles.dateCol, { alignItems: 'flex-start', paddingLeft: 40 }]}>
                         <Text style={styles.dateLabel}>FIM</Text>
                         <Text style={styles.dateValue}>{endDate}</Text>
                       </View>
                     </View>
                     <View style={styles.reservationFooter}>
-                      <Text style={styles.durationText}>{daily} {daily > 1 ? 'dias' : 'dia'}</Text>
                       <Text style={styles.priceText}>{price}</Text>
                     </View>
                   </View>
@@ -390,11 +386,11 @@ export default function AdminUserDetailsScreen() {
                     {existingRating ? (
                       <View style={styles.existingRatingBox}>
                         <View style={styles.ratingHeaderBox}>
-                          <Ionicons name="star" size={16} color="#F59E0B" />
+                          <Ionicons name="star" size={14} color="#EAB308" />
                           <Text style={styles.ratingScoreText}>Nota: {existingRating.score}/10</Text>
                         </View>
                         {existingRating.feedback ? (
-                          <Text style={styles.ratingFeedbackText}>Feedback: {existingRating.feedback}</Text>
+                          <Text style={styles.ratingFeedbackText}>Feedback: <Text style={{fontStyle: 'italic'}}>{existingRating.feedback}</Text></Text>
                         ) : null}
                       </View>
                     ) : (
@@ -431,7 +427,7 @@ export default function AdminUserDetailsScreen() {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Avaliar Aluguel</Text>
               <TouchableOpacity onPress={() => setRatingModalVisible(false)}>
-                <Ionicons name="close" size={24} color={GRAY_500} />
+                <Ionicons name="close" size={24} color={TEXT_MUTED} />
               </TouchableOpacity>
             </View>
 
@@ -443,7 +439,7 @@ export default function AdminUserDetailsScreen() {
             <TextInput
               style={styles.scoreInput}
               placeholder="Ex: 10"
-              placeholderTextColor={GRAY_300}
+              placeholderTextColor={TEXT_MUTED}
               keyboardType="numeric"
               value={ratingScore}
               onChangeText={setRatingScore}
@@ -454,7 +450,7 @@ export default function AdminUserDetailsScreen() {
             <TextInput
               style={styles.feedbackInput}
               placeholder="Ex: Entregou no prazo, tudo certo."
-              placeholderTextColor={GRAY_300}
+              placeholderTextColor={TEXT_MUTED}
               multiline
               textAlignVertical="top"
               value={ratingFeedback}
@@ -489,11 +485,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: BG,
   },
   errorText: {
     fontSize: 16,
-    color: GRAY_500,
+    color: TEXT_MUTED,
     marginBottom: 16,
   },
   backButtonCenter: {
@@ -512,22 +508,20 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 16,
-    backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: GRAY_100,
+    borderBottomColor: '#18181B',
   },
   backButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: GRAY_100,
     alignItems: 'center',
     justifyContent: 'center',
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: GRAY_900,
+    color: TEXT_LIGHT,
   },
   scrollContent: {
     padding: 20,
@@ -537,26 +531,25 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
-    color: GRAY_900,
-    marginBottom: 12,
+    color: TEXT_LIGHT,
+    marginBottom: 16,
   },
   infoCard: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
+    backgroundColor: CARD_BG,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: BORDER,
     padding: 24,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 3,
   },
   avatarLarge: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#EEF2FF',
+    backgroundColor: '#18181B',
+    borderWidth: 2,
+    borderColor: PRIMARY,
     alignItems: 'center',
     justifyContent: 'center',
     alignSelf: 'center',
@@ -573,32 +566,32 @@ const styles = StyleSheet.create({
     color: PRIMARY,
   },
   userName: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: 'bold',
-    color: GRAY_900,
+    color: TEXT_LIGHT,
     textAlign: 'center',
     marginBottom: 8,
   },
   roleBadge: {
     paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
   roleUser: {
-    backgroundColor: '#E0F2FE',
+    backgroundColor: '#2E1065',
   },
   roleAdmin: {
-    backgroundColor: '#FEF3C7',
+    backgroundColor: '#78350F',
   },
   roleText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: 'bold',
   },
   roleTextUser: {
-    color: '#0284C7',
+    color: '#C084FC',
   },
   roleTextAdmin: {
-    color: '#D97706',
+    color: '#FBBF24',
   },
   infoRow: {
     flexDirection: 'row',
@@ -606,11 +599,11 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: GRAY_100,
+    borderBottomColor: BORDER,
   },
   infoText: {
-    fontSize: 15,
-    color: GRAY_900,
+    fontSize: 14,
+    color: '#D4D4D8',
     marginLeft: 12,
     flex: 1,
   },
@@ -618,31 +611,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 40,
-    backgroundColor: '#fff',
-    borderRadius: 16,
+    backgroundColor: CARD_BG,
+    borderWidth: 1,
+    borderColor: BORDER,
+    borderRadius: 12,
   },
   emptyText: {
     marginTop: 12,
     fontSize: 15,
-    color: GRAY_500,
+    color: TEXT_MUTED,
   },
   reservationCard: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
+    backgroundColor: CARD_BG,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: BORDER,
     marginBottom: 16,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
   },
   reservationMainContent: {
     flexDirection: 'row',
   },
   imageContainer: {
-    width: 100,
-    backgroundColor: '#E5E7EB',
+    width: 80,
+    backgroundColor: '#18181B',
+    borderRightWidth: 1,
+    borderRightColor: BORDER,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   cardImage: {
     width: '100%',
@@ -653,29 +649,30 @@ const styles = StyleSheet.create({
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#18181B',
   },
   reservationDetails: {
     flex: 1,
-    padding: 12,
+    padding: 16,
   },
   reservationHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
+    alignItems: 'flex-start',
+    marginBottom: 12,
   },
   kitName: {
     fontSize: 15,
     fontWeight: 'bold',
-    color: GRAY_900,
+    color: TEXT_LIGHT,
     flex: 1,
     marginRight: 8,
   },
   badge: {
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 8,
+    borderRadius: 6,
+    borderWidth: 1,
   },
   badgeText: {
     fontSize: 10,
@@ -683,11 +680,7 @@ const styles = StyleSheet.create({
   },
   datesBox: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#F9FAFB',
-    padding: 8,
-    borderRadius: 8,
+    alignItems: 'flex-start',
     marginBottom: 12,
   },
   dateCol: {
@@ -696,33 +689,34 @@ const styles = StyleSheet.create({
   dateLabel: {
     fontSize: 10,
     fontWeight: 'bold',
-    color: GRAY_500,
-    marginBottom: 2,
+    color: TEXT_MUTED,
+    marginBottom: 4,
   },
   dateValue: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '500',
-    color: GRAY_900,
-  },
-  reservationFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    color: TEXT_LIGHT,
+    marginBottom: 4,
   },
   durationText: {
     fontSize: 12,
     color: PRIMARY,
     fontWeight: '600',
   },
+  reservationFooter: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+  },
   priceText: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: GRAY_900,
+    color: TEXT_LIGHT,
   },
   ratingSection: {
     borderTopWidth: 1,
-    borderTopColor: GRAY_100,
-    backgroundColor: '#FAFAFA',
+    borderTopColor: BORDER,
+    backgroundColor: '#09090B',
   },
   rateButton: {
     flexDirection: 'row',
@@ -738,32 +732,34 @@ const styles = StyleSheet.create({
   },
   existingRatingBox: {
     padding: 12,
+    paddingHorizontal: 16,
   },
   ratingHeaderBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: 6,
   },
   ratingScoreText: {
-    marginLeft: 4,
+    marginLeft: 6,
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#B45309',
+    color: '#EAB308',
   },
   ratingFeedbackText: {
     fontSize: 13,
-    color: GRAY_500,
-    lineHeight: 18,
+    color: TEXT_MUTED,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.8)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalContent: {
     width: '90%',
-    backgroundColor: '#fff',
+    backgroundColor: '#18181B',
+    borderWidth: 1,
+    borderColor: BORDER,
     borderRadius: 16,
     padding: 24,
   },
@@ -776,55 +772,56 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: GRAY_900,
+    color: TEXT_LIGHT,
   },
   modalSubtitle: {
     fontSize: 14,
-    color: GRAY_500,
+    color: TEXT_MUTED,
     marginBottom: 20,
   },
   inputLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: GRAY_900,
+    color: TEXT_LIGHT,
     marginBottom: 8,
   },
   scoreInput: {
     borderWidth: 1,
-    borderColor: GRAY_300,
+    borderColor: BORDER,
+    backgroundColor: '#09090B',
     borderRadius: 8,
     paddingHorizontal: 12,
     height: 48,
     fontSize: 16,
-    color: GRAY_900,
+    color: TEXT_LIGHT,
     marginBottom: 16,
-    backgroundColor: '#fff',
   },
   feedbackInput: {
     borderWidth: 1,
-    borderColor: GRAY_300,
+    borderColor: BORDER,
+    backgroundColor: '#09090B',
     borderRadius: 8,
     paddingHorizontal: 12,
-    paddingTop: 12,
+    paddingVertical: 12,
     height: 100,
     fontSize: 15,
-    color: GRAY_900,
+    color: TEXT_LIGHT,
     marginBottom: 24,
-    backgroundColor: '#fff',
   },
   saveRatingBtn: {
     backgroundColor: PRIMARY,
     height: 48,
     borderRadius: 8,
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
   },
   saveRatingBtnDisabled: {
-    backgroundColor: GRAY_300,
+    backgroundColor: '#4C1D95',
+    opacity: 0.5,
   },
   saveRatingBtnText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: 'bold',
   },
 });
