@@ -1,20 +1,20 @@
-import React, { useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  ActivityIndicator,
-  TouchableOpacity,
-  Modal,
-  TextInput,
-  Alert,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { doc, getDoc, collection, query, where, getDocs, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { db, auth } from '../../../config/firebaseConfig';
+import { addDoc, collection, doc, getDoc, getDocs, query, serverTimestamp, updateDoc, where } from 'firebase/firestore';
+import React, { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Modal,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { auth, db } from '../../../config/firebaseConfig';
 
 const BG = '#09090B';
 const CARD_BG = '#09090B';
@@ -48,9 +48,9 @@ export default function UserReportScreen() {
   const [user, setUser] = useState<User | null>(null);
   const [reservations, setReservations] = useState<any[]>([]);
   const [ratings, setRatings] = useState<Rating[]>([]);
-  
+
   const [loading, setLoading] = useState(true);
-  
+
   // Modal states
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedResId, setSelectedResId] = useState<number | null>(null);
@@ -65,7 +65,7 @@ export default function UserReportScreen() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      
+
       // 1. Fetch User
       const userRef = doc(db, 'users', userId);
       const userSnap = await getDoc(userRef);
@@ -90,7 +90,7 @@ export default function UserReportScreen() {
       const currentUser = auth.currentUser;
       if (currentUser && userData.email) {
         const idToken = await currentUser.getIdToken();
-        const headers = { 
+        const headers = {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${idToken}`
         };
@@ -119,12 +119,12 @@ export default function UserReportScreen() {
     if (!isoString) return '--/--/----';
     const split = isoString.split('T');
     if (split.length > 0) {
-       const datePart = split[0];
-       const parts = datePart.split('-');
-       if (parts.length === 3) {
-         const [y, m, d] = parts;
-         return `${d}/${m}/${y}`;
-       }
+      const datePart = split[0];
+      const parts = datePart.split('-');
+      if (parts.length === 3) {
+        const [y, m, d] = parts;
+        return `${d}/${m}/${y}`;
+      }
     }
     return isoString;
   };
@@ -138,7 +138,7 @@ export default function UserReportScreen() {
 
   const submitRating = async () => {
     if (!selectedResId || !user) return;
-    
+
     const ratingNum = parseFloat(ratingInput);
     if (isNaN(ratingNum) || ratingNum < 0 || ratingNum > 10) {
       Alert.alert('Atenção', 'Digite uma nota válida entre 0 e 10.');
@@ -151,7 +151,7 @@ export default function UserReportScreen() {
 
     try {
       setSubmitting(true);
-      
+
       // Save rating
       const newRatingRef = await addDoc(collection(db, 'ratings'), {
         userId: user.id,
@@ -178,7 +178,7 @@ export default function UserReportScreen() {
         generalRating: newGeneralRating,
         ratingCount: newRatingCount
       });
-      
+
       setRatings([...ratings, {
         id: newRatingRef.id,
         reservationId: selectedResId,
@@ -201,7 +201,7 @@ export default function UserReportScreen() {
     const kitName = item.kit?.name || item.kitName || `Reserva #${item.id}`;
     const startDate = item.startDateTime ? formatVisibleDate(item.startDateTime) : (item.startDate || '--/--/----');
     const endDate = item.endDateTime ? formatVisibleDate(item.endDateTime) : (item.endDate || '--/--/----');
-    
+
     const existingRating = ratings.find(r => r.reservationId === item.id);
 
     return (
@@ -229,7 +229,7 @@ export default function UserReportScreen() {
             <Text style={styles.feedbackText}>"{existingRating.feedback}"</Text>
           </View>
         ) : (
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.rateButton}
             onPress={() => openRatingModal(item.id)}
             activeOpacity={0.8}
@@ -336,8 +336,8 @@ export default function UserReportScreen() {
               onChangeText={setFeedbackInput}
             />
 
-            <TouchableOpacity 
-              style={[styles.saveButton, submitting && { opacity: 0.7 }]} 
+            <TouchableOpacity
+              style={[styles.saveButton, submitting && { opacity: 0.7 }]}
               onPress={submitRating}
               disabled={submitting}
             >

@@ -12,7 +12,9 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as Linking from 'expo-linking';
 import { auth } from '../../config/firebaseConfig';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const BG = '#09090B';
 const CARD_BG = '#09090B';
@@ -38,6 +40,71 @@ export default function ReservationDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [canceling, setCanceling] = useState(false);
+  const [loadingPay, setLoadingPay] = useState(false);
+
+  const handlePayNow = async () => {
+    setLoadingPay(true);
+    try {
+      await AsyncStorage.setItem('latest_checkout_reservation_id', String(id));
+      const currentUser = auth.currentUser;
+      const token = await currentUser?.getIdToken();
+
+      const cleanUrl = (url: string) => {
+        if (url.includes(':///')) {
+          return url.replace(':///', '://localhost/');
+        }
+        return url;
+      };
+
+      const successUrl = cleanUrl(Linking.createURL('/payment/approved'));
+      const failureUrl = cleanUrl(Linking.createURL('/payment/failed'));
+      const pendingUrl = cleanUrl(Linking.createURL('/payment/pending'));
+
+      const checkoutResp = await fetch('https://locadj.onrender.com/api/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({
+          reservationId: Number(id),
+          successUrl: successUrl,
+          failureUrl: failureUrl,
+          pendingUrl: pendingUrl
+        })
+      });
+
+      if (checkoutResp.ok) {
+        const checkoutData = await checkoutResp.text();
+        try {
+          const jsonData = JSON.parse(checkoutData);
+          if (jsonData?.redirectUrl) {
+            Linking.openURL(jsonData.redirectUrl);
+            return;
+          } else if (jsonData?.sandbox_init_point || jsonData?.init_point) {
+            Linking.openURL(jsonData.sandbox_init_point || jsonData.init_point);
+            return;
+          } else if (jsonData?.url) {
+            Linking.openURL(jsonData.url);
+            return;
+          }
+        } catch {
+          if (checkoutData.startsWith('http')) {
+            Linking.openURL(checkoutData);
+            return;
+          }
+        }
+        Alert.alert('Erro', 'Não foi possível obter o link de pagamento do Mercado Pago.');
+      } else {
+        Alert.alert('Erro', 'O backend do Checkout retornou erro.');
+      }
+    } catch (e) {
+      console.warn(e);
+      Alert.alert('Erro', 'Verifique sua conexão.');
+    } finally {
+      setLoadingPay(false);
+    }
+  };
 
   useEffect(() => {
     fetchReservationDetails();
@@ -65,6 +132,7 @@ export default function ReservationDetailScreen() {
       }
       
       const data = await resp.json();
+      console.log('RESERVATION DATA:', JSON.stringify(data, null, 2));
       setReservation(data);
     } catch (err: any) {
       console.error(err);
@@ -149,7 +217,7 @@ export default function ReservationDetailScreen() {
   const imageUrl = reservation.kit?.imageUrl;
   const daily = reservation.daily || 1;
   const price = reservation.totalAmount ? `R$ ${reservation.totalAmount.toFixed(2).replace('.', ',')}` : 'R$ 0,00';
-  const paymentMethod = reservation.paymentMethod || 'A combinar';
+  const paymentMethod = reservation.paymentMethod || (currentStatus !== 'PENDENTE' ? 'Mercado Pago' : 'A combinar');
   const address = reservation.deliveryAddress || 'Retirada no local / Não informado';
 
   const formatVisibleDateWithTime = (isoString?: string) => {
@@ -314,6 +382,25 @@ export default function ReservationDetailScreen() {
             <Text style={styles.infoValue} numberOfLines={2}>{address}</Text>
           </View>
         </View>
+
+        {/* Pay Now Button */}
+        {currentStatus === 'PENDENTE' && (
+          <TouchableOpacity
+            style={[styles.payNowBtn, loadingPay && styles.payNowBtnDisabled]}
+            onPress={handlePayNow}
+            disabled={loadingPay}
+            activeOpacity={0.8}
+          >
+            {loadingPay ? (
+              <ActivityIndicator size="small" color="#FFF" />
+            ) : (
+              <>
+                <Ionicons name="card-outline" size={20} color="#FFF" style={{ marginRight: 8 }} />
+                <Text style={styles.payNowBtnText}>Pagar Agora com Mercado Pago</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        )}
 
         {/* Cancel Reservation Button */}
         {(currentStatus === 'PENDENTE' || currentStatus === 'CONFIRMADA') && (
@@ -586,5 +673,25 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: TEXT_MUTED,
     lineHeight: 18,
+  },
+  payNowBtn: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: PRIMARY,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: 12,
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  payNowBtnDisabled: {
+    borderColor: '#3F3F46',
+  },
+  payNowBtnText: {
+    color: PRIMARY,
+    fontSize: 16,
+    fontWeight: '700',
   },
 });

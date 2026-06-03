@@ -1,21 +1,21 @@
+import { Feather, Ionicons } from '@expo/vector-icons';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { collection, doc, getDocs, query, updateDoc, where } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
   ActivityIndicator,
-  ScrollView,
-  Image,
   Alert,
+  Image,
   Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
   TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Ionicons, Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { auth, db } from '../../../config/firebaseConfig';
-import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
 
 const BG = '#09090B';
 const CARD_BG = '#09090B';
@@ -36,7 +36,7 @@ export default function AdminReservationDetailScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  
+
   const [reservation, setReservation] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
@@ -55,13 +55,13 @@ export default function AdminReservationDetailScreen() {
   const fetchReservationDetails = async (silent = false) => {
     if (!silent) setLoading(true);
     setError('');
-    
+
     try {
       const currentUser = auth.currentUser;
       if (!currentUser) throw new Error("Usuário não autenticado.");
-      
+
       const idToken = await currentUser.getIdToken();
-      const headers = { 
+      const headers = {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${idToken}`,
         'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -71,12 +71,13 @@ export default function AdminReservationDetailScreen() {
 
       const BASE_URL = `https://locadj.onrender.com/api/reservations/${id}`;
       const resp = await fetch(BASE_URL, { headers });
-      
+
       if (!resp.ok) {
         throw new Error('Reserva não encontrada.');
       }
-      
+
       const data = await resp.json();
+      console.log('ADMIN RESERVATION DATA:', JSON.stringify(data, null, 2));
       setReservation(data);
     } catch (err: any) {
       console.error(err);
@@ -91,7 +92,7 @@ export default function AdminReservationDetailScreen() {
     try {
       const currentUser = auth.currentUser;
       const idToken = currentUser ? await currentUser.getIdToken() : '';
-      const headers = { 
+      const headers = {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${idToken}`
       };
@@ -143,21 +144,21 @@ export default function AdminReservationDetailScreen() {
     setSavingRating(true);
     try {
       const userEmail = reservation.user.email.toLowerCase();
-      
+
       const usersRef = collection(db, 'users');
       const q = query(usersRef, where('email', '==', userEmail));
       const querySnapshot = await getDocs(q);
-      
+
       if (querySnapshot.empty) {
         Alert.alert('Aviso', 'Usuário não encontrado no banco de dados. A avaliação não foi salva, mas a reserva foi concluída.');
         setRatingModalVisible(false);
         router.navigate('/(admin)/reservations');
         return;
       }
-      
+
       const userDoc = querySnapshot.docs[0];
       const userData = userDoc.data();
-      
+
       const newRatings = {
         ...(userData.ratings || {}),
         [reservation.id]: {
@@ -166,16 +167,16 @@ export default function AdminReservationDetailScreen() {
           createdAt: new Date().toISOString()
         }
       };
-      
+
       const userDocRef = doc(db, 'users', userDoc.id);
       await updateDoc(userDocRef, { ratings: newRatings });
-      
+
       Alert.alert('Sucesso', 'Reserva finalizada e usuário avaliado!');
       setRatingModalVisible(false);
       setRatingScore('');
       setRatingFeedback('');
       router.navigate('/(admin)/reservations');
-      
+
     } catch (error) {
       console.error('Erro ao salvar avaliação:', error);
       Alert.alert('Erro', 'Falha ao salvar a avaliação.');
@@ -211,9 +212,9 @@ export default function AdminReservationDetailScreen() {
   const pricePerDay = reservation.kit?.pricePerDay ? `R$ ${reservation.kit.pricePerDay.toFixed(2).replace('.', ',')}` : 'R$ 0,00';
   const daily = reservation.daily || 1;
   const totalAmount = reservation.totalAmount ? `R$ ${reservation.totalAmount.toFixed(2).replace('.', ',')}` : 'R$ 0,00';
-  const paymentMethod = reservation.paymentMethod || 'A combinar';
-  const address = reservation.deliveryAddress || 'Retirada no local / Não informado';
   const currentStatus = reservation.status || 'PENDENTE';
+  const paymentMethod = reservation.paymentMethod || (currentStatus !== 'PENDENTE' ? 'Mercado Pago' : 'A combinar');
+  const address = reservation.deliveryAddress || 'Retirada no local / Não informado';
 
   const formatVisibleDateWithTime = (isoString?: string) => {
     if (!isoString) return '--/--/---- às --:--';
@@ -221,13 +222,13 @@ export default function AdminReservationDetailScreen() {
     const dateObj = new Date(str);
     if (isNaN(dateObj.getTime())) return isoString;
     const brtDate = new Date(dateObj.getTime() - (3 * 60 * 60 * 1000));
-    
+
     const d = String(brtDate.getUTCDate()).padStart(2, '0');
     const m = String(brtDate.getUTCMonth() + 1).padStart(2, '0');
     const y = brtDate.getUTCFullYear();
     const hs = String(brtDate.getUTCHours()).padStart(2, '0');
     const ms = String(brtDate.getUTCMinutes()).padStart(2, '0');
-    
+
     return `${d}/${m}/${y} às ${hs}:${ms}`;
   };
 
@@ -244,11 +245,11 @@ export default function AdminReservationDetailScreen() {
   };
 
   const getStatusDisplay = () => {
-    switch(currentStatus) {
+    switch (currentStatus) {
       case 'PENDENTE': return { text: 'Reserva Pendente', bg: 'rgba(245, 158, 11, 0.15)', color: '#FBBF24', icon: 'clock' };
       case 'CONFIRMADA': return { text: 'Reserva Aprovada', bg: 'rgba(16, 185, 129, 0.15)', color: '#10B981', icon: 'check-circle' };
       case 'SAIU_PARA_ENTREGA': return { text: 'Saiu para Entrega', bg: 'rgba(59, 130, 246, 0.15)', color: '#3B82F6', icon: 'truck' };
-      case 'EM_ADAMENTO': 
+      case 'EM_ADAMENTO':
       case 'IN_PROGRESS': return { text: 'Em Andamento', bg: 'rgba(168, 85, 247, 0.15)', color: '#A855F7', icon: 'play-circle' };
       case 'CONCLUIDA': return { text: 'Concluída', bg: 'rgba(156, 163, 175, 0.15)', color: '#9CA3AF', icon: 'check-square' };
       default: return { text: currentStatus, bg: 'rgba(156, 163, 175, 0.15)', color: '#9CA3AF', icon: 'info' };
@@ -268,7 +269,7 @@ export default function AdminReservationDetailScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        
+
         {/* Status Tracker */}
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Status do Aluguel</Text>
@@ -278,7 +279,7 @@ export default function AdminReservationDetailScreen() {
               const isCompleted = index < activeStep;
               const isActive = index === activeStep;
               const color = getStepColor(index);
-              
+
               const statusLog = (reservation.statusLogs || []).find((log: any) => log.status === step.key);
               const statusDate = statusLog ? formatVisibleDateWithTime(statusLog.date) : null;
 
@@ -391,7 +392,7 @@ export default function AdminReservationDetailScreen() {
             <Text style={[styles.sectionTitle, { marginTop: 8 }]}>AÇÕES DO ADMINISTRADOR</Text>
             <View style={styles.actionsContainer}>
               {(currentStatus === 'PENDENTE' || currentStatus === 'CONFIRMADA') && (
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={[styles.actionBtn, styles.btnBlue]}
                   onPress={() => updateStatus('left-for-delivery', 'Status atualizado para: Saiu para Entrega')}
                   disabled={updating}
@@ -402,7 +403,7 @@ export default function AdminReservationDetailScreen() {
               )}
 
               {currentStatus === 'SAIU_PARA_ENTREGA' && (
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={[styles.actionBtn, styles.btnPurple]}
                   onPress={() => updateStatus('in-progress', 'Status atualizado para: Em Andamento')}
                   disabled={updating}
@@ -413,7 +414,7 @@ export default function AdminReservationDetailScreen() {
               )}
 
               {(currentStatus === 'EM_ADAMENTO' || currentStatus === 'IN_PROGRESS') && (
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={[styles.actionBtn, styles.btnGreen]}
                   onPress={() => updateStatus('completed', 'Reserva finalizada com sucesso')}
                   disabled={updating}
@@ -473,7 +474,7 @@ export default function AdminReservationDetailScreen() {
               onChangeText={setRatingFeedback}
             />
 
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.saveRatingBtn, (!ratingScore || savingRating) && styles.saveRatingBtnDisabled]}
               onPress={handleSaveRating}
               disabled={!ratingScore || savingRating}
@@ -506,7 +507,7 @@ const styles = StyleSheet.create({
   headerBackBtn: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center', backgroundColor: 'transparent', borderWidth: 1, borderColor: BORDER },
   headerTitle: { flex: 1, textAlign: 'center', fontSize: 17, fontWeight: '700', color: TEXT_LIGHT },
   scrollContent: { padding: 20, paddingBottom: 40 },
-  
+
   stepperContainer: { paddingLeft: 4, marginTop: 12 },
   stepItem: { flexDirection: 'row', minHeight: 50 },
   stepIndicatorCol: { alignItems: 'center', width: 24, marginRight: 12 },
@@ -517,17 +518,17 @@ const styles = StyleSheet.create({
   stepLabel: { fontSize: 14, fontWeight: '600', marginTop: -2 },
   stepDateLabel: { fontSize: 12, color: TEXT_MUTED, marginTop: 2 },
   stepSubLabel: { fontSize: 12, color: PRIMARY, marginTop: 4 },
-  
+
   sectionTitle: { fontSize: 11, fontWeight: '700', color: TEXT_MUTED, letterSpacing: 0.5, marginBottom: 8, marginLeft: 4 },
   card: { backgroundColor: CARD_BG, borderRadius: 16, padding: 16, marginBottom: 24, borderWidth: 1, borderColor: BORDER },
-  
+
   kitRow: { flexDirection: 'row', alignItems: 'center' },
   kitImage: { width: 48, height: 48, borderRadius: 10, marginRight: 12 },
   kitImagePlaceholder: { width: 48, height: 48, borderRadius: 10, backgroundColor: '#18181B', marginRight: 12 },
   kitInfo: { flex: 1 },
   kitName: { fontSize: 15, fontWeight: '700', color: TEXT_LIGHT, marginBottom: 4 },
   kitDetails: { fontSize: 13, color: TEXT_MUTED },
-  
+
   dateRow: { flexDirection: 'row', marginBottom: 16 },
   dateIconWrapper: { width: 24, alignItems: 'center', marginRight: 12 },
   dateIconCircle: { width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center', zIndex: 2 },
@@ -535,11 +536,11 @@ const styles = StyleSheet.create({
   dateTextWrapper: { flex: 1, paddingBottom: 8 },
   dateLabel: { fontSize: 12, color: TEXT_MUTED, marginBottom: 2 },
   dateValue: { fontSize: 14, fontWeight: '700', color: TEXT_LIGHT },
-  
+
   divider: { height: 1, backgroundColor: BORDER, marginVertical: 12 },
   addressLabel: { fontSize: 11, fontWeight: '600', color: TEXT_MUTED, marginBottom: 4 },
   addressValue: { fontSize: 14, fontWeight: '600', color: PRIMARY },
-  
+
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
   summaryLabel: { fontSize: 13, color: TEXT_MUTED },
   summaryValue: { fontSize: 13, fontWeight: '500', color: TEXT_LIGHT },
@@ -547,7 +548,7 @@ const styles = StyleSheet.create({
   totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   totalLabel: { fontSize: 14, fontWeight: '700', color: TEXT_LIGHT },
   totalValue: { fontSize: 18, fontWeight: '800', color: PRIMARY },
-  
+
   actionsContainer: { gap: 12 },
   actionBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 14, borderRadius: 12, borderWidth: 1 },
   btnBlue: { backgroundColor: 'transparent', borderColor: '#3B82F6' },

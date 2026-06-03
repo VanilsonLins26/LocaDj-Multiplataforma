@@ -79,7 +79,7 @@ export default function SuporteScreen() {
 
   const handleFAQPress = (item: any) => {
     router.push({
-      pathname: `/faq/${item.slug}`,
+      pathname: `/faq/${item.slug}` as any,
       params: { 
         question: item.question,
         answer: item.answer,
