@@ -1,21 +1,21 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ActivityIndicator,
-  TouchableOpacity,
-  ScrollView,
-  Image,
-  Modal,
-  TextInput,
-  Alert,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons, Feather } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { db, auth } from '../../../config/firebaseConfig';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { auth, db } from '../../../config/firebaseConfig';
 
 const BG = '#09090B';
 const CARD_BG = '#09090B';
@@ -39,7 +39,7 @@ interface User {
 export default function AdminUserDetailsScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
-  
+
   const [user, setUser] = useState<User | null>(null);
   const [reservations, setReservations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,7 +59,7 @@ export default function AdminUserDetailsScreen() {
       Alert.alert('Nota Inválida', 'Por favor, insira uma nota numérica entre 0 e 10.');
       return;
     }
-    
+
     setSavingRating(true);
     try {
       const newRatings = {
@@ -70,7 +70,7 @@ export default function AdminUserDetailsScreen() {
           createdAt: new Date().toISOString()
         }
       };
-      
+
       if (user.id === 'mock-user-123') {
         setUser({ ...user, ratings: newRatings });
       } else {
@@ -78,7 +78,7 @@ export default function AdminUserDetailsScreen() {
         await updateDoc(userRef, { ratings: newRatings });
         setUser({ ...user, ratings: newRatings });
       }
-      
+
       setRatingModalVisible(false);
       setRatingScore('');
       setRatingFeedback('');
@@ -110,7 +110,7 @@ export default function AdminUserDetailsScreen() {
             'loc3': { score: 9, feedback: 'Ótimo estado.', createdAt: new Date().toISOString() }
           }
         };
-        
+
         const mockReservations = [
           {
             id: 'loc1',
@@ -162,7 +162,7 @@ export default function AdminUserDetailsScreen() {
 
       const userDocRef = doc(db, 'users', id as string);
       const userSnapshot = await getDoc(userDocRef);
-      
+
       let fetchedUser = null;
       if (userSnapshot.exists()) {
         fetchedUser = { id: userSnapshot.id, ...userSnapshot.data() } as User;
@@ -175,7 +175,7 @@ export default function AdminUserDetailsScreen() {
       const currentUser = auth.currentUser;
       if (currentUser && fetchedUser.email) {
         const idToken = await currentUser.getIdToken();
-        const headers: Record<string, string> = { 
+        const headers: Record<string, string> = {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${idToken}`,
           'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -186,7 +186,7 @@ export default function AdminUserDetailsScreen() {
         const BASE_URL = 'https://locadj.onrender.com/api/reservations/all';
         const listResp = await fetch(BASE_URL, { headers });
         let allData: any[] = [];
-        
+
         if (listResp.ok) {
           const json = await listResp.json();
           allData = Array.isArray(json) ? json : (json.value ?? []);
@@ -197,7 +197,7 @@ export default function AdminUserDetailsScreen() {
           .filter((item) => {
             if (!item || !item.id || !item.user?.email) return false;
             if (item.user.email.toLowerCase() !== fetchedUser.email.toLowerCase()) return false;
-            
+
             const idStr = String(item.id);
             if (uniqueIds.has(idStr)) return false;
             uniqueIds.add(idStr);
@@ -327,8 +327,8 @@ export default function AdminUserDetailsScreen() {
               <View style={styles.reputationTexts}>
                 <Text style={styles.reputationTitle}>Reputação do Cliente</Text>
                 <Text style={styles.reputationSubtitle}>
-                  {ratingCount > 0 
-                    ? `Nota Média: ${Number.isInteger(avgScore) ? avgScore : avgScore.toFixed(1)}/10 (${ratingCount} avaliações)` 
+                  {ratingCount > 0
+                    ? `Nota Média: ${Number.isInteger(avgScore) ? avgScore : avgScore.toFixed(1)}/10 (${ratingCount} avaliações)`
                     : 'Nenhuma avaliação recebida ainda.'}
                 </Text>
               </View>
@@ -359,7 +359,7 @@ export default function AdminUserDetailsScreen() {
 
         {/* Abas de Navegação */}
         <View style={styles.tabsContainer}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.tabButton, activeTab === 'locacoes' && styles.tabButtonActive]}
             onPress={() => setActiveTab('locacoes')}
           >
@@ -367,7 +367,7 @@ export default function AdminUserDetailsScreen() {
               Locações ({reservations.length})
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.tabButton, activeTab === 'feedbacks' && styles.tabButtonActive]}
             onPress={() => setActiveTab('feedbacks')}
           >
@@ -381,89 +381,89 @@ export default function AdminUserDetailsScreen() {
         {activeTab === 'locacoes' && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Histórico de Locações</Text>
-          
-          {reservations.length === 0 ? (
-             <View style={styles.emptyContainer}>
-               <Ionicons name="calendar-clear-outline" size={48} color={BORDER} />
-               <Text style={styles.emptyText}>Nenhuma locação encontrada.</Text>
-             </View>
-          ) : (
-            reservations.map((item) => {
-              const kitName = item.kit?.name || item.kitName || 'Kit sem nome';
-              const startDate = item.startDateTime ? formatVisibleDate(item.startDateTime) : (item.startDate || '--/--/----');
-              const endDate = item.endDateTime ? formatVisibleDate(item.endDateTime) : (item.endDate || '--/--/----');
-              const price = item.totalAmount ? `R$ ${item.totalAmount.toFixed(2).replace('.', ',')}` : 'R$ 0,00';
-              const daily = item.daily || 1;
-              const imageUrl = item.kit?.imageUrl;
-              const existingRating = user?.ratings?.[String(item.id)];
 
-              return (
-                <View key={item.id} style={styles.reservationCard}>
-                  <View style={styles.reservationMainContent}>
-                    <View style={styles.imageContainer}>
-                    {imageUrl ? (
-                      <Image source={{ uri: imageUrl }} style={styles.cardImage} resizeMode="cover" />
-                    ) : (
-                      <View style={styles.placeholderImage}>
-                        <Ionicons name="disc-outline" size={24} color={PRIMARY} />
+            {reservations.length === 0 ? (
+              <View style={styles.emptyContainer}>
+                <Ionicons name="calendar-clear-outline" size={48} color={BORDER} />
+                <Text style={styles.emptyText}>Nenhuma locação encontrada.</Text>
+              </View>
+            ) : (
+              reservations.map((item) => {
+                const kitName = item.kit?.name || item.kitName || 'Kit sem nome';
+                const startDate = item.startDateTime ? formatVisibleDate(item.startDateTime) : (item.startDate || '--/--/----');
+                const endDate = item.endDateTime ? formatVisibleDate(item.endDateTime) : (item.endDate || '--/--/----');
+                const price = item.totalAmount ? `R$ ${item.totalAmount.toFixed(2).replace('.', ',')}` : 'R$ 0,00';
+                const daily = item.daily || 1;
+                const imageUrl = item.kit?.imageUrl;
+                const existingRating = user?.ratings?.[String(item.id)];
+
+                return (
+                  <View key={item.id} style={styles.reservationCard}>
+                    <View style={styles.reservationMainContent}>
+                      <View style={styles.imageContainer}>
+                        {imageUrl ? (
+                          <Image source={{ uri: imageUrl }} style={styles.cardImage} resizeMode="cover" />
+                        ) : (
+                          <View style={styles.placeholderImage}>
+                            <Ionicons name="disc-outline" size={24} color={PRIMARY} />
+                          </View>
+                        )}
+                      </View>
+                      <View style={styles.reservationDetails}>
+                        <View style={styles.reservationHeader}>
+                          <Text style={styles.kitName} numberOfLines={1}>{kitName}</Text>
+                          {renderBadge(item.status || 'PENDENTE')}
+                        </View>
+                        <View style={styles.datesBox}>
+                          <View style={styles.dateCol}>
+                            <Text style={styles.dateLabel}>INÍCIO</Text>
+                            <Text style={styles.dateValue}>{startDate}</Text>
+                            <Text style={styles.durationText}>{daily} {daily > 1 ? 'dias' : 'dia'}</Text>
+                          </View>
+                          <View style={[styles.dateCol, { alignItems: 'flex-start', paddingLeft: 40 }]}>
+                            <Text style={styles.dateLabel}>FIM</Text>
+                            <Text style={styles.dateValue}>{endDate}</Text>
+                          </View>
+                        </View>
+                        <View style={styles.reservationFooter}>
+                          <Text style={styles.priceText}>{price}</Text>
+                        </View>
+                      </View>
+                    </View>
+
+                    {/* Rating Section */}
+                    {(existingRating || item.status === 'CONCLUIDA') && (
+                      <View style={styles.ratingSection}>
+                        {existingRating ? (
+                          <View style={styles.existingRatingBox}>
+                            <View style={styles.ratingHeaderBox}>
+                              <Ionicons name="star" size={14} color="#EAB308" />
+                              <Text style={styles.ratingScoreText}>Nota: {existingRating.score}/10</Text>
+                            </View>
+                            {existingRating.feedback ? (
+                              <Text style={styles.ratingFeedbackText}>Feedback: <Text style={{ fontStyle: 'italic' }}>{existingRating.feedback}</Text></Text>
+                            ) : null}
+                          </View>
+                        ) : (
+                          <TouchableOpacity
+                            style={styles.rateButton}
+                            onPress={() => {
+                              setSelectedReservation(item);
+                              setRatingScore('');
+                              setRatingFeedback('');
+                              setRatingModalVisible(true);
+                            }}
+                          >
+                            <Ionicons name="star-outline" size={16} color={PRIMARY} />
+                            <Text style={styles.rateButtonText}>Avaliar Locação</Text>
+                          </TouchableOpacity>
+                        )}
                       </View>
                     )}
                   </View>
-                  <View style={styles.reservationDetails}>
-                    <View style={styles.reservationHeader}>
-                      <Text style={styles.kitName} numberOfLines={1}>{kitName}</Text>
-                      {renderBadge(item.status || 'PENDENTE')}
-                    </View>
-                    <View style={styles.datesBox}>
-                      <View style={styles.dateCol}>
-                        <Text style={styles.dateLabel}>INÍCIO</Text>
-                        <Text style={styles.dateValue}>{startDate}</Text>
-                        <Text style={styles.durationText}>{daily} {daily > 1 ? 'dias' : 'dia'}</Text>
-                      </View>
-                      <View style={[styles.dateCol, { alignItems: 'flex-start', paddingLeft: 40 }]}>
-                        <Text style={styles.dateLabel}>FIM</Text>
-                        <Text style={styles.dateValue}>{endDate}</Text>
-                      </View>
-                    </View>
-                    <View style={styles.reservationFooter}>
-                      <Text style={styles.priceText}>{price}</Text>
-                    </View>
-                  </View>
-                  </View>
-
-                  {/* Rating Section */}
-                  {(existingRating || item.status === 'CONCLUIDA') && (
-                    <View style={styles.ratingSection}>
-                      {existingRating ? (
-                        <View style={styles.existingRatingBox}>
-                          <View style={styles.ratingHeaderBox}>
-                            <Ionicons name="star" size={14} color="#EAB308" />
-                            <Text style={styles.ratingScoreText}>Nota: {existingRating.score}/10</Text>
-                          </View>
-                          {existingRating.feedback ? (
-                            <Text style={styles.ratingFeedbackText}>Feedback: <Text style={{fontStyle: 'italic'}}>{existingRating.feedback}</Text></Text>
-                          ) : null}
-                        </View>
-                      ) : (
-                        <TouchableOpacity 
-                          style={styles.rateButton}
-                          onPress={() => {
-                            setSelectedReservation(item);
-                            setRatingScore('');
-                            setRatingFeedback('');
-                            setRatingModalVisible(true);
-                          }}
-                        >
-                          <Ionicons name="star-outline" size={16} color={PRIMARY} />
-                          <Text style={styles.rateButtonText}>Avaliar Locação</Text>
-                        </TouchableOpacity>
-                      )}
-                    </View>
-                  )}
-                </View>
-              );
-            })
-          )}
+                );
+              })
+            )}
           </View>
         )}
 
@@ -476,7 +476,7 @@ export default function AdminUserDetailsScreen() {
               .map(([resId, rating]) => {
                 const relatedRes = reservations.find(r => String(r.id) === resId);
                 const kitNameText = relatedRes?.kit?.name || relatedRes?.kitName || 'Locação Finalizada';
-                
+
                 return (
                   <View key={resId} style={styles.feedbackCard}>
                     <View style={styles.feedbackHeader}>
@@ -494,7 +494,7 @@ export default function AdminUserDetailsScreen() {
                     )}
                   </View>
                 );
-            })}
+              })}
             {(!user?.ratings || Object.keys(user.ratings).length === 0) && (
               <View style={styles.emptyContainer}>
                 <Ionicons name="chatbubble-ellipses-outline" size={48} color={BORDER} />
@@ -547,7 +547,7 @@ export default function AdminUserDetailsScreen() {
               onChangeText={setRatingFeedback}
             />
 
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.saveRatingBtn, (!ratingScore || savingRating) && styles.saveRatingBtnDisabled]}
               onPress={handleSaveRating}
               disabled={!ratingScore || savingRating}

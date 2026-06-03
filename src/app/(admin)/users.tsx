@@ -33,7 +33,7 @@ interface User {
   avatar?: string;
   cpf?: string;
   createdAt: any;
-  ratings?: Record<string, { score: number; feedback: string; createdAt: string }>;
+  ratings?: Record<string, { score: number; feedback: string; createdAt?: string }>;
   rentalCount?: number;
 }
 

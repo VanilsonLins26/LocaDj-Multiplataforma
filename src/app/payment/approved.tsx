@@ -1,5 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Linking from 'expo-linking';
+import { useGlobalSearchParams, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
@@ -24,15 +26,71 @@ import { auth } from '../../config/firebaseConfig';
 
 const { width, height } = Dimensions.get('window');
 
+const formatApprovedDate = (isoString?: string) => {
+  if (!isoString) return 'A definir';
+
+  // Trunca microssegundos para milissegundos para evitar problemas de compatibilidade no React Native
+  const sanitized = isoString.replace(/(\.\d{3})\d+/, '$1');
+
+  // Se não tiver indicador de fuso horário, tratamos como UTC
+  const hasTimezone = sanitized.includes('Z') || sanitized.includes('-') || sanitized.includes('+');
+  const str = hasTimezone ? sanitized : `${sanitized}Z`;
+  const dateObj = new Date(str);
+  if (isNaN(dateObj.getTime())) return isoString;
+
+  const pad = (n: number) => n.toString().padStart(2, '0');
+
+  // Se tratamos como UTC ou se foi passado em UTC (com Z), convertemos para Horário de Brasília (UTC-3)
+  if (!hasTimezone || sanitized.endsWith('Z')) {
+    const brtDate = new Date(dateObj.getTime() - (3 * 60 * 60 * 1000));
+    const d = pad(brtDate.getUTCDate());
+    const m = pad(brtDate.getUTCMonth() + 1);
+    const y = brtDate.getUTCFullYear();
+    const hs = pad(brtDate.getUTCHours());
+    const ms = pad(brtDate.getUTCMinutes());
+    return `${d}/${m}/${y} às ${hs}:${ms}`;
+  } else {
+    // Caso contrário, usamos a hora local corrigida pelo fuso
+    const d = pad(dateObj.getDate());
+    const m = pad(dateObj.getMonth() + 1);
+    const y = dateObj.getFullYear();
+    const hs = pad(dateObj.getHours());
+    const ms = pad(dateObj.getMinutes());
+    return `${d}/${m}/${y} às ${hs}:${ms}`;
+  }
+};
+
 export default function PaymentApprovedScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { payment_id, external_reference, preference_id } = useLocalSearchParams();
+
+  const localParams = useLocalSearchParams();
+  const globalParams = useGlobalSearchParams();
+  const deepLinkUrl = Linking.useURL();
+  const parsedDeepLink = deepLinkUrl ? Linking.parse(deepLinkUrl) : null;
+  const deepLinkParams = parsedDeepLink?.queryParams || {};
+
+  const params = {
+    ...globalParams,
+    ...localParams,
+    ...deepLinkParams
+  };
+
+  const { payment_id, external_reference, preference_id } = params;
 
   const [paymentMethod, setPaymentMethod] = useState("A definir");
   const [paymentDate, setPaymentDate] = useState("A definir");
   const [paymentAmount, setPaymentAmount] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [authLoaded, setAuthLoaded] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<any>({
+    queryParams: {},
+    resId: null,
+    authStatus: 'Iniciando',
+    resFetch: 'Não executado',
+    statusFetch: 'Não executado',
+  });
 
   const scaleValue = useRef(new Animated.Value(0)).current;
   const fadeValue = useRef(new Animated.Value(0)).current;
@@ -61,9 +119,52 @@ export default function PaymentApprovedScreen() {
   }, []);
 
   useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setCurrentUser(user);
+      setAuthLoaded(true);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (!authLoaded) return;
+
+    let active = true;
+
     async function fetchApiData() {
+      // 1. Tenta pegar o ID dos parâmetros
+      let resId = null;
+      if (external_reference && /^\d+$/.test(String(external_reference))) {
+        resId = String(external_reference);
+      } else if (preference_id && /^\d+$/.test(String(preference_id))) {
+        resId = String(preference_id);
+      } else {
+        resId = external_reference || preference_id;
+      }
+
+      // 2. Se não achou na URL, busca do AsyncStorage (fallback de redirecionamento limpo da Web/APK)
+      let storageResId = null;
+      let usedStorageFallback = false;
       try {
-        const currentUser = auth.currentUser;
+        storageResId = await AsyncStorage.getItem('latest_checkout_reservation_id');
+        if (!resId && storageResId) {
+          resId = storageResId;
+          usedStorageFallback = true;
+        }
+      } catch (err) {
+        console.warn('Erro ao ler reservation_id do AsyncStorage:', err);
+      }
+
+      const info: any = {
+        queryParams: { payment_id, external_reference, preference_id },
+        authStatus: currentUser ? `Logado: ${currentUser.email}` : 'Deslogado (Sem Auth)',
+        storageResId,
+        usedStorageFallback,
+      };
+
+      info.resId = resId;
+
+      try {
         const idToken = currentUser ? await currentUser.getIdToken() : null;
 
         const headers: Record<string, string> = {
@@ -73,21 +174,74 @@ export default function PaymentApprovedScreen() {
           headers['Authorization'] = `Bearer ${idToken}`;
         }
 
-        if (payment_id) {
-          const pId = String(payment_id).replace('sim_mp_', '');
+        console.log('APPROVED SCREEN PARAMS:', { payment_id, external_reference, preference_id, resId, hasToken: !!idToken });
 
-          if (!payment_id.toString().startsWith('sim_mp_')) {
+        if (resId) {
+          info.resFetch = 'Iniciando busca da reserva...';
+          setDebugInfo({ ...info });
+          try {
+            const res = await fetch(`https://locadj.onrender.com/api/reservations/${resId}`, { headers });
+            info.resFetch = `Status: ${res.status}`;
+            if (res.ok) {
+              const resData = await res.json();
+              info.resFetch += ` (Sucesso, ID: ${resData.id}, Status: ${resData.status})`;
+
+              if (resData.paymentMethod) {
+                setPaymentMethod(resData.paymentMethod);
+              } else {
+                setPaymentMethod('Mercado Pago');
+              }
+
+              if (resData.totalAmount) {
+                setPaymentAmount(`R$ ${Number(resData.totalAmount).toFixed(2).replace('.', ',')}`);
+              }
+
+              // Busca a data de confirmação no log de status
+              const confirmLog = (resData.statusLogs || []).find((l: any) => l.status === 'CONFIRMADA');
+              if (confirmLog && confirmLog.date) {
+                setPaymentDate(formatApprovedDate(confirmLog.date));
+              } else {
+                // Se ainda está pendente ou não tem log, mas o usuário acabou de pagar,
+                // exibe a data atual como aprovação estimada (melhor UX do que "A definir")
+                setPaymentDate(formatApprovedDate(new Date().toISOString()));
+              }
+
+              // Limpa o ID do storage após carregar com sucesso
+              try {
+                await AsyncStorage.removeItem('latest_checkout_reservation_id');
+              } catch (clearErr) { }
+            } else {
+              const errText = await res.text().catch(() => '');
+              info.resFetch += ` - Erro: ${errText.substring(0, 100)}`;
+            }
+          } catch (resErr: any) {
+            info.resFetch = `Falha de rede: ${resErr.message}`;
+          }
+        } else {
+          info.resFetch = 'Sem ID de reserva para buscar';
+        }
+
+        setDebugInfo({ ...info });
+
+        // 2. Busca secundária de status de checkout (apenas para transações reais)
+        if (payment_id && !payment_id.toString().startsWith('sim_mp_')) {
+          const pId = String(payment_id).replace('sim_mp_', '');
+          info.statusFetch = 'Iniciando busca de status...';
+          setDebugInfo({ ...info });
+          try {
             const res = await fetch(`https://locadj.onrender.com/api/checkout/status/${pId}`, { headers });
+            info.statusFetch = `Status: ${res.status}`;
             if (res.ok) {
               const data = await res.json();
-              if (data.paymentMethod) {
-                const type = String(data.paymentMethod).toLowerCase();
+              info.statusFetch += ` (Sucesso, Metodo: ${data.paymentMethod || data.payment_method})`;
 
+              const paymentMethodVal = data.paymentMethod || data.payment_method || data.payment_method_id || data.paymentMethodId;
+              if (paymentMethodVal) {
+                const type = String(paymentMethodVal).toLowerCase();
                 const creditBrands = ['visa', 'master', 'mastercard', 'amex', 'elo', 'hipercard', 'diners', 'cabal', 'credit'];
                 const debitBrands = ['maestro', 'visa_electron', 'debit'];
 
                 if (creditBrands.some(b => type.includes(b))) {
-                  // Se quiser exibir a bandeira: setPaymentMethod('Cartão de Crédito');
                   setPaymentMethod(type === 'visa' || type === 'master' || type === 'amex' || type === 'elo'
                     ? `Cartão de Crédito (${type.charAt(0).toUpperCase() + type.slice(1)})`
                     : 'Cartão de Crédito');
@@ -96,43 +250,50 @@ export default function PaymentApprovedScreen() {
                 else if (type.includes('pix')) setPaymentMethod('Pix');
                 else if (type.includes('ticket') || type.includes('boleto') || type.includes('bolbradesco') || type.includes('pec')) setPaymentMethod('Boleto');
                 else if (type.includes('account_money')) setPaymentMethod('Saldo em Conta (MP)');
-                else setPaymentMethod(data.paymentMethod);
+                else setPaymentMethod(paymentMethodVal);
               }
-              if (data.amount) {
-                setPaymentAmount(`R$ ${Number(data.amount).toFixed(2).replace('.', ',')}`);
-              }
-              if (data.paymentDate) {
-                let dateObj: Date;
-                if (Array.isArray(data.paymentDate) && data.paymentDate.length >= 3) {
-                  dateObj = new Date(data.paymentDate[0], data.paymentDate[1] - 1, data.paymentDate[2]);
-                } else {
-                  dateObj = new Date(data.paymentDate);
-                }
 
-                if (isNaN(dateObj.getTime())) {
-                  const match = String(data.paymentDate).match(/^(\d{4})-(\d{2})-(\d{2})/);
-                  if (match) {
-                    setPaymentDate(`${match[3]}/${match[2]}/${match[1]}`);
-                  } else {
-                    setPaymentDate(String(data.paymentDate));
-                  }
-                } else {
-                  const formattedDate = `${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth() + 1).toString().padStart(2, '0')}/${dateObj.getFullYear()}`;
-                  setPaymentDate(formattedDate);
-                }
+              const amountVal = data.amount || data.transaction_amount || data.transactionAmount;
+              if (amountVal) {
+                setPaymentAmount(`R$ ${Number(amountVal).toFixed(2).replace('.', ',')}`);
               }
+
+              const paymentDateVal = data.paymentDate || data.payment_date || data.date_approved || data.dateApproved;
+              if (paymentDateVal) {
+                setPaymentDate(formatApprovedDate(paymentDateVal));
+              }
+            } else {
+              const errText = await res.text().catch(() => '');
+              info.statusFetch += ` - Erro: ${errText.substring(0, 100)}`;
             }
+          } catch (statusErr: any) {
+            info.statusFetch = `Falha de rede: ${statusErr.message}`;
           }
+        } else if (payment_id && payment_id.toString().startsWith('sim_mp_')) {
+          // Fallback para fluxos simulados
+          setPaymentMethod('Saldo Mercado Pago');
+          setPaymentDate(formatApprovedDate(new Date().toISOString()));
+          info.statusFetch = 'Simulado';
+        } else {
+          info.statusFetch = 'Sem payment_id';
         }
-      } catch (error) {
-        console.error("Erro ao buscar detalhes da reserva ou pagamento:", error);
+      } catch (error: any) {
+        console.error("Erro geral na busca de dados da tela de aprovado:", error);
+        info.generalError = error.message;
       } finally {
-        setLoading(false);
+        if (active) {
+          setDebugInfo({ ...info });
+          setLoading(false);
+        }
       }
     }
 
     fetchApiData();
-  }, [payment_id, external_reference, preference_id]);
+
+    return () => {
+      active = false;
+    };
+  }, [authLoaded, currentUser, payment_id, external_reference, preference_id]);
 
   if (loading) {
     return (
@@ -191,6 +352,8 @@ export default function PaymentApprovedScreen() {
                 <Text style={[styles.summaryValue, { fontSize: 18, color: PRIMARY }]}>{paymentAmount}</Text>
               </View>
             )}
+
+
           </View>
 
         </Animated.View>
