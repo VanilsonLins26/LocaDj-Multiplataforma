@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { BarChart, PieChart } from 'react-native-gifted-charts';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { auth } from '../../config/firebaseConfig';
+import { auth } from '../../../config/firebaseConfig';
 
 const { width } = Dimensions.get('window');
 
@@ -241,7 +241,7 @@ export default function AdminDashboardScreen() {
                         centerLabelComponent={() => {
                           return (
                             <View style={styles.centerRecord}>
-                              <Image source={require('../../../assets/images/dados.gif')} style={styles.logo} resizeMode="contain" />
+                              <Image source={require('../../../../assets/images/dados.gif')} style={styles.logo} resizeMode="contain" />
                             </View>
                           );
                         }}

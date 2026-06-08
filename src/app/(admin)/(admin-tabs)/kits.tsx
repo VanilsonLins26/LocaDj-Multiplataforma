@@ -15,7 +15,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { auth } from '../../config/firebaseConfig';
+import { auth } from '../../../config/firebaseConfig';
 
 const BG = '#09090B';
 const CARD_BG = '#09090B';

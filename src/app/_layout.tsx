@@ -4,8 +4,8 @@ import React from 'react';
 export default function RootLayout() {
   return (
     <Stack screenOptions={{ headerShown: false, orientation: 'default' }}>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="(admin)" options={{ headerShown: false }} />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false, gestureEnabled: false }} />
+      <Stack.Screen name="(admin)" options={{ headerShown: false, gestureEnabled: false }} />
       <Stack.Screen name="kit/[id]" options={{ headerShown: false }} />
       <Stack.Screen name="checkout" options={{ headerShown: false }} />
       <Stack.Screen name="meus-dados" options={{ headerShown: false }} />

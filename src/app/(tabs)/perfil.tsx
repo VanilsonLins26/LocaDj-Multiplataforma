@@ -40,7 +40,12 @@ export default function PerfilScreen() {
   async function handleLogout() {
     try {
       await signOut(auth);
-      router.replace('/');
+      if (router.canDismiss()) {
+        router.dismissAll();
+      }
+      setTimeout(() => {
+        router.replace('/');
+      }, 100);
     } catch (error) {
       console.error('Erro ao sair da conta:', error);
     }
