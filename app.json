@@ -4,28 +4,29 @@
     "slug": "LocaDj",
     "version": "1.0.0",
     "orientation": "default",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/icon1.png",
     "scheme": "locadj",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "image": "./assets/images/icon1.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#000000"
     },
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      }
+        "foregroundImage": "./assets/images/icon1.png",
+        "backgroundColor": "#000000"
+      },
+      "package": "com.cauamilfont.LocaDj"
     },
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/icon1.png"
     },
     "plugins": [
       "expo-router",
@@ -38,6 +39,12 @@
     },
     "router": {
       "root": "src/app"
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "47ac67e6-2e74-4dcf-a280-1c3bb7d70801"
+      }
     }
   }
 }

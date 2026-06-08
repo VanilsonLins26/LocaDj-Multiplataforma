@@ -104,7 +104,7 @@ export default function LoginScreen() {
           </View>
 
           <Text style={styles.title}>Bem-vindo!</Text>
-          <Text style={styles.subtitle}>Entre com seus dados para continuar</Text>
+          <Text style={styles.subtitle}>Acesse sua conta para continuar</Text>
 
           <Animated.View style={{ transform: [{ translateX: shakeAnim }], marginTop: 24 }}>
             <Text style={styles.label}>E-MAIL</Text>

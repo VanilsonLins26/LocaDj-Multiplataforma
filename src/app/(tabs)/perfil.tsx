@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { signOut } from 'firebase/auth';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -40,12 +40,11 @@ export default function PerfilScreen() {
   async function handleLogout() {
     try {
       await signOut(auth);
-      if (router.canDismiss()) {
-        router.dismissAll();
-      }
-      setTimeout(() => {
+      if (Platform.OS === 'web') {
+        window.location.href = '/';
+      } else {
         router.replace('/');
-      }, 100);
+      }
     } catch (error) {
       console.error('Erro ao sair da conta:', error);
     }
