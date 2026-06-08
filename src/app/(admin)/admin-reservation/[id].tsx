@@ -13,6 +13,10 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Keyboard,
+  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { auth, db } from '../../../config/firebaseConfig';
@@ -38,6 +42,7 @@ export default function AdminReservationDetailScreen() {
   const insets = useSafeAreaInsets();
 
   const [reservation, setReservation] = useState<any>(null);
+  const [clientName, setClientName] = useState('');
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState('');
@@ -79,6 +84,24 @@ export default function AdminReservationDetailScreen() {
       const data = await resp.json();
       console.log('ADMIN RESERVATION DATA:', JSON.stringify(data, null, 2));
       setReservation(data);
+
+      // Resolve correct name from Firestore
+      if (data.user?.email) {
+        try {
+          const uQ = query(collection(db, 'users'), where('email', '==', data.user.email.toLowerCase()));
+          const uSnap = await getDocs(uQ);
+          if (!uSnap.empty) {
+            setClientName(uSnap.docs[0].data().name || data.user.name);
+          } else {
+            setClientName(data.user.name);
+          }
+        } catch (e) {
+          console.warn('Erro ao obter nome do Firestore:', e);
+          setClientName(data.user.name);
+        }
+      } else {
+        setClientName(data.user?.name || '');
+      }
     } catch (err: any) {
       console.error(err);
       if (!silent) setError('Falha ao carregar a reserva.');
@@ -434,59 +457,71 @@ export default function AdminReservationDetailScreen() {
         visible={ratingModalVisible}
         transparent
         animationType="fade"
-        onRequestClose={() => setRatingModalVisible(false)}
+        onRequestClose={() => {
+          setRatingModalVisible(false);
+          router.navigate('/(admin)/reservations');
+        }}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Avaliar Cliente</Text>
-              <TouchableOpacity onPress={() => {
-                setRatingModalVisible(false);
-                router.navigate('/(admin)/reservations'); // Ao fechar sem avaliar, volta pra lista
-              }}>
-                <Ionicons name="close" size={24} color={TEXT_MUTED} />
-              </TouchableOpacity>
-            </View>
-
-            <Text style={styles.modalSubtitle}>
-              Como foi a experiência de locação com {reservation?.user?.name || 'este usuário'}?
-            </Text>
-
-            <Text style={styles.inputLabel}>Nota (0 a 10)</Text>
-            <TextInput
-              style={styles.scoreInput}
-              placeholder="Ex: 10"
-              placeholderTextColor={TEXT_MUTED}
-              keyboardType="numeric"
-              value={ratingScore}
-              onChangeText={setRatingScore}
-              maxLength={4}
-            />
-
-            <Text style={styles.inputLabel}>Feedback (Opcional)</Text>
-            <TextInput
-              style={styles.feedbackInput}
-              placeholder="Ex: Entregou no prazo, equipamento bem cuidado."
-              placeholderTextColor={TEXT_MUTED}
-              multiline
-              textAlignVertical="top"
-              value={ratingFeedback}
-              onChangeText={setRatingFeedback}
-            />
-
-            <TouchableOpacity
-              style={[styles.saveRatingBtn, (!ratingScore || savingRating) && styles.saveRatingBtnDisabled]}
-              onPress={handleSaveRating}
-              disabled={!ratingScore || savingRating}
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.modalOverlay}>
+            <KeyboardAvoidingView
+              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+              style={{ width: '90%' }}
             >
-              {savingRating ? (
-                <ActivityIndicator color={PRIMARY} />
-              ) : (
-                <Text style={[styles.saveRatingBtnText, (!ratingScore || savingRating) && { color: TEXT_MUTED }]}>Salvar Avaliação</Text>
-              )}
-            </TouchableOpacity>
+              <View style={[styles.modalContent, { width: '100%' }]}>
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>Avaliar Cliente</Text>
+                  <TouchableOpacity onPress={() => {
+                    setRatingModalVisible(false);
+                    router.navigate('/(admin)/reservations'); // Ao fechar sem avaliar, volta pra lista
+                  }}>
+                    <Ionicons name="close" size={24} color={TEXT_MUTED} />
+                  </TouchableOpacity>
+                </View>
+
+                <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+                  <Text style={styles.modalSubtitle}>
+                    Como foi a experiência de locação com {clientName || 'este usuário'}?
+                  </Text>
+
+                  <Text style={styles.inputLabel}>Nota (0 a 10)</Text>
+                  <TextInput
+                    style={styles.scoreInput}
+                    placeholder="Ex: 10"
+                    placeholderTextColor={TEXT_MUTED}
+                    keyboardType="numeric"
+                    value={ratingScore}
+                    onChangeText={setRatingScore}
+                    maxLength={4}
+                  />
+
+                  <Text style={styles.inputLabel}>Feedback (Opcional)</Text>
+                  <TextInput
+                    style={styles.feedbackInput}
+                    placeholder="Ex: Entregou no prazo, equipamento bem cuidado."
+                    placeholderTextColor={TEXT_MUTED}
+                    multiline
+                    textAlignVertical="top"
+                    value={ratingFeedback}
+                    onChangeText={setRatingFeedback}
+                  />
+
+                  <TouchableOpacity
+                    style={[styles.saveRatingBtn, (!ratingScore || savingRating) && styles.saveRatingBtnDisabled]}
+                    onPress={handleSaveRating}
+                    disabled={!ratingScore || savingRating}
+                  >
+                    {savingRating ? (
+                      <ActivityIndicator color={PRIMARY} />
+                    ) : (
+                      <Text style={[styles.saveRatingBtnText, (!ratingScore || savingRating) && { color: TEXT_MUTED }]}>Salvar Avaliação</Text>
+                    )}
+                  </TouchableOpacity>
+                </ScrollView>
+              </View>
+            </KeyboardAvoidingView>
           </View>
-        </View>
+        </TouchableWithoutFeedback>
       </Modal>
 
     </View>

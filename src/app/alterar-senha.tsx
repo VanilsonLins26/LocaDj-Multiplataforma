@@ -8,10 +8,13 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth';
+import { auth } from '../config/firebaseConfig';
 
 const BG = '#09090B';
 const CARD_BG = '#09090B';
@@ -77,10 +80,29 @@ export default function AlterarSenhaScreen() {
   const [senhaAtual, setSenhaAtual] = useState('');
   const [novaSenha, setNovaSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const passwordsMatch = novaSenha.length > 0 && novaSenha === confirmarSenha;
   const allRequirementsMet = novaSenha.length > 0 && REQUIREMENTS.every((r) => r.test(novaSenha));
-  const canSave = senhaAtual.length > 0 && allRequirementsMet && passwordsMatch;
+  const canSave = senhaAtual.length > 0 && allRequirementsMet && passwordsMatch && !saving;
+
+  const handleSave = async () => {
+    if (!auth.currentUser || !auth.currentUser.email) return;
+    setSaving(true);
+    try {
+      const credential = EmailAuthProvider.credential(auth.currentUser.email, senhaAtual);
+      await reauthenticateWithCredential(auth.currentUser, credential);
+      await updatePassword(auth.currentUser, novaSenha);
+      Alert.alert('Sucesso', 'Sua senha foi alterada com sucesso.', [
+        { text: 'OK', onPress: () => router.back() }
+      ]);
+    } catch (error: any) {
+      console.error(error);
+      Alert.alert('Erro', 'A senha atual está incorreta ou ocorreu um erro.');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -156,11 +178,12 @@ export default function AlterarSenhaScreen() {
         {/* Footer Button */}
         <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 20) }]}>
           <TouchableOpacity
-            style={[styles.saveButton, !canSave && styles.saveButtonDisabled]}
+            style={[styles.saveButton, !canSave && styles.saveButtonDisabled, saving && { opacity: 0.7 }]}
             activeOpacity={canSave ? 0.8 : 1}
             disabled={!canSave}
+            onPress={handleSave}
           >
-            <Text style={styles.saveButtonText}>Salvar Nova Senha</Text>
+            <Text style={styles.saveButtonText}>{saving ? 'Salvando...' : 'Salvar Nova Senha'}</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>

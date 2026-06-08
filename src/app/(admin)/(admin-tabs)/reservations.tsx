@@ -14,7 +14,8 @@ import {
   View
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { auth } from '../../config/firebaseConfig';
+import { collection, getDocs } from 'firebase/firestore';
+import { auth, db } from '../../../config/firebaseConfig';
 
 const BG = '#09090B';
 const CARD_BG = '#09090B';
@@ -47,6 +48,7 @@ export default function AdminReservationsScreen() {
   const insets = useSafeAreaInsets();
 
   const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [userNamesMap, setUserNamesMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -77,6 +79,21 @@ export default function AdminReservationsScreen() {
 
       const data = await resp.json();
       setReservations(Array.isArray(data) ? data : []);
+
+      // Resolve correct names from Firestore
+      try {
+        const querySnapshot = await getDocs(collection(db, 'users'));
+        const mapping: Record<string, string> = {};
+        querySnapshot.forEach((doc) => {
+          const userData = doc.data();
+          if (userData.email && userData.name) {
+            mapping[userData.email.toLowerCase()] = userData.name;
+          }
+        });
+        setUserNamesMap(mapping);
+      } catch (firestoreErr) {
+        console.warn('Erro ao carregar mapeamento de usuários do Firestore:', firestoreErr);
+      }
     } catch (err) {
       console.error('Erro ao carregar reservas:', err);
       if (!silent) setError('Não foi possível carregar as reservas.');
@@ -128,7 +145,9 @@ export default function AdminReservationsScreen() {
 
       // Filtro de Busca
       const q = searchQuery.toLowerCase();
-      const userName = res.user?.name?.toLowerCase() || '';
+      const emailKey = res.user?.email?.toLowerCase();
+      const resolvedName = (emailKey && userNamesMap[emailKey]) || res.user?.name || '';
+      const userName = resolvedName.toLowerCase();
       const userEmail = res.user?.email?.toLowerCase() || '';
       const kitName = res.kit?.name?.toLowerCase() || '';
       return userName.includes(q) || userEmail.includes(q) || kitName.includes(q);
@@ -177,7 +196,8 @@ export default function AdminReservationsScreen() {
   };
 
   const renderItem = ({ item }: { item: Reservation }) => {
-    const userName = item.user?.name || 'Usuário';
+    const emailKey = item.user?.email?.toLowerCase();
+    const userName = (emailKey && userNamesMap[emailKey]) || item.user?.name || 'Usuário';
     const userEmail = item.user?.email || 'Sem e-mail';
     const kitName = item.kit?.name || 'Kit sem nome';
     const price = item.kit?.pricePerDay ? item.kit.pricePerDay.toFixed(2) : '0.00';

@@ -119,7 +119,8 @@ export default function LandingScreen() {
             router.replace('/(tabs)/kits_list');
           }
         } catch (error) {
-          router.replace('/(tabs)/kits_list');
+          await auth.signOut();
+          setIsChecking(false);
         }
       } else {
         setIsChecking(false);

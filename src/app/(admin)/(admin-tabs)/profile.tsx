@@ -11,7 +11,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { auth } from '../../config/firebaseConfig';
+import { auth } from '../../../config/firebaseConfig';
 
 const BG = '#09090B';
 const CARD_BG = '#09090B';
@@ -55,7 +55,12 @@ export default function AdminProfileScreen() {
           onPress: async () => {
             try {
               await auth.signOut();
-              router.replace('/login');
+              if (router.canDismiss()) {
+                router.dismissAll();
+              }
+              setTimeout(() => {
+                router.replace('/');
+              }, 100);
             } catch {
               Alert.alert('Erro', 'Não foi possível sair no momento.');
             }
@@ -93,13 +98,6 @@ export default function AdminProfileScreen() {
           <Text style={styles.profileName}>{displayName}</Text>
           <Text style={styles.profileEmail}>{email}</Text>
 
-          {/* Email verification badge */}
-          {!emailVerified && (
-            <View style={styles.unverifiedBadge}>
-              <Feather name="alert-circle" size={13} color={DANGER} />
-              <Text style={styles.unverifiedText}>E-mail não verificado</Text>
-            </View>
-          )}
         </View>
 
         {/* Menu Options */}

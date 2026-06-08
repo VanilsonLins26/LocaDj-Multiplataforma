@@ -10,7 +10,8 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather, Ionicons } from '@expo/vector-icons';
-import { auth } from '../../config/firebaseConfig';
+import { auth, db } from '../../config/firebaseConfig';
+import { doc, getDoc } from 'firebase/firestore';
 import { useRouter, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useIsLandscape } from '../../hooks/useIsLandscape';
@@ -27,6 +28,7 @@ export default function ReservationsScreen() {
   const insets = useSafeAreaInsets();
   const { isLandscape } = useIsLandscape();
   const [reservations, setReservations] = useState<any[]>([]);
+  const [currentUserName, setCurrentUserName] = useState('');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
@@ -44,6 +46,18 @@ export default function ReservationsScreen() {
       setLoading(false);
       setRefreshing(false);
       return;
+    }
+
+    if (currentUser) {
+      try {
+        const docRef = doc(db, 'users', currentUser.uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setCurrentUserName(docSnap.data().name || '');
+        }
+      } catch (firestoreErr) {
+        console.warn('Erro ao buscar nome do usuário no Firestore:', firestoreErr);
+      }
     }
 
     try {
@@ -162,7 +176,7 @@ export default function ReservationsScreen() {
 
   const renderItem = ({ item }: { item: any }) => {
     const kitName = item.kit?.name || item.kitName || 'Kit sem nome';
-    const userName = item.user?.name || auth.currentUser?.displayName || 'Usuário';
+    const userName = currentUserName || auth.currentUser?.displayName || item.user?.name || 'Usuário';
     const startDate = item.startDateTime ? formatVisibleDate(item.startDateTime) : (item.startDate || '--/--/----');
     const endDate = item.endDateTime ? formatVisibleDate(item.endDateTime) : (item.endDate || '--/--/----');
     const price = item.totalAmount ? `R$ ${item.totalAmount.toFixed(2).replace('.', ',')}` : 'R$ 0,00';

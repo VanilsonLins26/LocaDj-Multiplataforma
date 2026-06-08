@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
-import { db, auth } from '../../config/firebaseConfig';
+import { db, auth } from '../../../config/firebaseConfig';
 import { useRouter } from 'expo-router';
 
 const BG = '#09090B';

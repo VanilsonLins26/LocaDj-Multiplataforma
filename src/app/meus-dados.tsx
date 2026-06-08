@@ -33,7 +33,8 @@ export default function MeusDadosScreen() {
   const [name, setName] = React.useState('');
   const [email, setEmail] = React.useState('');
   const [phone, setPhone] = React.useState('');
-  const [cpf, setCpf] = React.useState('***.123.456-**');
+  const [cpf, setCpf] = React.useState('');
+  const [hasCpf, setHasCpf] = React.useState(false);
   const [avatar, setAvatar] = React.useState('');
   const [localPhotoUri, setLocalPhotoUri] = React.useState<string | null>(null);
   const [base64Data, setBase64Data] = React.useState<string | null>(null);
@@ -51,7 +52,10 @@ export default function MeusDadosScreen() {
           setName(data.name || auth.currentUser.displayName || '');
           setPhone(data.phone || '');
           setAvatar(data.avatar || auth.currentUser.photoURL || '');
-          if (data.cpf) setCpf(data.cpf);
+          if (data.cpf) {
+            setCpf(data.cpf);
+            setHasCpf(true);
+          }
         } else {
           setName(auth.currentUser.displayName || '');
         }
@@ -102,7 +106,10 @@ export default function MeusDadosScreen() {
         name,
         phone,
         avatar: finalAvatarUrl,
+        ...(!hasCpf && cpf ? { cpf } : {})
       }, { merge: true });
+
+      if (!hasCpf && cpf) setHasCpf(true);
 
       // 2. ATUALIZAR FIREBASE AUTH — photoURL só aceita https://, não base64
       const authPhotoURL = finalAvatarUrl.startsWith('data:')
@@ -238,13 +245,17 @@ export default function MeusDadosScreen() {
             {/* CPF */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>CPF</Text>
-              <View style={[styles.inputContainer, styles.inputDisabled]}>
+              <View style={[styles.inputContainer, hasCpf && styles.inputDisabled]}>
                 <TextInput
-                  style={[styles.input, { color: TEXT_MUTED }]}
+                  style={[styles.input, hasCpf && { color: TEXT_MUTED }]}
                   value={cpf}
-                  editable={false}
+                  onChangeText={setCpf}
+                  editable={!hasCpf}
+                  placeholder="000.000.000-00"
+                  placeholderTextColor={TEXT_MUTED}
+                  keyboardType="numeric"
                 />
-                <Feather name="lock" size={16} color={TEXT_MUTED} style={styles.inputIconRight} />
+                {hasCpf && <Feather name="lock" size={16} color={TEXT_MUTED} style={styles.inputIconRight} />}
               </View>
             </View>
 

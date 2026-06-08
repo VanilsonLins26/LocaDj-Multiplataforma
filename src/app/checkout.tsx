@@ -192,7 +192,45 @@ export default function CheckoutScreen() {
           return;
         }
       } else {
-        triggerSimulationBypass(`HTTP ${resp.status} - Bloqueado/Não Autorizado`);
+        let errorMsg = '';
+        try {
+          const errJson = await resp.json();
+          errorMsg = errJson.message || errJson.error || '';
+        } catch {
+          try {
+            errorMsg = await resp.text();
+          } catch {}
+        }
+
+        const isUnavailable =
+          resp.status === 400 ||
+          resp.status === 409 ||
+          errorMsg.toLowerCase().includes('indisponiv') ||
+          errorMsg.toLowerCase().includes('indisponív') ||
+          errorMsg.toLowerCase().includes('conflito') ||
+          errorMsg.toLowerCase().includes('indisponibilidade') ||
+          errorMsg.toLowerCase().includes('already reserved') ||
+          errorMsg.toLowerCase().includes('não disponível') ||
+          errorMsg.toLowerCase().includes('não disponivel');
+
+        if (isUnavailable) {
+          Alert.alert(
+            'Período Indisponível',
+            'Este kit não está disponível na data selecionada. Por favor, escolha outra data.',
+            [
+              {
+                text: 'Escolher outra data',
+                onPress: () => {
+                  setSubmitting(false);
+                  router.back();
+                }
+              }
+            ]
+          );
+          return;
+        }
+
+        triggerSimulationBypass(`HTTP ${resp.status} - ${errorMsg || 'Bloqueado/Não Autorizado'}`);
         return;
       }
 
