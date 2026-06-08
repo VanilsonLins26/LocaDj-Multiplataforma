@@ -9,8 +9,10 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { signOut } from 'firebase/auth';
 import { auth } from '../../../config/firebaseConfig';
 
 const BG = '#09090B';
@@ -43,31 +45,17 @@ export default function AdminProfileScreen() {
     }, [])
   );
 
-  const handleLogout = () => {
-    Alert.alert(
-      'Sair da conta',
-      'Tem certeza que deseja sair?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Sair',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await auth.signOut();
-              if (router.canDismiss()) {
-                router.dismissAll();
-              }
-              setTimeout(() => {
-                router.replace('/');
-              }, 100);
-            } catch {
-              Alert.alert('Erro', 'Não foi possível sair no momento.');
-            }
-          },
-        },
-      ]
-    );
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      if (Platform.OS === 'web') {
+        window.location.href = '/';
+      } else {
+        router.replace('/');
+      }
+    } catch (err) {
+      Alert.alert('Erro', 'Não foi possível sair no momento.');
+    }
   };
 
   return (
